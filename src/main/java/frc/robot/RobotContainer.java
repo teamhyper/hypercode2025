@@ -25,9 +25,17 @@ public class RobotContainer {
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
-    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+    // Field-Centric request
+    private final SwerveRequest.FieldCentric fieldCentricDrive = new SwerveRequest.FieldCentric()
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+
+    // Robot-Centric request
+    private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
+            .withDeadband(MaxSpeed * 0.1)
+            .withRotationalDeadband(MaxAngularRate * 0.1)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
@@ -55,12 +63,25 @@ public class RobotContainer {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(-squareInput(joystick.getLeftY()) * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-squareInput(joystick.getLeftX()) * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-squareInput(joystick.getRightX()) * MaxAngularRate) // Drive counterclockwise with negative X (left)
-            )
+            drivetrain.applyRequest(() -> {
+                // Check if the button is held (true => robot-centric)
+                boolean isRobotCentric = joystick.rightBumper().getAsBoolean();
+
+                // Decide which drive request to use
+                if (isRobotCentric) {
+                    // Robot-Centric
+                    return robotCentricDrive
+                        .withVelocityX(-squareInput(joystick.getLeftY()) * MaxSpeed)
+                        .withVelocityY(-squareInput(joystick.getLeftX()) * MaxSpeed)
+                        .withRotationalRate(-squareInput(joystick.getRightX()) * MaxAngularRate);
+                } else {
+                    // Field-Centric
+                    return fieldCentricDrive
+                        .withVelocityX(-squareInput(joystick.getLeftY()) * MaxSpeed)
+                        .withVelocityY(-squareInput(joystick.getLeftX()) * MaxSpeed)
+                        .withRotationalRate(-squareInput(joystick.getRightX()) * MaxAngularRate);
+                }
+            })
         );
 
         joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
