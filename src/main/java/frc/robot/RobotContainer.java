@@ -57,9 +57,9 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-squareInput(joystick.getLeftY()) * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-squareInput(joystick.getLeftX()) * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(-squareInput(joystick.getRightX()) * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
 
@@ -87,4 +87,13 @@ public class RobotContainer {
         // pre-loaded auto/path
         return autoChooser.getSelected();
     }
+
+    /**
+     * Squares the input value while preserving the sign.
+     * For example, 0.5 becomes 0.25, and -0.5 becomes -0.25.
+     */
+    private double squareInput(double value) {
+        return Math.copySign(value * value, value);
+    }
+
 }
