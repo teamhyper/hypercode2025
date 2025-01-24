@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.commands.DriveToAprilTagCommand;
+import frc.robot.commands.RotateToFaceAprilTagCommand;
 import frc.robot.subsystems.VisionSubsystem;
 import edu.wpi.first.math.geometry.Pose2d;
 
@@ -79,13 +80,13 @@ public class RobotContainer {
         joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
         joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
+        // Bind the DriveToAprilTagCommand to a button or use it in autonomous mode
+        joystick.x().toggleOnTrue(new RotateToFaceAprilTagCommand(vision, drivetrain));
         // reset the field-centric heading on left bumper press
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
 
-        // Bind the DriveToAprilTagCommand to a button or use it in autonomous mode
-        joystick.x().whileTrue(new DriveToAprilTagCommand(vision, drivetrain));
     }
 
     public Command getAutonomousCommand() {
