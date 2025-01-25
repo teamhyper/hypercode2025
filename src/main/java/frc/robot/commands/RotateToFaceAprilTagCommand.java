@@ -5,35 +5,37 @@ import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import edu.wpi.first.math.geometry.Rotation2d;
 
+/*
+ * A command that rotates the robot to face a specific AprilTag.
+ */
 public class RotateToFaceAprilTagCommand extends Command {
     private final VisionSubsystem visionSubsystem;
     private final CommandSwerveDrivetrain drivetrain;
+    private final int targetTag;
+    private final double angleTolerance = 5.0; // Adjust as needed
     private boolean isAligned;
 
-    public RotateToFaceAprilTagCommand(VisionSubsystem visionSubsystem, CommandSwerveDrivetrain drivetrain) {
+    /**
+     * Constructs a new RotateToFaceAprilTagCommand that rotates the robot to face a
+     * specific AprilTag.
+     * @param visionSubsystem The VisionSubsystem to use.
+     * @param drivetrain The CommandSwerveDrivetrain to use.
+     * @param targetTag The target AprilTag to face.
+     */
+    public RotateToFaceAprilTagCommand(VisionSubsystem visionSubsystem, CommandSwerveDrivetrain drivetrain, int targetTag) {
         this.visionSubsystem = visionSubsystem;
         this.drivetrain = drivetrain;
         this.isAligned = false;
+        this.targetTag = targetTag;
         addRequirements(visionSubsystem, drivetrain);
     }
 
     @Override
     public void execute() {
-        var results = visionSubsystem.getLatestResults();
-        if (!results.isEmpty()) {
-            // Camera processed a new frame since last
-            // Get the last one in the list.
-            
-            var result = results.get(results.size() - 1);
-            if (result.hasTargets()) {
-                // At least one AprilTag was seen by the camera
-                for (var target : result.getTargets()) {
-                    if (target.getFiducialId() == 16) {
-                        double targetYaw = target.getYaw();
-                        drivetrain.turnToAngle(Rotation2d.fromDegrees(targetYaw));
-                    }
-                }
-            }
+        if (visionSubsystem.getTagIfInView(targetTag).isPresent()) {
+            final var target = visionSubsystem.getTagIfInView(targetTag).get();
+            final double targetYaw = target.getYaw();
+            drivetrain.turnToAngle(Rotation2d.fromDegrees(targetYaw));
         }
     }
 
@@ -44,26 +46,12 @@ public class RotateToFaceAprilTagCommand extends Command {
 
     @Override
     public boolean isFinished() {
-        var results = visionSubsystem.getLatestResults();
-        if (!results.isEmpty()) {
-            // Camera processed a new frame since last
-            // Get the last one in the list.
-            
-            var result = results.get(results.size() - 1);
-
-            if (result.hasTargets()) {
-                // At least one AprilTag was seen by the camera
-                for (var target : result.getTargets()) {
-                    if (target.getFiducialId() == 16) {
-                        double targetYaw = target.getYaw();
-                        double currentYaw = drivetrain.getPose().getRotation().getDegrees();
-                        double angleTolerance = 5.0; // Adjust as needed
-                        isAligned = Math.abs(currentYaw - targetYaw) < angleTolerance;
-                    }
-                }
-                return isAligned;
-            }
+        if (visionSubsystem.getTagIfInView(targetTag).isPresent()) {
+            final var target = visionSubsystem.getTagIfInView(targetTag).get();
+            final double targetYaw = target.getYaw();
+            final double currentYaw = drivetrain.getPose().getRotation().getDegrees();
+            isAligned = Math.abs(currentYaw - targetYaw) < angleTolerance;
         }
-        return false;
+        return isAligned;
     }
 }
