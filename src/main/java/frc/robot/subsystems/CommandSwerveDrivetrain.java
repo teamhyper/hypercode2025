@@ -246,15 +246,29 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @param targetAngle The target angle to turn to.
      */
     public void turnToAngle(Rotation2d targetAngle) {
-        Pose2d currentPose = getPose();
-        double yawError = targetAngle.getDegrees() - currentPose.getRotation().getDegrees();
+        final var currentPose = getPose();
+        final var yawError = targetAngle.getDegrees() - currentPose.getRotation().getDegrees();
 
         // Simple proportional control for demonstration purposes
-        double kP = 1.0; // Proportional gain, adjust as needed
-        double yawSpeed = kP * yawError;
+        final double kP = 1.0; // Proportional gain, adjust as needed
+        final var yawSpeed = kP * yawError;
 
-        ChassisSpeeds chassisSpeeds = new ChassisSpeeds(0, 0, yawSpeed);
+        final var chassisSpeeds = new ChassisSpeeds(0, 0, yawSpeed);
         this.setControl( new SwerveRequest.ApplyRobotSpeeds().withSpeeds(chassisSpeeds));
+    }
+
+    /**
+     * Drives the robot to the specified pose.
+     * @param targetPose The target pose to drive to.
+     */
+    public void driveToPose(Pose2d targetPose) {
+        final var currentPose = getPose();
+        final var chassisSpeeds = new ChassisSpeeds(
+            targetPose.getTranslation().getX() - currentPose.getTranslation().getX(),
+            targetPose.getTranslation().getY() - currentPose.getTranslation().getY(),
+            0
+        );
+        this.setControl(new SwerveRequest.ApplyRobotSpeeds().withSpeeds(chassisSpeeds));
     }
 
     /**
