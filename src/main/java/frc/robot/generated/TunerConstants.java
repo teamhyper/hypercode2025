@@ -76,7 +76,7 @@ public class TunerConstants {
     // This needs to be tuned to your individual robot
     public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(5.79);
 
-        // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
+    // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
     // This may need to be tuned to your individual robot
     private static final double kCoupleRatio = 4.2;
 
@@ -125,7 +125,7 @@ public class TunerConstants {
             .withDriveFrictionVoltage(kDriveFrictionVoltage);
 
 
-        // Front Left
+    // Front Left
     private static final int kFrontLeftDriveMotorId = 9;
     private static final int kFrontLeftSteerMotorId = 6;
     private static final int kFrontLeftEncoderId = 12;
