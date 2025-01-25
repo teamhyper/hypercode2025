@@ -62,27 +62,46 @@ public class RobotContainer {
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
+        // In your RobotContainer class, somewhere in configureBindings()
         drivetrain.setDefaultCommand(
             drivetrain.applyRequest(() -> {
-                // Check if the button is held (true => robot-centric)
+                // Check which mode to use
                 boolean isRobotCentric = joystick.rightBumper().getAsBoolean();
+                // Check if slow mode is active
+                boolean slowMode = joystick.leftBumper().getAsBoolean();
 
-                // Decide which drive request to use
+                // Decide on your normal top speed/rotation
+                double speed = MaxSpeed;
+                double angular = MaxAngularRate;
+
+                // If slow mode is on, reduce them
+                if (slowMode) {
+                    speed *= 0.5;    // 50% of normal speed
+                    angular *= 0.5; // 50% of normal turn rate
+                }
+
+                // Square inputs if you want finer control at lower joystick deflection
+                double vx = -squareInput(joystick.getLeftY()) * speed;
+                double vy = -squareInput(joystick.getLeftX()) * speed;
+                double omega = -squareInput(joystick.getRightX()) * angular;
+
+                // Return the proper request
                 if (isRobotCentric) {
-                    // Robot-Centric
+                    // Robot-centric mode
                     return robotCentricDrive
-                        .withVelocityX(-squareInput(joystick.getLeftY()) * MaxSpeed)
-                        .withVelocityY(-squareInput(joystick.getLeftX()) * MaxSpeed)
-                        .withRotationalRate(-squareInput(joystick.getRightX()) * MaxAngularRate);
+                        .withVelocityX(vx)
+                        .withVelocityY(vy)
+                        .withRotationalRate(omega);
                 } else {
-                    // Field-Centric
+                    // Field-centric mode
                     return fieldCentricDrive
-                        .withVelocityX(-squareInput(joystick.getLeftY()) * MaxSpeed)
-                        .withVelocityY(-squareInput(joystick.getLeftX()) * MaxSpeed)
-                        .withRotationalRate(-squareInput(joystick.getRightX()) * MaxAngularRate);
+                        .withVelocityX(vx)
+                        .withVelocityY(vy)
+                        .withRotationalRate(omega);
                 }
             })
         );
+
 
         joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
         joystick.b().whileTrue(drivetrain.applyRequest(() ->
