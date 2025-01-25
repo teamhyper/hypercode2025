@@ -25,9 +25,17 @@ public class RobotContainer {
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     /* Setting up bindings for necessary control of the swerve drive platform */
-    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+    // Field-Centric request
+    private final SwerveRequest.FieldCentric fieldCentricDrive = new SwerveRequest.FieldCentric()
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+
+    // Robot-Centric request
+    private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
+            .withDeadband(MaxSpeed * 0.1)
+            .withRotationalDeadband(MaxAngularRate * 0.1)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
@@ -54,14 +62,46 @@ public class RobotContainer {
     private void configureBindings() {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
+        // In your RobotContainer class, somewhere in configureBindings()
         drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
-                    .withVelocityY(joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-                    .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-            )
+            drivetrain.applyRequest(() -> {
+                // Check which mode to use
+                boolean isRobotCentric = joystick.rightBumper().getAsBoolean();
+                // Check if slow mode is active
+                boolean slowMode = joystick.leftBumper().getAsBoolean();
+
+                // Decide on your normal top speed/rotation
+                double speed = MaxSpeed;
+                double angular = MaxAngularRate;
+
+                // If slow mode is on, reduce them
+                if (slowMode) {
+                    speed *= 0.5;    // 50% of normal speed
+                    angular *= 0.5; // 50% of normal turn rate
+                }
+
+                // Square inputs if you want finer control at lower joystick deflection
+                double vx = -squareInput(joystick.getLeftY()) * speed;
+                double vy = -squareInput(joystick.getLeftX()) * speed;
+                double omega = -squareInput(joystick.getRightX()) * angular;
+
+                // Return the proper request
+                if (isRobotCentric) {
+                    // Robot-centric mode
+                    return robotCentricDrive
+                        .withVelocityX(vx)
+                        .withVelocityY(vy)
+                        .withRotationalRate(omega);
+                } else {
+                    // Field-centric mode
+                    return fieldCentricDrive
+                        .withVelocityX(vx)
+                        .withVelocityY(vy)
+                        .withRotationalRate(omega);
+                }
+            })
         );
+
 
         joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
         joystick.b().whileTrue(drivetrain.applyRequest(() ->
@@ -87,4 +127,13 @@ public class RobotContainer {
         // pre-loaded auto/path
         return autoChooser.getSelected();
     }
+
+    /**
+     * Squares the input value while preserving the sign.
+     * For example, 0.5 becomes 0.25, and -0.5 becomes -0.25.
+     */
+    private double squareInput(double value) {
+        return Math.copySign(value * value, value);
+    }
+
 }
