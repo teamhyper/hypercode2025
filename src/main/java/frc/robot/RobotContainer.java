@@ -7,6 +7,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 
@@ -27,13 +28,13 @@ public class RobotContainer {
     /* Setting up bindings for necessary control of the swerve drive platform */
     // Field-Centric request
     private final SwerveRequest.FieldCentric fieldCentricDrive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDeadband(MaxSpeed * 0.01).withRotationalDeadband(MaxAngularRate * 0.01) // Add a 1% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
     // Robot-Centric request
     private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
-            .withDeadband(MaxSpeed * 0.1)
-            .withRotationalDeadband(MaxAngularRate * 0.1)
+            .withDeadband(MaxSpeed * 0.01)
+            .withRotationalDeadband(MaxAngularRate * 0.01)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
@@ -81,8 +82,8 @@ public class RobotContainer {
                 }
 
                 // Square inputs if you want finer control at lower joystick deflection
-                double vx = -squareInput(joystick.getLeftY()) * speed;
-                double vy = -squareInput(joystick.getLeftX()) * speed;
+                double vx = squareInput(joystick.getLeftY()) * speed;
+                double vy = squareInput(joystick.getLeftX()) * speed;
                 double omega = -squareInput(joystick.getRightX()) * angular;
 
                 // Return the proper request
@@ -119,6 +120,7 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+        SignalLogger.enableAutoLogging(false);
     }
 
     public Command getAutonomousCommand() {
