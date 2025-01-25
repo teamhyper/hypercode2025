@@ -41,6 +41,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     /**
      * Updates the latest results from the camera.
+     * This method should be called periodically.
      */
     public void updateLatestResults() {
         latestResults = camera_1.getAllUnreadResults();
@@ -48,6 +49,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     /**
      * Gets the latest results from the camera.
+     * @return The latest results from the camera.
      */
     public List<PhotonPipelineResult> getLatestResults() {
         if (latestResults.isEmpty()) {
@@ -58,6 +60,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     /**
      * Gets the tags in the current view.
+     * @return The tags in the current view.
      */
     public List<Integer> getAllTagsInView() {
         List<Integer> tags = List.of();
@@ -81,6 +84,7 @@ public class VisionSubsystem extends SubsystemBase {
     /**
      * Checks if a specific tag is in the current view.
      * @param fiducialId The ID of the tag to check for.
+     * @return Whether the tag is in the current view.
      */
     public boolean tagInView(int fiducialId) {
         return getTagIfInView(fiducialId).isPresent();
@@ -106,6 +110,7 @@ public class VisionSubsystem extends SubsystemBase {
 
     /**
      * Gets the camera used by the VisionSubsystem.
+     * @return The camera used by the VisionSubsystem.
      */
     public PhotonCamera getCamera_1() {
         return camera_1;

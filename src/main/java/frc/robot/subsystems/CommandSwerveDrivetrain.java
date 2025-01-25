@@ -225,14 +225,26 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
     }
 
+    /**
+     * Gets the current pose of the robot.
+     * @return The current pose of the robot.
+     */
     public Pose2d getPose() {
         return this.getState().Pose;
     }
     
+    /**
+     * Gets the current speeds of the robot.
+     * @return The current speeds of the robot.
+     */
     public ChassisSpeeds getSpeeds() {
         return this.getState().Speeds;
     }
 
+    /**
+     * Turns the robot to the specified angle.
+     * @param targetAngle The target angle to turn to.
+     */
     public void turnToAngle(Rotation2d targetAngle) {
         Pose2d currentPose = getPose();
         double yawError = targetAngle.getDegrees() - currentPose.getRotation().getDegrees();
