@@ -14,6 +14,7 @@ import org.photonvision.targeting.PhotonTrackedTarget;
  * A subsystem that handles vision processing.
  */
 public class VisionSubsystem extends SubsystemBase {
+    private final PhotonCamera camera_2;
     private final PhotonCamera camera_1;
     private List<PhotonPipelineResult> latestResults;
 
@@ -21,19 +22,15 @@ public class VisionSubsystem extends SubsystemBase {
      * Constructs a new VisionSubsystem.
      */
     public VisionSubsystem() {
-        camera_1 = new PhotonCamera("photonvision");
-        latestResults = camera_1.getAllUnreadResults();
+        camera_2 = new PhotonCamera("arducam-ov9281-usb-02");
+        camera_1 = new PhotonCamera("arducam-ov9281-usb-01");
     }
 
     @Override
     public void periodic() {
         updateLatestResults();
-        // Report all tags in view to SmartDashboard
-        SmartDashboard.putNumber("Vision Tags In View", getAllTagsInView().size());
-        // Report every tag in view to SmartDashboard
-        getAllTagsInView().forEach(tag -> SmartDashboard.putBoolean("Vision Tag " + tag + " In View", true));
         // Check if tag 16 is in view and put the result on the SmartDashboard
-        SmartDashboard.putBoolean("Vision Has Target", tagInView(16));
+        SmartDashboard.putBoolean("Tag 16 Visible", tagInView(16));
         // Report the yaw of tag 16 to SmartDashboard
         getTagIfInView(16).ifPresent(tag -> SmartDashboard.putNumber("Vision Tag 16 Yaw", tag.getYaw()));
 
@@ -44,7 +41,7 @@ public class VisionSubsystem extends SubsystemBase {
      * This method should be called periodically.
      */
     public void updateLatestResults() {
-        latestResults = camera_1.getAllUnreadResults();
+        latestResults = camera_2.getAllUnreadResults();
     }
 
     /**
@@ -52,33 +49,7 @@ public class VisionSubsystem extends SubsystemBase {
      * @return The latest results from the camera.
      */
     public List<PhotonPipelineResult> getLatestResults() {
-        if (latestResults.isEmpty()) {
-            return null;
-        }
         return latestResults;
-    }
-
-    /**
-     * Gets the tags in the current view.
-     * @return The tags in the current view.
-     */
-    public List<Integer> getAllTagsInView() {
-        List<Integer> tags = List.of();
-
-        if (latestResults.isEmpty()) {
-            return tags;
-        }
-
-
-        final var frame = latestResults.get(latestResults.size() - 1);
-
-        if (frame.hasTargets()) {
-            for (var target : frame.getTargets()) {
-                tags.add(target.getFiducialId());
-            }
-        }
-
-        return tags;
     }
 
     /**
@@ -94,11 +65,9 @@ public class VisionSubsystem extends SubsystemBase {
         if (latestResults.isEmpty()) {
             return Optional.empty();
         }
-
         final var frame = latestResults.get(latestResults.size() - 1);
-
         if (frame.hasTargets()) {
-            for (var target : frame.getTargets()) {
+            for (var target : frame.targets) {
                 if (target.getFiducialId() == fiducialId) {
                     return Optional.of(target);
                 }
@@ -112,6 +81,10 @@ public class VisionSubsystem extends SubsystemBase {
      * Gets the camera used by the VisionSubsystem.
      * @return The camera used by the VisionSubsystem.
      */
+    public PhotonCamera getCamera_2() {
+        return camera_2;
+    }
+
     public PhotonCamera getCamera_1() {
         return camera_1;
     }

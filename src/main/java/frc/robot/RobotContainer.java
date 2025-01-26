@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.commands.RotateToFaceAprilTagCommand;
 import frc.robot.subsystems.VisionSubsystem;
 
 public class RobotContainer {
@@ -67,12 +66,15 @@ public class RobotContainer {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         // In your RobotContainer class, somewhere in configureBindings()
+
         drivetrain.setDefaultCommand(
             drivetrain.applyRequest(() -> {
                 // Check which mode to use
                 boolean isRobotCentric = joystick.rightBumper().getAsBoolean();
                 // Check if slow mode is active
                 boolean slowMode = joystick.leftBumper().getAsBoolean();
+
+                boolean trackTag = joystick.y().getAsBoolean();
 
                 // Decide on your normal top speed/rotation
                 double speed = MaxSpeed;
@@ -88,7 +90,16 @@ public class RobotContainer {
                 double vx = squareInput(joystick.getLeftY()) * speed;
                 double vy = squareInput(joystick.getLeftX()) * speed;
                 double omega = -squareInput(joystick.getRightX()) * angular;
+                
+                SmartDashboard.putBoolean("Robot-Centric Drive", isRobotCentric);
+                SmartDashboard.putBoolean("Slow Mode", slowMode);
+                SmartDashboard.putBoolean("Track Tag", trackTag);
 
+                if (trackTag && vision.getTagIfInView(16).isPresent()) {
+                    // If we are tracking a tag, use the vision subsystem to get the angle to the tag
+                    // and rotate towards it.
+                    omega = -1.0 * vision.getTagIfInView(16).get().getYaw() * angular * .01;
+                }
                 // Return the proper request
                 if (isRobotCentric) {
                     // Robot-centric mode
@@ -119,8 +130,6 @@ public class RobotContainer {
         joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
         joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
-        // Bind the DriveToAprilTagCommand to a button or use it in autonomous mode
-        joystick.x().toggleOnTrue(new RotateToFaceAprilTagCommand(vision, drivetrain, 16));
         // reset the field-centric heading on left bumper press
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
