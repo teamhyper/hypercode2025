@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -24,6 +25,10 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+
+    private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(3.0);
+    private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(3.0);
+    private final SlewRateLimiter rotLimiter    = new SlewRateLimiter(3.0);
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     // Field-Centric request
@@ -81,10 +86,20 @@ public class RobotContainer {
                     angular *= 0.10; // 10% of normal turn rate
                 }
 
+                // Read the raw joystick
+                double rawX  = squareInput(joystick.getLeftY())  * speed;   // forward/back (note sign)
+                double rawY  = squareInput(joystick.getLeftX())  * speed;   // strafe
+                double rawRot = -squareInput(joystick.getRightX()) * angular; // rotation
+                
+                // Pass through the limiters
+                double vx    = xSpeedLimiter.calculate(rawX);
+                double vy    = ySpeedLimiter.calculate(rawY);
+                double omega = rotLimiter.calculate(rawRot);
+
                 // Square inputs if you want finer control at lower joystick deflection
-                double vx = squareInput(joystick.getLeftY()) * speed;
-                double vy = squareInput(joystick.getLeftX()) * speed;
-                double omega = -squareInput(joystick.getRightX()) * angular;
+                vx = squareInput(joystick.getLeftY()) * vx;
+                vy = squareInput(joystick.getLeftX()) * vy;
+                omega = -squareInput(joystick.getRightX()) * omega;
 
                 // Return the proper request
                 if (isRobotCentric) {
