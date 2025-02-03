@@ -87,8 +87,8 @@ public class RobotContainer {
                 }
 
                 // Read the raw joystick
-                double rawX  = squareInput(joystick.getLeftY())  * speed;   // forward/back (note sign)
-                double rawY  = squareInput(joystick.getLeftX())  * speed;   // strafe
+                double rawX  = squareInput(-joystick.getLeftY())  * speed;   // forward/back (note sign)
+                double rawY  = squareInput(-joystick.getLeftX())  * speed;   // strafe
                 double rawRot = -squareInput(joystick.getRightX()) * angular; // rotation
                 
                 // Pass through the limiters
