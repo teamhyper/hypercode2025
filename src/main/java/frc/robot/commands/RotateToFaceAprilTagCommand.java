@@ -2,7 +2,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.VisionSubsystem;
-import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Drivetrain;
 import edu.wpi.first.math.geometry.Rotation2d;
 
 /*
@@ -10,7 +10,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
  */
 public class RotateToFaceAprilTagCommand extends Command {
     private final VisionSubsystem visionSubsystem;
-    private final CommandSwerveDrivetrain drivetrain;
+    private final Drivetrain drivetrain;
     private final int targetTag;
     private final double angleTolerance = 5.0; // Adjust as needed
     private boolean isAligned;
@@ -19,10 +19,10 @@ public class RotateToFaceAprilTagCommand extends Command {
      * Constructs a new RotateToFaceAprilTagCommand that rotates the robot to face a
      * specific AprilTag.
      * @param visionSubsystem The VisionSubsystem to use.
-     * @param drivetrain The CommandSwerveDrivetrain to use.
+     * @param drivetrain The Drivetrain to use.
      * @param targetTag The target AprilTag to face.
      */
-    public RotateToFaceAprilTagCommand(VisionSubsystem visionSubsystem, CommandSwerveDrivetrain drivetrain, int targetTag) {
+    public RotateToFaceAprilTagCommand(VisionSubsystem visionSubsystem, Drivetrain drivetrain, int targetTag) {
         this.visionSubsystem = visionSubsystem;
         this.drivetrain = drivetrain;
         this.isAligned = false;
