@@ -22,6 +22,7 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.EndEffector;
+import frc.robot.subsystems.VisionSubsystem;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -53,6 +54,7 @@ public class RobotContainer {
     public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
 
     public final EndEffector endEffector = new EndEffector();
+    public final VisionSubsystem vision = new VisionSubsystem();
 
     private final SendableChooser<Command> autoChooser;
 
@@ -72,12 +74,15 @@ public class RobotContainer {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         // In your RobotContainer class, somewhere in configureBindings()
+
         drivetrain.setDefaultCommand(
             drivetrain.applyRequest(() -> {
                 // Check which mode to use
                 boolean isRobotCentric = joystick.rightBumper().getAsBoolean();
                 // Check if slow mode is active
                 boolean slowMode = joystick.leftBumper().getAsBoolean();
+
+                boolean trackTag = joystick.y().getAsBoolean();
 
                 // Decide on your normal top speed/rotation
                 double speed = MaxSpeed;
@@ -103,7 +108,16 @@ public class RobotContainer {
                 vx = squareInput(joystick.getLeftY()) * vx;
                 vy = squareInput(joystick.getLeftX()) * vy;
                 omega = -squareInput(joystick.getRightX()) * omega;
+                
+                SmartDashboard.putBoolean("Robot-Centric Drive", isRobotCentric);
+                SmartDashboard.putBoolean("Slow Mode", slowMode);
+                SmartDashboard.putBoolean("Track Tag", trackTag);
 
+                if (trackTag && vision.getTagIfInView(16).isPresent()) {
+                    // If we are tracking a tag, use the vision subsystem to get the angle to the tag
+                    // and rotate towards it.
+                    omega = -1.0 * vision.getTagIfInView(16).get().getYaw() * omega * .01;
+                }
                 // Return the proper request
                 if (isRobotCentric) {
                     // Robot-centric mode

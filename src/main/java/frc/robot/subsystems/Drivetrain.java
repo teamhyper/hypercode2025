@@ -17,7 +17,9 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -144,9 +146,9 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
         }
 
         AutoBuilder.configure(
-            () -> this.getState().Pose, // Pose supplier
+            this::getPose, // Pose supplier
             this::resetPose, // Pose resetter
-            () -> this.getState().Speeds, // Speeds supplier
+            this::getSpeeds, // Speeds supplier
             (speeds, feedforwards) -> this.setControl(request.withSpeeds(speeds)), // Speeds setter
             new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
             Constants.translationPidConstants, // Translation PID constants
@@ -222,6 +224,52 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
         if (Utils.isSimulation()) {
             startSimThread();
         }
+    }
+
+    /**
+     * Gets the current pose of the robot.
+     * @return The current pose of the robot.
+     */
+    public Pose2d getPose() {
+        return this.getState().Pose;
+    }
+    
+    /**
+     * Gets the current speeds of the robot.
+     * @return The current speeds of the robot.
+     */
+    public ChassisSpeeds getSpeeds() {
+        return this.getState().Speeds;
+    }
+
+    /**
+     * Turns the robot to the specified angle.
+     * @param targetAngle The target angle to turn to.
+     */
+    public void turnToAngle(Rotation2d targetAngle) {
+        final var currentPose = getPose();
+        final var yawError = targetAngle.getDegrees() - currentPose.getRotation().getDegrees();
+
+        // Simple proportional control for demonstration purposes
+        final double kP = 1.0; // Proportional gain, adjust as needed
+        final var yawSpeed = kP * yawError;
+
+        final var chassisSpeeds = new ChassisSpeeds(0, 0, yawSpeed);
+        this.setControl( new SwerveRequest.ApplyRobotSpeeds().withSpeeds(chassisSpeeds));
+    }
+
+    /**
+     * Drives the robot to the specified pose.
+     * @param targetPose The target pose to drive to.
+     */
+    public void driveToPose(Pose2d targetPose) {
+        final var currentPose = getPose();
+        final var chassisSpeeds = new ChassisSpeeds(
+            targetPose.getTranslation().getX() - currentPose.getTranslation().getX(),
+            targetPose.getTranslation().getY() - currentPose.getTranslation().getY(),
+            0
+        );
+        this.setControl(new SwerveRequest.ApplyRobotSpeeds().withSpeeds(chassisSpeeds));
     }
 
     /**
