@@ -95,19 +95,14 @@ public class RobotContainer {
                 }
 
                 // Read the raw joystick
-                double rawX  = squareInput(-joystick.getLeftY())  * speed;   // forward/back (note sign)
-                double rawY  = squareInput(-joystick.getLeftX())  * speed;   // strafe
-                double rawRot = -squareInput(joystick.getRightX()) * angular; // rotation
+                double rawX  = squareInput(joystick.getLeftY())  * speed;   // forward/back (note sign)
+                double rawY  = squareInput(joystick.getLeftX())  * speed;   // strafe
+                double rawRot = squareInput(-joystick.getRightX()) * angular; // rotation
                 
                 // Pass through the limiters
                 double vx    = xSpeedLimiter.calculate(rawX);
                 double vy    = ySpeedLimiter.calculate(rawY);
                 double omega = rotLimiter.calculate(rawRot);
-
-                // Square inputs if you want finer control at lower joystick deflection
-                vx = squareInput(joystick.getLeftY()) * vx;
-                vy = squareInput(joystick.getLeftX()) * vy;
-                omega = -squareInput(joystick.getRightX()) * omega;
                 
                 SmartDashboard.putBoolean("Robot-Centric Drive", isRobotCentric);
                 SmartDashboard.putBoolean("Slow Mode", slowMode);

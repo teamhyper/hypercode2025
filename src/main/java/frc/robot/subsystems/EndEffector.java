@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class EndEffector extends SubsystemBase {
-    private static final int MOTOR_ID = 15; // Change this ID based on actual CAN ID
+    private static final int MOTOR_ID = 16; // Change this ID based on actual CAN ID
     private static final double HOLD_TORQUE = 5.0; // Adjust based on actual holding torque required
     private static final double CURRENT_THRESHOLD = 30.0; // Adjust based on expected current spike when grabbing
     
