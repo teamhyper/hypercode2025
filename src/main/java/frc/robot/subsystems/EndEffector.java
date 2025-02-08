@@ -3,6 +3,8 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -29,8 +31,9 @@ public class EndEffector extends SubsystemBase {
         config.Slot0.kP = 0.1; // Example PID values, adjust as needed
         config.Slot0.kI = 0.0;
         config.Slot0.kD = 0.0;
-        config.TorqueCurrent.PeakTorqueCurrent = 40;  // Example peak torque current limit
-        config.TorqueCurrent.PeakTorqueCurrentEnable = true;
+        config.TorqueCurrent.PeakForwardTorqueCurrent = 30;
+        config.TorqueCurrent.PeakReverseTorqueCurrent = -30;  // Example peak torque current limit
+        
         intakeMotor.getConfigurator().apply(config);
     }
 
@@ -62,6 +65,7 @@ public class EndEffector extends SubsystemBase {
     @Override
     public void periodic() {
         double current = intakeMotor.getStatorCurrent().getValueAsDouble(); // Fixed type mismatch
+        SmartDashboard.putNumber("EndEffector Current", current); // Publish to Shuffleboard
         if (!isHolding && current > CURRENT_THRESHOLD) {
             holdGamePiece();
         }
@@ -87,6 +91,14 @@ public class EndEffector extends SubsystemBase {
     public Command holdGamePieceCommand() {
         return new InstantCommand(this::holdGamePiece, this);
     }
+
+    public void holdGamePieceAdaptive() {
+        double current = intakeMotor.getStatorCurrent().getValueAsDouble();
+        double adjustedTorque = Math.min(10.0, current * 0.2); // Scale torque based on current
+        intakeMotor.setControl(new TorqueCurrentFOC(adjustedTorque));
+        isHolding = true;
+    }
+    
 
     /**
      * Continuous command to run the intake at a given speed until interrupted.

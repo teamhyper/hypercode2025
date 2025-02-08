@@ -21,6 +21,7 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.EndEffector;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -50,6 +51,8 @@ public class RobotContainer {
     private final CommandXboxController joystick = new CommandXboxController(0);
 
     public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
+
+    public final EndEffector endEffector = new EndEffector();
 
     private final SendableChooser<Command> autoChooser;
 
@@ -127,6 +130,8 @@ public class RobotContainer {
 
         // reset the field-centric heading on left bumper press
         joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+
+        
 
         drivetrain.registerTelemetry(logger::telemeterize);
         SignalLogger.enableAutoLogging(false);
