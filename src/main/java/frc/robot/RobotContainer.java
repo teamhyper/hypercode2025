@@ -138,9 +138,12 @@ public class RobotContainer {
         joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
-        joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+        // joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
-        
+        // Bind A button to run intake at full speed (1.0)
+        joystick.b().whileTrue(endEffector.runIntakeContinuousCommand(.25));
+        joystick.a().whileTrue(endEffector.runIntakeContinuousCommand(-.25));
+        joystick.x().whileTrue(endEffector.holdGamePieceCommand());
 
         drivetrain.registerTelemetry(logger::telemeterize);
         SignalLogger.enableAutoLogging(false);
