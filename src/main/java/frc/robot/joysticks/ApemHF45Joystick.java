@@ -15,8 +15,8 @@ public class ApemHF45Joystick extends CommandJoystick {
     private static final int X_AXIS = 0;  // Left-Right movement
     private static final int Y_AXIS = 1;  // Forward-Backward movement
     private static final int Z_ROTATION = 2; // Twist (if available)
-    private static final int LEFT_BUTTON = 3; // Pushbutton (if applicable)
-    private static final int RIGHT_BUTTON = 4; // Pushbutton (if applicable)
+    private static final int LEFT_BUTTON = 1; // Pushbutton (if applicable)
+    private static final int RIGHT_BUTTON = 2; // Pushbutton (if applicable)
 
     /**
      * Constructor for the Apem HF45S10U Joystick.

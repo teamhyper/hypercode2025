@@ -255,7 +255,7 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
         final var yawSpeed = kP * yawError;
 
         final var chassisSpeeds = new ChassisSpeeds(0, 0, yawSpeed);
-        this.setControl( new SwerveRequest.ApplyRobotSpeeds().withSpeeds(chassisSpeeds));
+        this.setControl(new SwerveRequest.ApplyRobotSpeeds().withSpeeds(chassisSpeeds));
     }
 
     /**
