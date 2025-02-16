@@ -14,6 +14,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -33,7 +34,7 @@ public class Telemetry {
         SignalLogger.start();
     }
 
-    /* What to publish over networktables for telemetry */
+    /* What to publish over NetworkTables for telemetry */
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
 
     /* Robot swerve drive state */
@@ -50,6 +51,10 @@ public class Telemetry {
     private final NetworkTable table = inst.getTable("Pose");
     private final DoubleArrayPublisher fieldPub = table.getDoubleArrayTopic("robotPose").publish();
     private final StringPublisher fieldTypePub = table.getStringTopic(".type").publish();
+
+    /* Battery Voltage Telemetry */
+    private final NetworkTable robotDataTable = inst.getTable("RobotData");
+    private final DoublePublisher batteryVoltagePub = robotDataTable.getDoubleTopic("BatteryVoltage").publish();
 
     /* Mechanisms to represent the swerve module states */
     private final Mechanism2d[] m_moduleMechanisms = new Mechanism2d[] {
@@ -81,6 +86,12 @@ public class Telemetry {
     private final double[] m_moduleStatesArray = new double[8];
     private final double[] m_moduleTargetsArray = new double[8];
 
+    /** Publish the current battery voltage to NetworkTables */
+    public void updateBatteryVoltage() {
+        double voltage = RobotController.getBatteryVoltage();
+        batteryVoltagePub.set(voltage);
+    }
+
     /** Accept the swerve drive state and telemeterize it to SmartDashboard and SignalLogger. */
     public void telemeterize(SwerveDriveState state) {
         /* Telemeterize the swerve drive state */
@@ -107,6 +118,9 @@ public class Telemetry {
         SignalLogger.writeDoubleArray("DriveState/ModuleStates", m_moduleStatesArray);
         SignalLogger.writeDoubleArray("DriveState/ModuleTargets", m_moduleTargetsArray);
         SignalLogger.writeDouble("DriveState/OdometryPeriod", state.OdometryPeriod, "seconds");
+
+        /* Publish battery voltage */
+        updateBatteryVoltage();
 
         /* Telemeterize the pose to a Field2d */
         fieldTypePub.set("Field2d");
