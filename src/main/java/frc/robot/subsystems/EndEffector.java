@@ -12,16 +12,16 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class EndEffector extends SubsystemBase {
     private static final int MOTOR_ID = 16; // Change this ID based on actual CAN ID
-    private static final double HOLD_TORQUE = 20.0; // Adjust based on actual holding torque required
+    private static final double MAX_HOLD_TORQUE = 20.0; // Maximum holding torque
     private static final double CURRENT_THRESHOLD = 30.0; // Adjust based on expected current spike when grabbing
-    
+    private static final double TORQUE_SCALING_FACTOR = 0.5; // Scaling factor for adaptive torque
+
     private final TalonFX intakeMotor;
     private boolean isHolding = false;
 
     public EndEffector() {
         intakeMotor = new TalonFX(MOTOR_ID);
         configMotor();
-        // setDefaultCommand(new RunCommand(this::holdGamePiece, this));
     }
 
     /**
@@ -48,10 +48,12 @@ public class EndEffector extends SubsystemBase {
     }
 
     /**
-     * Stops the intake and holds the game piece with a constant torque.
+     * Stops the intake and holds the game piece with adaptive torque control.
      */
-    public void holdGamePiece() {
-        intakeMotor.setControl(new TorqueCurrentFOC(HOLD_TORQUE));
+    public void holdGamePieceAdaptive() {
+        double current = intakeMotor.getStatorCurrent().getValueAsDouble();
+        double adaptiveTorque = Math.min(MAX_HOLD_TORQUE, current * TORQUE_SCALING_FACTOR); // Scale torque based on resistance
+        intakeMotor.setControl(new TorqueCurrentFOC(adaptiveTorque));
         isHolding = true;
     }
 
@@ -65,10 +67,12 @@ public class EndEffector extends SubsystemBase {
 
     @Override
     public void periodic() {
-        double current = intakeMotor.getStatorCurrent().getValueAsDouble(); // Fixed type mismatch
-        SmartDashboard.putNumber("EndEffector Current", current); // Publish to Shuffleboard
+        double current = intakeMotor.getStatorCurrent().getValueAsDouble(); // Get current draw
+        SmartDashboard.putNumber("EndEffector Current", current);
+        SmartDashboard.putNumber("Adaptive Torque", Math.min(MAX_HOLD_TORQUE, current * TORQUE_SCALING_FACTOR));
+        
         if (!isHolding && current > CURRENT_THRESHOLD) {
-            holdGamePiece();
+            holdGamePieceAdaptive(); // Switch to adaptive torque control
         }
     }
 
@@ -87,19 +91,11 @@ public class EndEffector extends SubsystemBase {
     }
 
     /**
-     * Command to hold the game piece.
+     * Command to hold the game piece adaptively.
      */
     public Command holdGamePieceCommand() {
-        return new InstantCommand(this::holdGamePiece, this);
+        return new InstantCommand(this::holdGamePieceAdaptive, this);
     }
-
-    public void holdGamePieceAdaptive() {
-        double current = intakeMotor.getStatorCurrent().getValueAsDouble();
-        double adjustedTorque = Math.min(10.0, current * 0.2); // Scale torque based on current
-        intakeMotor.setControl(new TorqueCurrentFOC(adjustedTorque));
-        isHolding = true;
-    }
-    
 
     /**
      * Continuous command to run the intake at a given speed until interrupted.
@@ -107,4 +103,18 @@ public class EndEffector extends SubsystemBase {
     public Command runIntakeContinuousCommand(double speed) {
         return new RunCommand(() -> runIntake(speed), this);
     }
+
+    public Command autoIntakeAndHoldCommand(double intakeSpeed) {
+        return new RunCommand(() -> {
+            double current = intakeMotor.getStatorCurrent().getValueAsDouble();
+            SmartDashboard.putNumber("EndEffector Current", current);
+            
+            if (current > CURRENT_THRESHOLD) {
+                holdGamePieceAdaptive(); // Automatically switch to holding mode
+            } else {
+                runIntake(intakeSpeed);
+            }
+        }, this);
+    }
+    
 }
