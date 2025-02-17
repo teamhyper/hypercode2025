@@ -23,6 +23,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.joysticks.ApemHF45Joystick;
 import frc.robot.joysticks.VKBGladiatorJoystick;
 import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.VisionSubsystem;
 
@@ -62,6 +63,7 @@ public class RobotContainer {
     public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
     public final EndEffector endEffector = new EndEffector();
     public final VisionSubsystem vision = new VisionSubsystem();
+    public final Elevator elevator = new Elevator();
 
     private final SendableChooser<Command> autoChooser;
 
@@ -140,6 +142,11 @@ public class RobotContainer {
         // Climber Bindings
 
         // Elevator Bindings
+        operatorJoystickLeft.outerHatUp().whileTrue(elevator.moveUpCommand(5));
+        operatorJoystickLeft.outerHatUp().whileTrue(elevator.moveDownCommand(5));
+
+        operatorJoystickRight.outerHatUp().whileTrue(elevator.moveUpCommand(5));
+        operatorJoystickRight.outerHatUp().whileTrue(elevator.moveDownCommand(5));
 
         // EndEffector Bindings
         operatorJoystickLeft.triggerPrimary().onTrue(endEffector.autoIntakeAndHoldCommand(.5));
