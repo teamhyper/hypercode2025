@@ -26,6 +26,7 @@ import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.subsystems.Pivot;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -64,6 +65,7 @@ public class RobotContainer {
     public final EndEffector endEffector = new EndEffector();
     public final VisionSubsystem vision = new VisionSubsystem();
     public final Elevator elevator = new Elevator();
+    public final Pivot pivot = new Pivot();
 
     private final SendableChooser<Command> autoChooser;
 
@@ -160,6 +162,11 @@ public class RobotContainer {
         operatorJoystickRight.thumbButton().onTrue(endEffector.stopIntakeCommand());
 
         // Pivot Bindings
+        operatorJoystickLeft.innerHatUp().whileTrue(pivot.runPivotOut(.5));
+        operatorJoystickLeft.innerHatDown().whileTrue(pivot.runPivotIn(.5));
+
+        operatorJoystickRight.innerHatUp().whileTrue(pivot.runPivotOut(.5));
+        operatorJoystickRight.innerHatDown().whileTrue(pivot.runPivotIn(.5));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.

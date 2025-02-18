@@ -1,86 +1,102 @@
-// package frc.robot.subsystems;
+package frc.robot.subsystems;
 
-// import com.revrobotics.spark.SparkMax;
-// import com.revrobotics.spark.SparkLowLevel.MotorType;
-// import com.revrobotics.spark.SparkAbsoluteEncoder;
-// import com.revrobotics.spark.SparkClosedLoopController;
-// import com.revrobotics.spark.config.SparkMaxConfig;
-// import com.revrobotics.spark.config.SparkCommandResult;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkAbsoluteEncoder;
+import com.revrobotics.spark.SparkClosedLoopController;
 
-// import edu.wpi.first.math.controller.ArmFeedforward;
-// import edu.wpi.first.math.controller.ProfiledPIDController;
-// import edu.wpi.first.math.trajectory.TrapezoidProfile;
-// import edu.wpi.first.wpilibj2.command.SubsystemBase;
-// import edu.wpi.first.wpilibj2.command.Command;
-// import edu.wpi.first.wpilibj2.command.InstantCommand;
-// import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 
-// public class Pivot extends SubsystemBase {
-//     private final SparkMax pivotMotor;
-//     private final SparkAbsoluteEncoder absoluteEncoder;
-//     private final SparkClosedLoopController pidController;
-//     private final ProfiledPIDController profiledPIDController;
-//     private final ArmFeedforward armFeedforward;
-//     private double targetPosition;
+public class Pivot extends SubsystemBase {    
+    // PID coefficients
+    private static final double kP = 0.1;
+    private static final double kI = 0.0;
+    private static final double kD = 0.0;
+    private static final double kFF = 0.0;
+    private static final double kMinOutput = -1.0;
+    private static final double kMaxOutput = 1.0;
 
-//     public Pivot(int motorID) {
-//         // Create SparkMAX object
-//         pivotMotor = new SparkMax(motorID, MotorType.kBrushless);
+    // Smart Motion parameters
+    private static final double kMaxVelocity = 1000.0;
+    private static final double kMaxAcceleration = 500.0;
+    private static final double kAllowedError = 1.0;
 
-//         // Set up configuration
-//         SparkConfiguration config = new SparkConfiguration();
-//         config.setSmartCurrentLimit(40);
-//         config.setIdleMode(SparkMax.IdleMode.kBrake);
+    private static final int PIVOT_MOTOR_ID = 20;
 
-//         // Apply configuration
-//         SparkCommandResult result = pivotMotor.setConfiguration(config);
-//         if (!result.isSuccess()) {
-//             System.err.println("Spark config error: " + result.getMessage());
-//         }
+    private final SparkMax m_pivot;
+    private final SparkAbsoluteEncoder encoder;
+    private final SparkClosedLoopController pidController;
+    
+    private double holdPosition = 0.0;
 
-//         // Create absolute encoder and PID controller
-//         absoluteEncoder = pivotMotor.getAbsoluteEncoder(SparkAbsoluteEncoder.Type.kDutyCycle);
-//         pidController = pivotMotor.getClosedLoopController();
+    public Pivot() {
+        this(PIVOT_MOTOR_ID);
+    }
 
-//         // Configure encoder
-//         absoluteEncoder.setPositionConversionFactor(360.0); // Convert to degrees
+    public Pivot(int motorId) {
+        m_pivot = new SparkMax(motorId, MotorType.kBrushless);
+        SparkMaxConfig config = new SparkMaxConfig();
 
-//         // Configure PID controller
-//         pidController.setFeedbackDevice(absoluteEncoder);
-//         pidController.setP(0.1);
-//         pidController.setI(0.0);
-//         pidController.setD(0.0);
-//         pidController.setFF(0.0);
+        config
+            .inverted(false)
+            .idleMode(IdleMode.kBrake);
+        config.encoder
+            .positionConversionFactor(1000)
+            .velocityConversionFactor(1000);
+        config.closedLoop
+            .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+            .pid(kP, kI, kD)
+            .smartMotionMaxVelocity(kMaxVelocity)
+            .smartMotionMaxAccel(kMaxAcceleration)
+            .smartMotionAllowedClosedLoopError(kAllowedError);
 
-//         // Configure trapezoidal motion profile
-//         TrapezoidProfile.Constraints constraints = new TrapezoidProfile.Constraints(100.0, 200.0);
-//         profiledPIDController = new ProfiledPIDController(0.1, 0.0, 0.0, constraints);
-//         profiledPIDController.setGoal(absoluteEncoder.getPosition() * 360.0);
+        m_pivot.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-//         // Configure feedforward for gravity compensation
-//         armFeedforward = new ArmFeedforward(0.0, 0.2, 0.0); // Tune kS, kG, kV as needed
+        pidController = m_pivot.getClosedLoopController();
+        encoder = m_pivot.getAbsoluteEncoder();
+    }
 
-//         // Set default target position
-//         targetPosition = absoluteEncoder.getPosition() * 360.0;
-//     }
+    @Override
+    public void periodic() {
+        SmartDashboard.putNumber("EncoderPosition", this.getPosition());
+    }
 
-//     public void setTargetPosition(double position) {
-//         targetPosition = position;
-//         profiledPIDController.setGoal(targetPosition);
-//     }
+    // Method to set the pivot position using Smart Motion Profiling
+    public void setPosition(double position) {
+        holdPosition = position;
+        pidController.setReference(position, SparkMax.ControlType.kSmartMotion);
+    }
 
-//     public Command pivotToPosition(double position) {
-//         return new InstantCommand(() -> setTargetPosition(position), this);
-//     }
+    // Method to get the current position
+    public double getPosition() {
+        return encoder.getPosition();
+    }
 
-//     public Command holdPosition() {
-//         return new RunCommand(() -> {
-//             double currentAngle = absoluteEncoder.getPosition() * 360.0;
-//             double output = profiledPIDController.calculate(currentAngle);
-//             double feedforward = armFeedforward.calculate(Math.toRadians(currentAngle), 0);
+    // Method to stop the pivot
+    public void stop() {
+        m_pivot.stopMotor();
+    }
+    
+    // Command to move pivot manually while a button is held
+    public Command runPivotOut(double speed) {
+        return new RunCommand(() -> m_pivot.set(speed), this).finallyDo(interrupted -> stop());
+    }
 
-//             // Combine motion profile output + feedforward
-//             pidController.setReference(output + feedforward, SparkClosedLoopController.ControlType.kPosition);
-//         }, this);
-//     }
-// }
+    // Command to move pivot manually while a button is held
+    public Command runPivotIn(double speed) {
+        return new RunCommand(() -> m_pivot.set(-speed), this).finallyDo(interrupted -> stop());
+    }
+
+    // Command to hold the pivot in place
+    public Command holdPositionCommand() {
+        return new RunCommand(() -> setPosition(holdPosition), this);
+    }
+}
