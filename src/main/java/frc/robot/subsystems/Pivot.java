@@ -51,12 +51,12 @@ public class Pivot extends SubsystemBase {
         config.encoder
             .positionConversionFactor(1000)
             .velocityConversionFactor(1000);
-        config.closedLoop
-            .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-            .pid(kP, kI, kD)
-            .smartMotionMaxVelocity(kMaxVelocity)
-            .smartMotionMaxAccel(kMaxAcceleration)
-            .smartMotionAllowedClosedLoopError(kAllowedError);
+        // config.closedLoop
+        //     .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+        //     .pid(kP, kI, kD)
+        //     .smartMotionMaxVelocity(kMaxVelocity)
+        //     .smartMotionMaxAccel(kMaxAcceleration)
+        //     .smartMotionAllowedClosedLoopError(kAllowedError);
 
         m_pivot.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
@@ -72,7 +72,7 @@ public class Pivot extends SubsystemBase {
     // Method to set the pivot position using Smart Motion Profiling
     public void setPosition(double position) {
         holdPosition = position;
-        pidController.setReference(position, SparkMax.ControlType.kSmartMotion);
+        // pidController.setReference(position, SparkMax.ControlType.kSmartMotion);
     }
 
     // Method to get the current position

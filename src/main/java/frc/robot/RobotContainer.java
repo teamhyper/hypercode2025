@@ -25,6 +25,7 @@ import frc.robot.joysticks.VKBGladiatorJoystick;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
+import frc.robot.subsystems.LEDStrip;
 import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.Pivot;
 
@@ -63,14 +64,15 @@ public class RobotContainer {
     // Subsytem Initialization
     public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
     public final EndEffector endEffector = new EndEffector();
-    public final VisionSubsystem vision = new VisionSubsystem();
+    // public final VisionSubsystem vision = new VisionSubsystem();
     public final Elevator elevator = new Elevator();
     public final Pivot pivot = new Pivot();
+    public final LEDStrip ledStrip = new LEDStrip();
 
     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
-        configureBindings();
+        // configureBindings();
 
         // Build an auto chooser. This will use Commands.none() as the default option.
         autoChooser = AutoBuilder.buildAutoChooser();
@@ -119,11 +121,11 @@ public class RobotContainer {
                 SmartDashboard.putBoolean("Slow Mode", slowMode);
                 SmartDashboard.putBoolean("Track Tag", trackTag);
 
-                if (trackTag && vision.getTagIfInView(16).isPresent()) {
-                    // If we are tracking a tag, use the vision subsystem to get the angle to the tag
-                    // and rotate towards it.
-                    omega = -1.0 * vision.getTagIfInView(16).get().getYaw() * omega * .01;
-                }
+                // if (trackTag && vision.getTagIfInView(16).isPresent()) {
+                //     // If we are tracking a tag, use the vision subsystem to get the angle to the tag
+                //     // and rotate towards it.
+                //     omega = -1.0 * vision.getTagIfInView(16).get().getYaw() * omega * .01;
+                // }
                 // Return the proper request
                 if (isRobotCentric) {
                     // Robot-centric mode

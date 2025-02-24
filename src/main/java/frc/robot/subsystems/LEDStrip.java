@@ -1,9 +1,31 @@
 package frc.robot.subsystems;
+import static edu.wpi.first.units.Units.Percent;
+import static edu.wpi.first.units.Units.Seconds;
+
+import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+import edu.wpi.first.wpilibj.LEDPattern;
+import edu.wpi.first.wpilibj.LEDPattern.GradientType;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class LEDStrip extends SubsystemBase {
-  /** Creates a new ExampleSubsystem. */
-  public LEDStrip() {}
+  
+  private static final int PWM_PORT = 1;
+  private static final int NUM_LEDS = 66;
+
+  private final AddressableLED m_led;
+  private final AddressableLEDBuffer m_ledBuffer;
+
+  public LEDStrip() {
+    this(PWM_PORT, NUM_LEDS);
+  }
+
+  public LEDStrip(int pwmPort, int numLEDS) {
+    m_led = new AddressableLED(pwmPort);
+    m_ledBuffer = new AddressableLEDBuffer(numLEDS);
+    m_led.setLength(m_ledBuffer.getLength());
+  }
 
   /**
    * An example method querying a boolean state of the subsystem (for example, a digital sensor).
@@ -17,11 +39,19 @@ public class LEDStrip extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
-  }
+    // Create an LED pattern that displays a red-to-blue gradient, breathing at a 2 second period (0.5 Hz)
+    // LEDPattern base = LEDPattern.gradient(GradientType.kDiscontinuous, Color.kOrange, Color.kNavy);
+    // LEDPattern base = LEDPattern.rainbow(255, NUM_LEDS)
+    // LEDPattern pattern = base.breathe(Seconds.of(2));
+    // pattern = base.atBrightness(Percent.of(25));
+    LEDPattern red = LEDPattern.solid(Color.kRed).atBrightness(Percent.of(25));
+    
+    // Apply the LED pattern to the data buffer
+    red.applyTo(m_ledBuffer);
 
-  @Override
-  public void simulationPeriodic() {
-    // This method will be called once per scheduler run during simulation
+    // Write the data to the LED strip
+    m_led.setData(m_ledBuffer);
+    m_led.start();
   }
+  
 }

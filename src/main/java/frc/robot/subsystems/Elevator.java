@@ -26,8 +26,8 @@ public class Elevator extends SubsystemBase {
     }
     
     public Elevator(int masterID, int followerID) {
-        masterMotor = new TalonFX(masterID);
-        followerMotor = new TalonFX(followerID);
+        masterMotor = new TalonFX(masterID, "hyperbus");
+        followerMotor = new TalonFX(followerID, "hyperbus");
         
         configMotors();
     }

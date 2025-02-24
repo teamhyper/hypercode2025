@@ -20,7 +20,7 @@ public class EndEffector extends SubsystemBase {
     private boolean isHolding = false;
 
     public EndEffector() {
-        intakeMotor = new TalonFX(MOTOR_ID);
+        intakeMotor = new TalonFX(MOTOR_ID, "rio");
         configMotor();
     }
 
