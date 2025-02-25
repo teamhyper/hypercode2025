@@ -72,7 +72,7 @@ public class RobotContainer {
     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
-        // configureBindings();
+        configureBindings();
 
         // Build an auto chooser. This will use Commands.none() as the default option.
         autoChooser = AutoBuilder.buildAutoChooser();
@@ -146,11 +146,13 @@ public class RobotContainer {
         // Climber Bindings
 
         // Elevator Bindings
-        operatorJoystickLeft.outerHatUp().whileTrue(elevator.moveUpCommand(5));
-        operatorJoystickLeft.outerHatUp().whileTrue(elevator.moveDownCommand(5));
+        operatorJoystickLeft.outerHatUp().whileTrue(elevator.moveUpCommand(20));
+        operatorJoystickLeft.outerHatDown().whileTrue(elevator.moveDownCommand(20));
 
-        operatorJoystickRight.outerHatUp().whileTrue(elevator.moveUpCommand(5));
-        operatorJoystickRight.outerHatUp().whileTrue(elevator.moveDownCommand(5));
+        operatorJoystickRight.outerHatUp().whileTrue(elevator.moveUpCommand(20));
+        operatorJoystickRight.outerHatDown().whileTrue(elevator.moveDownCommand(20));
+
+        operatorJoystickRight.f1Button().whileTrue(elevator.moveVariableCommand(operatorJoystickRight::getY));
 
         // EndEffector Bindings
         operatorJoystickLeft.triggerPrimary().onTrue(endEffector.autoIntakeAndHoldCommand(.5));

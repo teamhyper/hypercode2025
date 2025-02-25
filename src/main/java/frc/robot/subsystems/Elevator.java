@@ -1,8 +1,12 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+
+import java.util.function.DoubleSupplier;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -33,7 +37,8 @@ public class Elevator extends SubsystemBase {
     }
     
     private void configMotors() {
-        TalonFXConfiguration config = new TalonFXConfiguration();        
+        TalonFXConfiguration config = new TalonFXConfiguration();
+               
         masterMotor.getConfigurator().apply(config);
         followerMotor.getConfigurator().apply(config);
         
@@ -43,6 +48,10 @@ public class Elevator extends SubsystemBase {
     
     public void runElevator(double current) {
         masterMotor.setControl(new TorqueCurrentFOC(current));
+    }
+
+    public void runElevatorVariable(double output) {
+        masterMotor.setControl(new DutyCycleOut(output));
     }
     
     public void stop() {
@@ -65,5 +74,9 @@ public class Elevator extends SubsystemBase {
     
     public Command moveDownCommand(double current) {
         return new RunCommand(() -> runElevator(-current), this).finallyDo(interrupted -> stop());
+    }
+
+    public Command moveVariableCommand(DoubleSupplier output) {
+        return new RunCommand(() -> runElevatorVariable(output.getAsDouble()), this).finallyDo(interrupted -> stop());
     }
 }
