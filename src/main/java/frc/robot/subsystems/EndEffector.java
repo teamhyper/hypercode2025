@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.playingwithfusion.TimeOfFlight;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 
@@ -17,10 +18,18 @@ public class EndEffector extends SubsystemBase {
     private static final double TORQUE_SCALING_FACTOR = 0.5; // Scaling factor for adaptive torque
 
     private final TalonFX intakeMotor;
+
+    private final TimeOfFlight tof_coral_inner;
+    private final TimeOfFlight tof_coral_outer;
+    private final TimeOfFlight tof_algae;
     private boolean isHolding = false;
 
     public EndEffector() {
         intakeMotor = new TalonFX(MOTOR_ID, "rio");
+
+        tof_coral_inner = new TimeOfFlight(21);
+        tof_coral_outer = new TimeOfFlight(22);
+        tof_algae = new TimeOfFlight(23);
         configMotor();
     }
 
