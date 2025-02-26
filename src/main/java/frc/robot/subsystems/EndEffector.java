@@ -26,11 +26,12 @@ public class EndEffector extends SubsystemBase {
 
     public EndEffector() {
         intakeMotor = new TalonFX(MOTOR_ID, "rio");
-
         tof_coral_inner = new TimeOfFlight(21);
         tof_coral_outer = new TimeOfFlight(22);
         tof_algae = new TimeOfFlight(23);
+
         configMotor();
+        configSensors();
     }
 
     /**
@@ -45,6 +46,12 @@ public class EndEffector extends SubsystemBase {
         config.TorqueCurrent.PeakReverseTorqueCurrent = -30;  // Example peak torque current limit
         
         intakeMotor.getConfigurator().apply(config);
+    }
+
+    private void configSensors() {
+        tof_coral_inner.setRangingMode(TimeOfFlight.RangingMode.Short, 50);
+        tof_coral_outer.setRangingMode(TimeOfFlight.RangingMode.Short, 50);
+        tof_algae.setRangingMode(TimeOfFlight.RangingMode.Short, 50);
     }
 
     /**
@@ -77,8 +84,17 @@ public class EndEffector extends SubsystemBase {
     @Override
     public void periodic() {
         double current = intakeMotor.getStatorCurrent().getValueAsDouble(); // Get current draw
+
+        double coral_inner_distance = tof_coral_inner.getRange();
+        double coral_outer_distance = tof_coral_outer.getRange();
+        double algae_distance = tof_algae.getRange();
+
         SmartDashboard.putNumber("EndEffector Current", current);
         SmartDashboard.putNumber("Adaptive Torque", Math.min(MAX_HOLD_TORQUE, current * TORQUE_SCALING_FACTOR));
+
+        SmartDashboard.putNumber("Coral Inner Distance", coral_inner_distance);
+        SmartDashboard.putNumber("Coral Outer Distance", coral_outer_distance);
+        SmartDashboard.putNumber("Algae Distance", algae_distance);
         
         if (!isHolding && current > CURRENT_THRESHOLD) {
             holdGamePieceAdaptive(); // Switch to adaptive torque control
