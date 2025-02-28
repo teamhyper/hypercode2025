@@ -2,6 +2,9 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.playingwithfusion.TimeOfFlight;
+
+import java.util.function.BooleanSupplier;
+
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 
@@ -14,7 +17,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class EndEffector extends SubsystemBase {
     private static final int MOTOR_ID = 16; // Change this ID based on actual CAN ID
-    private static final double MAX_HOLD_TORQUE = 20.0; // Maximum holding torque
+    private static final double HOLD_CURRENT = 10.0; // Maximum holding torque
     private static final double CURRENT_THRESHOLD = 30.0; // Adjust based on expected current spike when grabbing
     private static final double TORQUE_SCALING_FACTOR = 0.5; // Scaling factor for adaptive torque
     private static final double TOF_SAMPLE_TIME_MS = 30;
@@ -101,12 +104,14 @@ public class EndEffector extends SubsystemBase {
      * Stops the intake and holds the game piece with adaptive torque control.
      */
     // turn this into a command instead of this
-    public void holdGamePieceAdaptive() {
-        double current = intakeMotor.getStatorCurrent().getValueAsDouble();
-        double adaptiveTorque = Math.min(MAX_HOLD_TORQUE, current * TORQUE_SCALING_FACTOR); // Scale torque based on resistance
-        intakeMotor.setControl(new TorqueCurrentFOC(adaptiveTorque));
-        isHolding = true;
-    } 
+    // public void holdGamePieceAdaptive() {
+    //     double current = intakeMotor.getStatorCurrent().getValueAsDouble();
+    //     double adaptiveTorque = Math.min(HOLD_CURRENT, current * TORQUE_SCALING_FACTOR); // Scale torque based on resistance
+    //     intakeMotor.setControl(new TorqueCurrentFOC(adaptiveTorque));
+    //     isHolding = true;
+    // } 
+
+    // private boolean isCurrentLimit
 
     @Override
     public void periodic() {
@@ -117,7 +122,7 @@ public class EndEffector extends SubsystemBase {
         isAlgaeDetected = isDetecting(tof_algae, ALGAE_THRESHOLD);
 
         SmartDashboard.putNumber("EndEffector Current", motorStatorCurrent);
-        SmartDashboard.putNumber("Adaptive Torque", Math.min(MAX_HOLD_TORQUE, motorStatorCurrent * TORQUE_SCALING_FACTOR));
+        SmartDashboard.putNumber("Adaptive Torque", Math.min(HOLD_CURRENT, motorStatorCurrent * TORQUE_SCALING_FACTOR));
 
         // Coral & Algae Detection Metrics
         SmartDashboard.putNumber("Coral Inner Distance", tof_coral_inner.getRange());
@@ -127,8 +132,9 @@ public class EndEffector extends SubsystemBase {
         SmartDashboard.putBoolean("Coral Outer", isCoralOuterDetected);
         SmartDashboard.putBoolean("Algae Present", isAlgaeDetected);
         
-        if (isAlgaeDetected && motorStatorCurrent > CURRENT_THRESHOLD) {
-            holdGamePieceAdaptive(); // Switch to adaptive torque control
+        if (isAlgaeDetected && !isHolding && motorStatorCurrent > CURRENT_THRESHOLD) {
+            isHolding = true;
+            runIntakeWithTorqueCurrentFOC(HOLD_CURRENT);
         }
     }
 
@@ -150,18 +156,18 @@ public class EndEffector extends SubsystemBase {
                 .finallyDo(interrupted -> runIntake(0)); // Ensure the motor stops
     }
 
-    // public Command intakeAlgaeCommand() {
-    //     return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(10), this)
-    //             .until
+    public Command intakeAlgaeCommand() {
+        return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(10), this)
+                .until()
 
-    // }
+    }
 
     /**
      * Command to hold the game piece adaptively.
      */
-    public Command holdGamePieceCommand() {
-        return new InstantCommand(this::holdGamePieceAdaptive, this);
-    }
+    // public Command holdGamePieceCommand() {
+    //     return new InstantCommand(this::holdGamePieceAdaptive, this);
+    // }
 
     /**
      * Continuous command to run the intake at a given speed until interrupted.
@@ -170,18 +176,18 @@ public class EndEffector extends SubsystemBase {
         return new RunCommand(() -> runIntake(speed), this);
     }
 
-    public Command autoIntakeAndHoldCommand(double intakeSpeed) {
-        return new RunCommand(() -> {
-            double current = intakeMotor.getStatorCurrent().getValueAsDouble();
-            SmartDashboard.putNumber("EndEffector Current", current);
+    // public Command autoIntakeAndHoldCommand(double intakeSpeed) {
+    //     return new RunCommand(() -> {
+    //         double current = intakeMotor.getStatorCurrent().getValueAsDouble();
+    //         SmartDashboard.putNumber("EndEffector Current", current);
             
-            if (current > CURRENT_THRESHOLD) {
-                holdGamePieceAdaptive(); // Automatically switch to holding mode
-            } else {
-                runIntake(intakeSpeed);
-            }
-        }, this);
-    }
+    //         if (current > CURRENT_THRESHOLD) {
+    //             holdGamePieceAdaptive(); // Automatically switch to holding mode
+    //         } else {
+    //             runIntake(intakeSpeed);
+    //         }
+    //     }, this);
+    // }
 
     // ========================= TRIGGERS ======================================
     public Trigger getCoralInnerDetectionTrigger() {
