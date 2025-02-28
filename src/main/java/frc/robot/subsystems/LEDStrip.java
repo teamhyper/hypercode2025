@@ -17,11 +17,11 @@ public class LEDStrip extends SubsystemBase {
   private static final int NUM_LEDS = 66;
   private static final double BLINK_INTERVAL = 0.5; // Blink every 0.5 seconds
 
-  private final Timer blinkTimer = new Timer();
-  private boolean isBlinkOn = true; // Track LED state for blinking
-
   private final AddressableLED m_led;
   private final AddressableLEDBuffer m_ledBuffer;
+  private final Timer blinkTimer;
+
+  private boolean isBlinkOn = true; // Track LED state for blinking
 
   public LEDStrip() {
     this(PWM_PORT, NUM_LEDS);
@@ -32,6 +32,8 @@ public class LEDStrip extends SubsystemBase {
     m_ledBuffer = new AddressableLEDBuffer(numLEDS);
     m_led.setLength(m_ledBuffer.getLength());
     m_led.start();
+
+    blinkTimer = new Timer();
     blinkTimer.start(); // Start the timer
   }
 
@@ -50,8 +52,7 @@ public class LEDStrip extends SubsystemBase {
 
     LEDPattern red = LEDPattern.solid(Color.kRed).atBrightness(Percent.of(25));
 
-    if (RobotState.isEnabled()) {
-      // Toggle LED state based on timer
+    if (RobotState.isEnabled()) {      
       if (blinkTimer.hasElapsed(BLINK_INTERVAL)) {
         isBlinkOn = !isBlinkOn; // Toggle LED state
         blinkTimer.reset(); // Reset the timer
