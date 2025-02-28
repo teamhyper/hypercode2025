@@ -9,6 +9,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -17,27 +18,23 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Pivot extends SubsystemBase {
     // PID coefficients
-    private static final double kP = 0.1;
-    private static final double kI = 0.0;
-    private static final double kD = 0.0;
-    private static final double kFF = 0.0;
-    private static final double kMinOutput = -1.0;
-    private static final double kMaxOutput = 1.0;
+    // from REV example p = 0.1, i = 1e-4, d = 1
+    private static final double kP = 0.0075, kI = 0.0, kD = 0.0;
+    private static final double kFF = 0.0, kMinOutput = -1.0, kMaxOutput = 1.0;
 
     // Max Motion parameters
-    private static final double kMaxVelocity = 1000.0;
-    private static final double kMaxAcceleration = 500.0;
-    private static final double kAllowedError = 1.0;
+    private static final double kMaxVelocity = 1000.0, kMaxAcceleration = 500.0, kAllowedError = 0.005;
 
-
-    private static final double kReverseSoftLimit = 212;
-    private static final double kForwardSoftLimit = 309;
+    // REV soft limit parameters
+    private static final boolean kForwardSoftLimitEnabled = true, kReverseSoftLimitEnabled = true;
+    private static final double kReverseSoftLimit = 212.5, kForwardSoftLimit = 308.5;
 
     private static final int PIVOT_MOTOR_ID = 20;
-
+    private static final double kS = 0, kG = 0, kV = 0, kA = 0;
     private final SparkMax m_pivot;
     private final SparkAbsoluteEncoder encoder;
     private final SparkClosedLoopController pidController;
+    private final ArmFeedforward pivotFeedforward = new ArmFeedforward(kS, kG, kV, kA);
 
 
     public Pivot() {
@@ -58,7 +55,10 @@ public class Pivot extends SubsystemBase {
 
         config.closedLoop
                 .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
-                .pid(kP, kI, kD);
+                .pidf(kP, kI, kD, kFF)
+                .minOutput(kMinOutput)
+                .maxOutput(kMaxOutput);
+
 
         config.closedLoop.maxMotion
                 .maxVelocity(kMaxVelocity)
@@ -66,8 +66,8 @@ public class Pivot extends SubsystemBase {
                 .allowedClosedLoopError(kAllowedError);
 
         config.softLimit
-                .forwardSoftLimitEnabled(true)
-                .reverseSoftLimitEnabled(true)
+                .forwardSoftLimitEnabled(kForwardSoftLimitEnabled)
+                .reverseSoftLimitEnabled(kReverseSoftLimitEnabled)
                 .reverseSoftLimit(kReverseSoftLimit)
                 .forwardSoftLimit(kForwardSoftLimit);
 
@@ -76,8 +76,9 @@ public class Pivot extends SubsystemBase {
         pidController = m_pivot.getClosedLoopController();
         encoder = m_pivot.getAbsoluteEncoder();
 
-// TODO: uncomment once the PID and limits are tuned
-//        setDefaultCommand(this.setTargetPositionCommand());
+        setDefaultCommand(this.setTargetPositionCommand().andThen(
+                new RunCommand(() -> {
+                }, this)));
     }
 
     @Override
@@ -111,7 +112,7 @@ public class Pivot extends SubsystemBase {
     }
 
     public Command setTargetPositionCommand(double position) {
-        return new InstantCommand(() -> setPosition(position), this);
+        return new InstantCommand(() -> setPosition(position));
     }
 
     public Command setTargetPositionCommand() {
