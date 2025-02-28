@@ -157,7 +157,7 @@ public class RobotContainer {
 
         // EndEffector Bindings
         operatorJoystickLeft.triggerPrimary().whileTrue(endEffector.runIntakeCommand(.3));
-        operatorJoystickLeft.redButton().whileTrue(endEffector.runIntakeCommand(-.3));
+        operatorJoystickLeft.redButton().whileTrue(endEffector.runIntakeCommand(-.5));
         endEffector.getAlgaeDetectionTrigger().onTrue(endEffector.intakeAlgaeCommand());
         // operatorJoystickLeft.thumbButton().onTrue(endEffector.stopIntakeCommand());
 

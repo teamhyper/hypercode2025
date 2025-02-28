@@ -17,12 +17,13 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class EndEffector extends SubsystemBase {
     private static final int MOTOR_ID = 16; // Change this ID based on actual CAN ID
-    private static final double HOLD_CURRENT = 10.0; // Maximum holding torque
+    private static final double HOLD_CURRENT = 5.0; // Maximum holding torque
     private static final double CURRENT_THRESHOLD = 30.0; // Adjust based on expected current spike when grabbing
     private static final double TORQUE_SCALING_FACTOR = 0.5; // Scaling factor for adaptive torque
     private static final double TOF_SAMPLE_TIME_MS = 30;
     private static final double CORAL_THRESHOLD = 100;
-    private static final double ALGAE_THRESHOLD = 300;
+    private static final double ALGAE_OUT_THRESHOLD = 250;
+    private static final double ALGAE_IN_THRESHOLD = 100;
 
     private final TalonFX intakeMotor;
 
@@ -34,7 +35,7 @@ public class EndEffector extends SubsystemBase {
     private boolean isCoralInnerDetected;
     private boolean isCoralOuterDetected;
     private boolean isAlgaeDetected;
-    private boolean isHolding;
+    private boolean isAlgaeDetectedClose;
     private double motorStatorCurrent;
 
     public EndEffector() {        
@@ -81,13 +82,21 @@ public class EndEffector extends SubsystemBase {
 
     /**
      * Runs the intake at a given percentage output.
+     * @param sensor The ToF sensor
+     * @param range Range threshold in mm for positive detection
+     */
+    private boolean isDetectingWithinRange(TimeOfFlight sensor, double range1, double range2) {
+        return range1 < sensor.getRange() && sensor.getRange() < range2;
+    }
+
+    /**
+     * Runs the intake at a given percentage output.
      * Positive input intakes algae, intakes coral from rear.
      * Negative input outputs algae, outputs coral from front.
      * @param speed The speed to run the intake (-1.0 to 1.0)
      */
     public void runIntake(double speed) {
         intakeMotor.set(speed);
-        isHolding = false;
     }
 
     /**
@@ -111,7 +120,9 @@ public class EndEffector extends SubsystemBase {
     //     isHolding = true;
     // } 
 
-    // private boolean isCurrentLimit
+    private boolean isHoldingAlgae() {
+        return isAlgaeDetected && isAlgaeDetectedClose;
+    }
 
     @Override
     public void periodic() {
@@ -119,10 +130,12 @@ public class EndEffector extends SubsystemBase {
 
         isCoralInnerDetected = isDetecting(tof_coral_inner, CORAL_THRESHOLD);
         isCoralOuterDetected = isDetecting(tof_coral_outer, CORAL_THRESHOLD);
-        isAlgaeDetected = isDetecting(tof_algae, ALGAE_THRESHOLD);
+        isAlgaeDetected = isDetecting(tof_algae, ALGAE_OUT_THRESHOLD);
+        isAlgaeDetectedClose = isDetecting(tof_algae, ALGAE_IN_THRESHOLD);
 
         SmartDashboard.putNumber("EndEffector Current", motorStatorCurrent);
-        SmartDashboard.putNumber("Adaptive Torque", Math.min(HOLD_CURRENT, motorStatorCurrent * TORQUE_SCALING_FACTOR));
+        SmartDashboard.putBoolean("isHoldingAlgae", isHoldingAlgae());
+        // SmartDashboard.putNumber("Adaptive Torque", Math.min(HOLD_CURRENT, motorStatorCurrent * TORQUE_SCALING_FACTOR));
 
         // Coral & Algae Detection Metrics
         SmartDashboard.putNumber("Coral Inner Distance", tof_coral_inner.getRange());
@@ -131,11 +144,7 @@ public class EndEffector extends SubsystemBase {
         SmartDashboard.putBoolean("Coral Inner", isCoralInnerDetected);
         SmartDashboard.putBoolean("Coral Outer", isCoralOuterDetected);
         SmartDashboard.putBoolean("Algae Present", isAlgaeDetected);
-        
-        if (isAlgaeDetected && !isHolding && motorStatorCurrent > CURRENT_THRESHOLD) {
-            isHolding = true;
-            runIntakeWithTorqueCurrentFOC(HOLD_CURRENT);
-        }
+        SmartDashboard.putBoolean("Algae Present Close", isAlgaeDetectedClose);
     }
 
     // ========================= COMMANDS ======================================
@@ -157,8 +166,8 @@ public class EndEffector extends SubsystemBase {
     }
 
     public Command intakeAlgaeCommand() {
-        return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(10), this)
-                .until()
+        return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(20), this)
+                .until(() -> isHoldingAlgae()).andThen(() -> runIntakeWithTorqueCurrentFOC(HOLD_CURRENT), this);
 
     }
 
@@ -195,7 +204,7 @@ public class EndEffector extends SubsystemBase {
     }
 
     public Trigger getAlgaeDetectionTrigger() {
-        return new Trigger(() -> isDetecting(tof_algae, ALGAE_THRESHOLD));
+        return new Trigger(() -> (isDetecting(tof_algae, ALGAE_OUT_THRESHOLD) && !isDetecting(tof_algae, ALGAE_IN_THRESHOLD)));
     }
     
 }
