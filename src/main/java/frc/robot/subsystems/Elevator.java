@@ -9,6 +9,7 @@ import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -21,18 +22,23 @@ public class Elevator extends SubsystemBase {
     private static final double TOP_POSITION = 100000.0;
     private static final int MASTER_ID = 17;
     private static final int FOLLOWER_ID = 18;
+    private static final int LIM_SWITCH_ID = 1;
     
     private final TalonFX masterMotor;
     private final TalonFX followerMotor;
 
+    private final DigitalInput bottomLimitSwitch;
+
     public Elevator() {
-        this(MASTER_ID, FOLLOWER_ID);
+        this(MASTER_ID, FOLLOWER_ID, LIM_SWITCH_ID) ;
     }
     
-    public Elevator(int masterID, int followerID) {
+    public Elevator(int masterID, int followerID, int limSwitchID) {
         masterMotor = new TalonFX(masterID, "hyperbus");
         followerMotor = new TalonFX(followerID, "hyperbus");
-        
+
+        bottomLimitSwitch = new DigitalInput(limSwitchID);
+
         configMotors();
     }
     
@@ -41,6 +47,9 @@ public class Elevator extends SubsystemBase {
      */
     private void configMotors() {
         TalonFXConfiguration config = new TalonFXConfiguration();
+
+        // config
+        //     .SoftwareLimitSwitch.ForwardSoftLimitEnable
                
         masterMotor.getConfigurator().apply(config);
         followerMotor.getConfigurator().apply(config);
