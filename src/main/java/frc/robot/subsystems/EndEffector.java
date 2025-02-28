@@ -6,17 +6,24 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class EndEffector extends SubsystemBase {
     private static final int MOTOR_ID = 16;
+    private static final int TOF1_ID = 21;
+    private static final int TOF2_ID = 22;
+    private static final int TOF3_ID = 23;
     private static final double HOLD_CURRENT = 5.0;
     private static final double TOF_SAMPLE_TIME_MS = 30;
     private static final double CORAL_THRESHOLD = 100;
     private static final double ALGAE_OUT_THRESHOLD = 250;
     private static final double ALGAE_IN_THRESHOLD = 100;
+    private static final double CORAL_EJECTION_SPEED = .5;
+    private static final double ALGAE_INTAKE_CURRENT = 20.0;
+    private static final double ALGAE_EJECTION_CURRENT = 30.0;
 
     private final TalonFX intakeMotor;
 
@@ -27,13 +34,13 @@ public class EndEffector extends SubsystemBase {
     public EndEffector() {        
 
         intakeMotor = new TalonFX(MOTOR_ID, "rio");
-        tof_coral_inner = new TimeOfFlight(21);
-        tof_coral_outer = new TimeOfFlight(22);
-        tof_algae = new TimeOfFlight(23);
+        tof_coral_inner = new TimeOfFlight(TOF1_ID);
+        tof_coral_outer = new TimeOfFlight(TOF2_ID);
+        tof_algae = new TimeOfFlight(TOF3_ID);
 
         configMotor();
         configSensors();
-    }
+    }    
 
     /**
      * Configures the TalonFX settings.
@@ -51,6 +58,9 @@ public class EndEffector extends SubsystemBase {
         intakeMotor.getConfigurator().apply(config);
     }
 
+    /**
+     * Configures subsystem sensor settings.
+     */
     private void configSensors() {
         tof_coral_inner.setRangingMode(TimeOfFlight.RangingMode.Short, TOF_SAMPLE_TIME_MS);
         tof_coral_outer.setRangingMode(TimeOfFlight.RangingMode.Short, TOF_SAMPLE_TIME_MS);
@@ -63,7 +73,8 @@ public class EndEffector extends SubsystemBase {
      * @param range Range threshold in mm for positive detection
      */
     private boolean isDetecting(TimeOfFlight sensor, double range){
-        return sensor.getRange() < range;
+        // TODO: Test if isRangeValid() works as intended
+        return sensor.getRange() < range && sensor.isRangeValid();
     }
 
     /**
@@ -122,6 +133,13 @@ public class EndEffector extends SubsystemBase {
     }
 
     /**
+     * Command to stop the intake.
+     */
+    public Command stopIntakeCommand() {
+        return new InstantCommand(()-> runIntake(0), this);
+    }
+
+    /**
      * Command to run the intake until `tof_coral_outer` detects coral then stops.
      */
     public Command intakeCoralCommand() {
@@ -131,11 +149,28 @@ public class EndEffector extends SubsystemBase {
     }
 
     /**
+     * Command to run the intake until `tof_coral_outer` detects coral then stops.
+     */
+    public Command ejectCoralCommand() {
+        return new RunCommand(() -> runIntake(CORAL_EJECTION_SPEED), this)
+                .until(() -> !isDetecting(tof_coral_outer, CORAL_THRESHOLD)) // Stop when outer detection is true
+                .finallyDo(interrupted -> runIntake(0));
+    }
+
+    /**
      * Command to run the intake until algae is detected close then holds.
      */
     public Command intakeAlgaeCommand() {
-        return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(20), this)
+        return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(ALGAE_INTAKE_CURRENT), this)
                 .until(() -> isHoldingAlgae()).andThen(() -> runIntakeWithTorqueCurrentFOC(HOLD_CURRENT), this);
+    }
+
+    /**
+     * Command to run the intake until algae is ejected then stops.
+     */
+    public Command ejectAlgaeCommand() {
+        return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(-ALGAE_EJECTION_CURRENT), this)
+                .until(() -> !isHoldingAlgae()).andThen(() -> runIntake(0), this);
     }
 
     /**
