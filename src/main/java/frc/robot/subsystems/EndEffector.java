@@ -182,10 +182,16 @@ public class EndEffector extends SubsystemBase {
 
     // ========================= TRIGGERS ======================================
 
+    /**
+     * Trigger to run the intake when coral is detected.
+     */
     public Trigger getCoralInnerDetectionTrigger() {
         return new Trigger(() -> isDetecting(tof_coral_inner, CORAL_THRESHOLD));
     }
 
+    /**
+     * Trigger to run the intake when algae is detected.
+     */
     public Trigger getAlgaeDetectionTrigger() {
         return new Trigger(() -> (isDetecting(tof_algae, ALGAE_OUT_THRESHOLD) && !isDetecting(tof_algae, ALGAE_IN_THRESHOLD)));
     }
