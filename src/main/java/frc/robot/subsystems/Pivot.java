@@ -29,6 +29,10 @@ public class Pivot extends SubsystemBase {
     private static final double kMaxAcceleration = 500.0;
     private static final double kAllowedError = 1.0;
 
+
+    private static final double kReverseSoftLimit = 212;
+    private static final double kForwardSoftLimit = 309;
+
     private static final int PIVOT_MOTOR_ID = 20;
 
     private final SparkMax m_pivot;
@@ -45,17 +49,6 @@ public class Pivot extends SubsystemBase {
         SparkMaxConfig config = new SparkMaxConfig();
 
         config
-            .inverted(false)
-            .idleMode(IdleMode.kBrake);
-        config.encoder
-            .positionConversionFactor(1000)
-            .velocityConversionFactor(1000);
-        // config.closedLoop
-        //     .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-        //     .pid(kP, kI, kD)
-        //     .smartMotionMaxVelocity(kMaxVelocity)
-        //     .smartMotionMaxAccel(kMaxAcceleration)
-        //     .smartMotionAllowedClosedLoopError(kAllowedError);
                 .inverted(false)
                 .idleMode(IdleMode.kBrake);
 
@@ -72,6 +65,11 @@ public class Pivot extends SubsystemBase {
                 .maxAcceleration(kMaxAcceleration)
                 .allowedClosedLoopError(kAllowedError);
 
+        config.softLimit
+                .forwardSoftLimitEnabled(true)
+                .reverseSoftLimitEnabled(true)
+                .reverseSoftLimit(kReverseSoftLimit)
+                .forwardSoftLimit(kForwardSoftLimit);
 
         m_pivot.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
