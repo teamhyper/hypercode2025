@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 
@@ -155,15 +156,17 @@ public class RobotContainer {
         operatorJoystickRight.f1Button().whileTrue(elevator.moveVariableCommand(operatorJoystickRight::getY));
 
         // EndEffector Bindings
-        operatorJoystickLeft.triggerPrimary().onTrue(endEffector.autoIntakeAndHoldCommand(.5));
-        operatorJoystickLeft.triggerSecondary().onTrue(endEffector.autoIntakeAndHoldCommand(.5));
-        operatorJoystickLeft.redButton().whileTrue(endEffector.runIntakeContinuousCommand(-.5));
-        operatorJoystickLeft.thumbButton().onTrue(endEffector.stopIntakeCommand());
+        // operatorJoystickLeft.triggerPrimary().onTrue(endEffector.autoIntakeAndHoldCommand(.5));
+        // operatorJoystickLeft.triggerSecondary().onTrue(endEffector.autoIntakeAndHoldCommand(.5));
+        // operatorJoystickLeft.redButton().whileTrue(endEffector.runIntakeContinuousCommand(-.5));
+        // operatorJoystickLeft.thumbButton().onTrue(endEffector.stopIntakeCommand());
 
-        operatorJoystickRight.triggerPrimary().whileTrue(endEffector.runIntakeContinuousCommand(-.5));
-        operatorJoystickRight.triggerSecondary().whileTrue(endEffector.runIntakeContinuousCommand(-.5));
-        operatorJoystickRight.redButton().whileTrue(endEffector.runIntakeContinuousCommand(.5));
-        operatorJoystickRight.thumbButton().onTrue(endEffector.stopIntakeCommand());
+        // operatorJoystickRight.triggerPrimary().whileTrue(endEffector.runIntakeContinuousCommand(-.5));
+        // operatorJoystickRight.triggerSecondary().whileTrue(endEffector.runIntakeContinuousCommand(-.5));
+        operatorJoystickRight.triggerPrimary().whileTrue(endEffector.runIntakeCommand(.3));
+        operatorJoystickRight.redButton().whileTrue(endEffector.runIntakeCommand(.3));
+        endEffector.getCoralInnerDetectionTrigger().onTrue(endEffector.intakeCoralCommand());
+
 
         // Pivot Bindings
         operatorJoystickLeft.innerHatUp().whileTrue(pivot.runPivotOut(.5));
