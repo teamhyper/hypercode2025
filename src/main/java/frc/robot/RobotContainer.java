@@ -16,18 +16,25 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 
 import frc.robot.generated.TunerConstants;
+import frc.robot.joysticks.ApemHF45Joystick;
+import frc.robot.joysticks.VKBGladiatorJoystick;
 import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
+import frc.robot.subsystems.LEDStrip;
 import frc.robot.subsystems.VisionSubsystem;
+import frc.robot.subsystems.Pivot;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
+    // Slew Rate Limiter
     private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(Constants.xSpeedLimiter);
     private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(Constants.ySpeedLimiter);
     private final SlewRateLimiter rotLimiter    = new SlewRateLimiter(Constants.rotLimiter);
@@ -49,12 +56,19 @@ public class RobotContainer {
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
-    private final CommandXboxController joystick = new CommandXboxController(0);
+    // Controller Initialization
+    ApemHF45Joystick driverJoystickLeft = new ApemHF45Joystick(0);
+    ApemHF45Joystick driverJoystickRight = new ApemHF45Joystick(1);
+    VKBGladiatorJoystick operatorJoystickLeft = new VKBGladiatorJoystick(2);
+    VKBGladiatorJoystick operatorJoystickRight = new VKBGladiatorJoystick(3);
 
+    // Subsytem Initialization
     public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
-
     public final EndEffector endEffector = new EndEffector();
-    public final VisionSubsystem vision = new VisionSubsystem();
+    // public final VisionSubsystem vision = new VisionSubsystem();
+    public final Elevator elevator = new Elevator();
+    public final Pivot pivot = new Pivot();
+    public final LEDStrip ledStrip = new LEDStrip();
 
     private final SendableChooser<Command> autoChooser;
 
@@ -78,26 +92,26 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             drivetrain.applyRequest(() -> {
                 // Check which mode to use
-                boolean isRobotCentric = joystick.rightBumper().getAsBoolean();
+                boolean isRobotCentric = false;
                 // Check if slow mode is active
-                boolean slowMode = joystick.leftBumper().getAsBoolean();
+                boolean slowMode = false;
 
-                boolean trackTag = joystick.y().getAsBoolean();
+                boolean trackTag = driverJoystickRight.rightButton().getAsBoolean() || driverJoystickRight.leftButton().getAsBoolean();
 
                 // Decide on your normal top speed/rotation
                 double speed = MaxSpeed;
                 double angular = MaxAngularRate;
 
                 // If slow mode is on, reduce them
-                if (slowMode) {
-                    speed *= 0.10;    // 10% of normal speed
-                    angular *= 0.10; // 10% of normal turn rate
-                }
+                // if (slowMode) {
+                //     speed *= 0.10;    // 10% of normal speed
+                //     angular *= 0.10; // 10% of normal turn rate
+                // }
 
                 // Read the raw joystick
-                double rawX  = squareInput(joystick.getLeftY())  * speed;   // forward/back (note sign)
-                double rawY  = squareInput(joystick.getLeftX())  * speed;   // strafe
-                double rawRot = squareInput(-joystick.getRightX()) * angular; // rotation
+                double rawX  = squareInput(driverJoystickLeft.getYAxis())  * speed;   // forward/back (note sign)
+                double rawY  = squareInput(driverJoystickLeft.getXAxis())  * speed;   // strafe
+                double rawRot = squareInput(-driverJoystickRight.getZRotation()) * angular; // rotation
                 
                 // Pass through the limiters
                 double vx    = xSpeedLimiter.calculate(rawX);
@@ -108,11 +122,11 @@ public class RobotContainer {
                 SmartDashboard.putBoolean("Slow Mode", slowMode);
                 SmartDashboard.putBoolean("Track Tag", trackTag);
 
-                if (trackTag && vision.getTagIfInView(16).isPresent()) {
-                    // If we are tracking a tag, use the vision subsystem to get the angle to the tag
-                    // and rotate towards it.
-                    omega = -1.0 * vision.getTagIfInView(16).get().getYaw() * omega * .01;
-                }
+                // if (trackTag && vision.getTagIfInView(16).isPresent()) {
+                //     // If we are tracking a tag, use the vision subsystem to get the angle to the tag
+                //     // and rotate towards it.
+                //     omega = -1.0 * vision.getTagIfInView(16).get().getYaw() * omega * .01;
+                // }
                 // Return the proper request
                 if (isRobotCentric) {
                     // Robot-centric mode
@@ -130,23 +144,52 @@ public class RobotContainer {
             })
         );
 
+        // Climber Bindings
+
+        // Elevator Bindings
+        operatorJoystickLeft.outerHatUp().whileTrue(elevator.moveUpCommand(20));
+        operatorJoystickLeft.outerHatDown().whileTrue(elevator.moveDownCommand(20));
+
+        operatorJoystickRight.outerHatUp().whileTrue(elevator.moveUpCommand(20));
+        operatorJoystickRight.outerHatDown().whileTrue(elevator.moveDownCommand(20));
+
+        operatorJoystickRight.f1Button().whileTrue(elevator.moveVariableCommand(operatorJoystickRight::getY));
+
+        // EndEffector Bindings
+        operatorJoystickLeft.triggerPrimary().whileTrue(endEffector.runIntakeCommand(.3));
+        operatorJoystickLeft.redButton().whileTrue(endEffector.runIntakeCommand(-.3));
+        endEffector.getAlgaeDetectionTrigger().onTrue(endEffector.intakeAlgaeCommand());
+        // operatorJoystickLeft.thumbButton().onTrue(endEffector.stopIntakeCommand());
+
+        operatorJoystickRight.triggerPrimary().whileTrue(endEffector.runIntakeCommand(.3));
+        operatorJoystickRight.redButton().whileTrue(endEffector.runIntakeCommand(.3));
+        endEffector.getCoralInnerDetectionTrigger().onTrue(endEffector.intakeCoralCommand());
+
+
+        // Pivot Bindings
+        operatorJoystickLeft.innerHatUp().whileTrue(pivot.runPivotOut(.15));
+        operatorJoystickLeft.innerHatDown().whileTrue(pivot.runPivotIn(.15));
+
+        operatorJoystickRight.innerHatUp().whileTrue(pivot.runPivotOut(.15));
+        operatorJoystickRight.innerHatDown().whileTrue(pivot.runPivotIn(.15));
+
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
-        joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        // joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        // joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        // joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        // joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
         // joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         // Bind A button to run intake at full speed (1.0)
-        joystick.b().whileTrue(endEffector.runIntakeContinuousCommand(.25));
-        joystick.a().whileTrue(endEffector.runIntakeContinuousCommand(-.25));
-        joystick.x().whileTrue(endEffector.holdGamePieceCommand());
+        // joystick.b().whileTrue(endEffector.runIntakeContinuousCommand(.25));
+        // joystick.a().whileTrue(endEffector.runIntakeContinuousCommand(-.25));
+        // joystick.x().whileTrue(endEffector.holdGamePieceCommand());
 
         drivetrain.registerTelemetry(logger::telemeterize);
-        SignalLogger.enableAutoLogging(false);
+        // SignalLogger.enableAutoLogging(false);
     }
 
     public Command getAutonomousCommand() {
