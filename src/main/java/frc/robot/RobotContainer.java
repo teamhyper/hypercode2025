@@ -169,11 +169,11 @@ public class RobotContainer {
 
 
         // Pivot Bindings
-        operatorJoystickLeft.innerHatUp().whileTrue(pivot.runPivotOut(.5));
-        operatorJoystickLeft.innerHatDown().whileTrue(pivot.runPivotIn(.5));
+        operatorJoystickLeft.innerHatUp().whileTrue(pivot.runPivotOut(.15));
+        operatorJoystickLeft.innerHatDown().whileTrue(pivot.runPivotIn(.15));
 
-        operatorJoystickRight.innerHatUp().whileTrue(pivot.runPivotOut(.5));
-        operatorJoystickRight.innerHatDown().whileTrue(pivot.runPivotIn(.5));
+        operatorJoystickRight.innerHatUp().whileTrue(pivot.runPivotOut(.15));
+        operatorJoystickRight.innerHatDown().whileTrue(pivot.runPivotIn(.15));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
