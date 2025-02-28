@@ -36,6 +36,9 @@ public class Elevator extends SubsystemBase {
         configMotors();
     }
     
+    /**
+     * Configures the TalonFX settings.
+     */
     private void configMotors() {
         TalonFXConfiguration config = new TalonFXConfiguration();
                
@@ -45,17 +48,21 @@ public class Elevator extends SubsystemBase {
         // Ensure follower motor runs in the opposite direction of the master motor
         followerMotor.setControl(new Follower(masterMotor.getDeviceID(), true));
     }
-    
+
+    /**
+     * Runs the elevator at a given current output.
+     * @param current Current output in Amps
+     */
     public void runElevator(double current) {
         masterMotor.setControl(new TorqueCurrentFOC(current));
     }
 
+    /**
+     * Runs the elevator at a given current output.
+     * @param output Speed output in duty cycle
+     */
     public void runElevatorVariable(double output) {
         masterMotor.setControl(new DutyCycleOut(output));
-    }
-    
-    public void stop() {
-        masterMotor.set(0);
     }
     
     @Override
@@ -68,15 +75,34 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("currentFollower", currentFollower);
     }
     
+    /**
+     * Command to move the elevator up.
+     * @param current The current to run the elevator in Amps
+     */
     public Command moveUpCommand(double current) {
-        return new RunCommand(() -> runElevator(current), this).finallyDo(interrupted -> stop());
+        return new RunCommand(() -> runElevator(current), this).finallyDo(interrupted -> runElevator(0));
     }
     
+    /**
+     * Command to move the elevator down.
+     * @param current The current to run the elevator in Amps
+     */
     public Command moveDownCommand(double current) {
-        return new RunCommand(() -> runElevator(-current), this).finallyDo(interrupted -> stop());
+        return new RunCommand(() -> runElevator(-current), this).finallyDo(interrupted -> runElevator(0));
     }
 
+    /**
+     * Command to stop the elevator.
+     */
+    public Command stopElevatorCommand() {
+        return new InstantCommand(() -> runElevator(0), this);
+    }
+
+    /**
+     * Command to move the elevator.
+     * @param output The current to run the elevator in Amps
+     */
     public Command moveVariableCommand(DoubleSupplier output) {
-        return new RunCommand(() -> runElevatorVariable(output.getAsDouble()), this).finallyDo(interrupted -> stop());
+        return new RunCommand(() -> runElevatorVariable(output.getAsDouble()), this).finallyDo(interrupted -> runElevator(0));
     }
 }
