@@ -38,7 +38,7 @@ public class Elevator extends SubsystemBase {
     private double lastPosition = 0.0;
 
     public Elevator() {
-        this(MASTER_ID, FOLLOWER_ID, LIM_SWITCH_ID) ;
+        this(MASTER_ID, FOLLOWER_ID, LIM_SWITCH_ID);
     }
     
     public Elevator(int masterID, int followerID, int limSwitchID) {

@@ -23,6 +23,7 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import frc.robot.generated.TunerConstants;
 import frc.robot.joysticks.ApemHF45Joystick;
 import frc.robot.joysticks.VKBGladiatorJoystick;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
@@ -65,6 +66,7 @@ public class RobotContainer {
     // Subsytem Initialization
     public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
     public final EndEffector endEffector = new EndEffector();
+    public final Climber climber = new Climber();
     // public final VisionSubsystem vision = new VisionSubsystem();
     public final Elevator elevator = new Elevator();
     public final Pivot pivot = new Pivot();
@@ -145,6 +147,8 @@ public class RobotContainer {
         );
 
         // Climber Bindings
+        // Pull BACK on the joystick to move the elevator up
+        operatorJoystickLeft.f1Button().whileTrue(climber.rotateClimberVariableCommad(operatorJoystickLeft::getY));
 
         // Elevator Bindings
         operatorJoystickLeft.outerHatUp().whileTrue(elevator.moveUpCommand(20));
