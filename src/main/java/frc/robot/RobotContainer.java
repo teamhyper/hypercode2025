@@ -157,12 +157,11 @@ public class RobotContainer {
         operatorJoystickRight.f1Button().whileTrue(elevator.moveVariableCommand(operatorJoystickRight::getY));
 
         // EndEffector Bindings
-        // operatorJoystickLeft.triggerPrimary().whileTrue(endEffector.runIntakeCommand(.3));
+        operatorJoystickLeft.triggerPrimary().and(endEffector.getAlgaeDetectionTrigger()).onTrue(endEffector.intakeAlgaeCommand());
         operatorJoystickLeft.redButton().onTrue(endEffector.ejectCoralCommand());
-        endEffector.getAlgaeDetectionTrigger().onTrue(endEffector.intakeAlgaeCommand());
         operatorJoystickLeft.thumbButton().onTrue(endEffector.stopIntakeCommand());
 
-        // operatorJoystickRight.triggerPrimary().whileTrue(endEffector.runIntakeCommand(.3));
+        operatorJoystickRight.triggerPrimary().whileTrue(endEffector.runIntakeCommand(.3));
         operatorJoystickRight.redButton().onTrue(endEffector.ejectCoralCommand());
         endEffector.getCoralInnerDetectionTrigger().onTrue(endEffector.intakeCoralCommand());
         operatorJoystickLeft.thumbButton().onTrue(endEffector.stopIntakeCommand());
