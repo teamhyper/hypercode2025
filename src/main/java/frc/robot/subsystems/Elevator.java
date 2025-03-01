@@ -10,6 +10,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -32,6 +33,10 @@ public class Elevator extends SubsystemBase {
 
     private final DigitalInput bottomLimitSwitch;
 
+    private final MotionMagicTorqueCurrentFOC motionMagicControl;
+
+    private double lastPosition = 0.0;
+
     public Elevator() {
         this(MASTER_ID, FOLLOWER_ID, LIM_SWITCH_ID) ;
     }
@@ -41,6 +46,7 @@ public class Elevator extends SubsystemBase {
         followerMotor = new TalonFX(followerID, "hyperbus");
 
         bottomLimitSwitch = new DigitalInput(limSwitchID);
+        motionMagicControl = new MotionMagicTorqueCurrentFOC(0);
 
         configMotors();
     }
@@ -114,6 +120,29 @@ public class Elevator extends SubsystemBase {
     public void runElevatorVariable(double output) {
         masterMotor.setControl(new DutyCycleOut(output));
     }
+
+    /**
+     * Holds the elevator at its current position.
+     */
+    public void holdPosition() {
+        motionMagicControl.withPosition(lastPosition);
+        masterMotor.setControl(motionMagicControl);
+    }
+
+    /**
+     * Moves the elevator to a specified position using Motion Magic with Torque FOC.
+     * @param targetPosition Target position in motor shaft rotations.
+     */
+    public void setElevatorPosition(double targetPosition) {
+        // Ensure target is within soft limits
+        targetPosition = Math.max(BOTTOM_POSITION, Math.min(TOP_POSITION, targetPosition));
+
+        // Apply Motion Magic control with FOC
+        motionMagicControl.withPosition(targetPosition);
+        masterMotor.setControl(motionMagicControl);
+
+        lastPosition = targetPosition;
+    }
     
     @Override
     public void periodic() {
@@ -155,4 +184,20 @@ public class Elevator extends SubsystemBase {
     public Command moveVariableCommand(DoubleSupplier output) {
         return new RunCommand(() -> runElevatorVariable(output.getAsDouble()), this).finallyDo(interrupted -> runElevator(0));
     }
+
+    /**
+     * Command to move the elevator to the set position.
+     * @param position The position to move the elevator to in rotations
+     */
+    public Command moveToPositionCommand(double position) {
+        return new InstantCommand(() -> setElevatorPosition(position), this);
+    }
+
+    /**
+     * Command to hold the elevator at the set position.
+     */
+    public Command holdElevatorPositionCommand() {
+        return new RunCommand(() -> holdPosition(), this);
+    }
+
 }
