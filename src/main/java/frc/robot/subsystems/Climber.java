@@ -15,6 +15,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -34,6 +35,8 @@ public class Climber extends SubsystemBase {
     private final CANcoder e_climber;
     private final Servo s_ratchet;
     private final Servo s_ramp;
+
+    private double ratchetLastPosition;
 
     public Climber() {
         this(CLIMBER_ID, CLIMBER_ABS_ENC_ID);
@@ -80,7 +83,14 @@ public class Climber extends SubsystemBase {
      */
     private double getClimberAngle() {
         return e_climber.getPosition().getValueAsDouble() - CLIMBER_ENCODER_OFFSET; // TODO: fix
-    }    
+    }
+
+    /**
+     * Returns boolean of last commanded ratchet position.
+     */
+    private boolean getRatchetLocked() {
+        return s_ratchet.get() == RATCHET_LOCK_POSITION;
+    }
 
     /**
      * Runs the climber at a given current output.
@@ -104,6 +114,7 @@ public class Climber extends SubsystemBase {
      */
     public void setRatchet(double position) {
         s_ratchet.set(position);
+        ratchetLastPosition = position;
     }
 
     @Override
@@ -111,7 +122,8 @@ public class Climber extends SubsystemBase {
 
       SmartDashboard.putNumber("Climber Angle", getClimberAngle());
       SmartDashboard.putNumber("Climber Current Output", m_climber.getTorqueCurrent().getValueAsDouble());
-      SmartDashboard.putBoolean("Ratchet Locked", false)
+
+      SmartDashboard.putBoolean("Ratchet Locked", getRatchetLocked());
     }
 
     /**
@@ -128,6 +140,18 @@ public class Climber extends SubsystemBase {
      */
     public Command rotateClimberVariableCommad(DoubleSupplier output) {
         return new RunCommand(() -> runClimberVariable(output.getAsDouble()), this).finallyDo(interrupted -> runClimberVariable(0));
+    }
+
+    // may need to move rachets to their own subsystem
+    /**
+     * Command to lock the ratchet.
+     */
+    public Command lockRatchetCommand() {
+        return new InstantCommand(() -> setRatchet(RATCHET_LOCK_POSITION), this);
+    }
+
+    public Command unlockRatchetCommand() {
+        return new InstantCommand(() -> setRatchet(RATCHET_UNLOCK_POSITION), this);
     }
 
     
