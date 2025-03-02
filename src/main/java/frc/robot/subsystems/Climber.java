@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import java.util.function.DoubleSupplier;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
@@ -56,10 +58,16 @@ public class Climber extends SubsystemBase {
      */
     private void configSensors() {
         
+        CANcoderConfiguration config = new CANcoderConfiguration();
+        MagnetSensorConfigs magnetConfig = new MagnetSensorConfigs();
+
+        magnetConfig
+        
     }
 
     private double getClimberAngle() {
-        return e_climber.getAbsolutePosition().getValueAsDouble() - CLIMBER_ENCODER_OFFSET;
+        // return e_climber.getAbsolutePosition().getValueAsDouble() - CLIMBER_ENCODER_OFFSET;
+        return e_climber.getPosition().getValueAsDouble() - CLIMBER_ENCODER_OFFSET;
     }    
 
     /**
