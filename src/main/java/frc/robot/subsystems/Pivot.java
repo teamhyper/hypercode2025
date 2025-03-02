@@ -51,13 +51,14 @@ public class Pivot extends SubsystemBase {
                 .inverted(true)
                 .positionConversionFactor(360);
 
+        // TODO: tune PID values
         config.closedLoop
                 .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
                 .pidf(kP, kI, kD, kFF)
                 .minOutput(kMinOutput)
                 .maxOutput(kMaxOutput);
 
-
+        // TODO: tune maxMotion values
         config.closedLoop.maxMotion
                 .maxVelocity(kMaxVelocity)
                 .maxAcceleration(kMaxAcceleration)
