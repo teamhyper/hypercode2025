@@ -30,6 +30,8 @@ import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.LEDStrip;
 import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.Pivot;
+import frc.robot.subsystems.Ramp;
+import frc.robot.subsystems.Ratchet;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -70,6 +72,8 @@ public class RobotContainer {
     // public final VisionSubsystem vision = new VisionSubsystem();
     public final Elevator elevator = new Elevator();
     public final Pivot pivot = new Pivot();
+    public final Ratchet ratchet = new Ratchet();
+    public final Ramp ramp = new Ramp();
     public final LEDStrip ledStrip = new LEDStrip();
 
     private final SendableChooser<Command> autoChooser;
