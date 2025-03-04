@@ -23,7 +23,10 @@ public class Climber extends SubsystemBase {
     
     private static final int CLIMBER_ID = 19;
     private static final int CLIMBER_ABS_ENC_ID = 24;
+
     private static final double CLIMBER_ENCODER_OFFSET = 10; // TODO: set when calculated
+    private static final double PREPARE_CURRENT = 30.0;
+    private static final double CLIMB_CURRENT = 80.0;
 
     private final TalonFX m_climber;
     private final CANcoder e_climber;
@@ -111,4 +114,26 @@ public class Climber extends SubsystemBase {
     public Command rotateClimberVariableCommad(DoubleSupplier output) {
         return new RunCommand(() -> runClimberVariable(output.getAsDouble()), this).finallyDo(interrupted -> runClimberVariable(0));
     }
+
+    /**
+     * Command to stop the climber.
+     */
+    public Command stopClimberCommand() {
+        return new InstantCommand(() -> runClimber(0), this);
+    }
+
+    /**
+     * Command to move the climber to climbing position.
+     */
+    public Command rotateClimberOutCommand() {
+        return rotateClimberCommand(-PREPARE_CURRENT).until(() -> getClimberAngle() >= 180).andThen(stopClimberCommand());
+    }
+
+    /**
+     * Command to move the climber to lifting position.
+     */
+    public Command rotateClimberInCommand() {
+        return rotateClimberCommand(CLIMB_CURRENT).until(() -> getClimberAngle() <= 100).andThen(stopClimberCommand());
+    }
+
 }
