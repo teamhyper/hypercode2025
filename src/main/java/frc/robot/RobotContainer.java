@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -92,10 +93,8 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
-        // Note that X is defined as forward according to WPILib convention,
-        // and Y is defined as to the left according to WPILib convention.
-        // In your RobotContainer class, somewhere in configureBindings()
 
+        // Drivetrain Bindings
         drivetrain.setDefaultCommand(
             drivetrain.applyRequest(() -> {
                 // Check which mode to use
@@ -155,6 +154,16 @@ public class RobotContainer {
         // Pull BACK on the joystick to move the elevator up
         operatorJoystickLeft.f1Button().whileTrue(climber.rotateClimberVariableCommad(operatorJoystickLeft::getY));
 
+        operatorJoystickLeft.f2Button().onTrue(
+            new ParallelCommandGroup(ramp.detachRampCommand(), ratchet.unlockRatchetCommand())
+            .andThen(climber.rotateClimberOutCommand()));
+        operatorJoystickLeft.f3Button().onTrue(climber.rotateClimberInCommand());
+
+        operatorJoystickRight.f2Button().onTrue(
+            new ParallelCommandGroup(ramp.detachRampCommand(), ratchet.unlockRatchetCommand())
+            .andThen(climber.rotateClimberOutCommand()));
+        operatorJoystickRight.f3Button().onTrue(ratchet.lockRatchetCommand().andThen(climber.rotateClimberInCommand()));
+
         // Elevator Bindings
         operatorJoystickLeft.outerHatUp().whileTrue(elevator.moveUpCommand(20));
         operatorJoystickLeft.outerHatDown().whileTrue(elevator.moveDownCommand(20));
@@ -166,15 +175,14 @@ public class RobotContainer {
         operatorJoystickRight.f1Button().whileTrue(elevator.moveVariableCommand(operatorJoystickRight::getY));
 
         // EndEffector Bindings
-        operatorJoystickLeft.triggerPrimary().and(endEffector.getAlgaeDetectionTrigger()).onTrue(endEffector.intakeAlgaeCommand());
-        operatorJoystickLeft.redButton().onTrue(endEffector.ejectAlgaeCommand());
+        operatorJoystickLeft.triggerPrimary().onTrue(endEffector.ejectAlgaeCommand());
+        operatorJoystickLeft.redButton().onTrue(endEffector.intakeAlgaeAndHoldCommand());        
         operatorJoystickLeft.thumbButton().onTrue(endEffector.stopIntakeCommand());
-
-        operatorJoystickRight.triggerPrimary().whileTrue(endEffector.runIntakeCommand(.3));
-        operatorJoystickRight.redButton().onTrue(endEffector.ejectCoralCommand());
+        
+        operatorJoystickRight.triggerPrimary().onTrue(endEffector.ejectCoralCommand());
+        operatorJoystickRight.redButton().whileTrue(endEffector.runIntakeCommand(.3));
         endEffector.getCoralInnerDetectionTrigger().onTrue(endEffector.intakeCoralCommand());
         operatorJoystickLeft.thumbButton().onTrue(endEffector.stopIntakeCommand());
-
 
         // Pivot Bindings
         operatorJoystickLeft.innerHatUp().whileTrue(pivot.runPivotOut(.15));
@@ -182,6 +190,10 @@ public class RobotContainer {
 
         operatorJoystickRight.innerHatUp().whileTrue(pivot.runPivotOut(.15));
         operatorJoystickRight.innerHatDown().whileTrue(pivot.runPivotIn(.15));
+
+        // Ramp Bindings
+
+        // Ratchet Bindings
 
         // LED Bindings
         new Trigger(RobotState::isEnabled)
