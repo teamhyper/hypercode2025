@@ -1,8 +1,9 @@
 package frc.robot.subsystems;
 
+import java.time.Instant;
+
 import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -10,6 +11,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Ramp extends SubsystemBase{
 
     private static final int RAMP_PWM_ID = 2;
+
+    private static final double SERVO_SPEED = 1.0;
+    private static final double RUN_TIME = 3.0;
 
     private final Servo s_ramp;
     private final Timer timer;
@@ -66,6 +70,13 @@ public class Ramp extends SubsystemBase{
                 timer.stop();
             }
         }.withTimeout(duration); // Ensure timeout safety
+    }
+
+    /**
+     * Command to detach ramp.
+     */
+    public Command detachRampCommand() {
+        return runServoForTime(SERVO_SPEED, RUN_TIME);
     }
 
 }
