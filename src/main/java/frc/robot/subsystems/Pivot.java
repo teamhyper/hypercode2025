@@ -104,6 +104,12 @@ public class Pivot extends SubsystemBase {
         pidController.setReference(position, SparkMax.ControlType.kMAXMotionPositionControl);
     }
 
+    /**
+     * sets the PID setpoint to the current position and then runs continuously so the closed loop PID on
+     * the SparkMax holds to that position
+     *
+     * @return command that sets the PID setpoint to the current position and holds
+     */
     public Command setPositionAndHoldCommand() {
         return setTargetPositionCommand().andThen(
                 new RunCommand(() -> {
