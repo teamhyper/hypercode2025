@@ -27,6 +27,14 @@ public class Elevator extends SubsystemBase {
 
     private static final double BOTTOM_POSITION = 0.0;
     private static final double TOP_POSITION = 100000.0;
+
+    private static final double POSITION_1 = 10;
+    private static final double POSITION_2 = 20;
+    private static final double POSITION_3 = 30;
+    private static final double POSITION_4 = 40;
+    private static final double POSITION_5 = 50;
+
+
     
     private final TalonFX masterMotor;
     private final TalonFX followerMotor;

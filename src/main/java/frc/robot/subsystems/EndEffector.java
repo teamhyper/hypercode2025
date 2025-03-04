@@ -23,7 +23,7 @@ public class EndEffector extends SubsystemBase {
     private static final double ALGAE_IN_THRESHOLD = 100;
     private static final double CORAL_EJECTION_SPEED = .5;
     private static final double ALGAE_INTAKE_CURRENT = 20.0;
-    private static final double ALGAE_EJECTION_CURRENT = 30.0;
+    private static final double ALGAE_EJECTION_CURRENT = 40.0;
 
     private final TalonFX intakeMotor;
 

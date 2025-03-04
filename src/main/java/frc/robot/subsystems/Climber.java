@@ -33,7 +33,7 @@ public class Climber extends SubsystemBase {
     }
 
     public Climber(int climberID, int climberEncoderID) {
-        m_climber = new TalonFX(climberID);
+        m_climber = new TalonFX(climberID, "hyperbus");
         e_climber = new CANcoder(climberEncoderID, "hyperbus");
 
         configMotors();
