@@ -13,7 +13,7 @@ public class Ramp extends SubsystemBase{
     private static final int RAMP_PWM_ID = 2;
 
     private static final double SERVO_SPEED = 1.0;
-    private static final double RUN_TIME = 3.0;
+    private static final double RUN_TIME = 2.0;
 
     private final Servo s_ramp;
     private final Timer timer;
@@ -66,7 +66,7 @@ public class Ramp extends SubsystemBase{
 
             @Override
             public void end(boolean interrupted) {
-                runServo(0.0); // Stop the servo
+                runServo(0.5); // Stop the servo
                 timer.stop();
             }
         }.withTimeout(duration); // Ensure timeout safety

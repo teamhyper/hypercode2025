@@ -41,9 +41,9 @@
           },
           {
             "title": "Algae Distance",
-            "x": 512.0,
-            "y": 640.0,
-            "width": 256.0,
+            "x": 256.0,
+            "y": 512.0,
+            "width": 768.0,
             "height": 256.0,
             "type": "Graph",
             "properties": {
@@ -57,9 +57,9 @@
           },
           {
             "title": "Coral Inner Distance",
-            "x": 0.0,
-            "y": 640.0,
-            "width": 256.0,
+            "x": 256.0,
+            "y": 0.0,
+            "width": 768.0,
             "height": 256.0,
             "type": "Graph",
             "properties": {
@@ -74,8 +74,8 @@
           {
             "title": "Coral Outer Distance",
             "x": 256.0,
-            "y": 640.0,
-            "width": 256.0,
+            "y": 256.0,
+            "width": 768.0,
             "height": 256.0,
             "type": "Graph",
             "properties": {
@@ -90,9 +90,9 @@
           {
             "title": "Coral Inner",
             "x": 0.0,
-            "y": 512.0,
+            "y": 0.0,
             "width": 256.0,
-            "height": 128.0,
+            "height": 256.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/Coral Inner",
@@ -106,10 +106,10 @@
           },
           {
             "title": "Coral Outer",
-            "x": 256.0,
-            "y": 512.0,
+            "x": 0.0,
+            "y": 256.0,
             "width": 256.0,
-            "height": 128.0,
+            "height": 256.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/Coral Outer",
@@ -123,10 +123,10 @@
           },
           {
             "title": "Algae Present",
-            "x": 512.0,
+            "x": 0.0,
             "y": 512.0,
             "width": 256.0,
-            "height": 128.0,
+            "height": 256.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/Algae Present",
@@ -140,7 +140,7 @@
           },
           {
             "title": "EndEffector Current",
-            "x": 768.0,
+            "x": 1152.0,
             "y": 512.0,
             "width": 768.0,
             "height": 384.0,
@@ -156,8 +156,8 @@
           },
           {
             "title": "isCurrentThresholdReached",
-            "x": 1024.0,
-            "y": 256.0,
+            "x": 640.0,
+            "y": 768.0,
             "width": 256.0,
             "height": 256.0,
             "type": "Boolean Box",
@@ -173,13 +173,30 @@
           },
           {
             "title": "isHolding",
-            "x": 768.0,
-            "y": 256.0,
+            "x": 0.0,
+            "y": 768.0,
             "width": 256.0,
             "height": 256.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/isHolding",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Ratchet Locked",
+            "x": 128.0,
+            "y": 1152.0,
+            "width": 384.0,
+            "height": 384.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Ratchet Locked",
               "period": 0.06,
               "data_type": "boolean",
               "true_color": 4283215696,
