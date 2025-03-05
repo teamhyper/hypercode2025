@@ -16,16 +16,25 @@ public class EndEffector extends SubsystemBase {
     private static final int TOF1_ID = 21;
     private static final int TOF2_ID = 22;
     private static final int TOF3_ID = 23;
-    private static final double HOLD_CURRENT = 5.0;
+
+    private static final double PEAK_FWD_TORQUE_CURRENT = 80;
+    private static final double PEAK_REV_TORQUE_CURRENT = 80;
+    
     private static final double TOF_SAMPLE_TIME_MS = 30;
-    private static final double CORAL_THRESHOLD = 100;
+    private static final double CORAL_THRESHOLD = 100;    
     private static final double ALGAE_OUT_THRESHOLD = 250;
     private static final double ALGAE_IN_THRESHOLD = 100;
+
+    private static final double CORAL_INTAKE_SPEED = .3;
     private static final double CORAL_EJECTION_SPEED = .5;
+    
     private static final double ALGAE_INTAKE_CURRENT = 20.0;
-    private static final double ALGAE_EJECTION_CURRENT = 30.0;
+    private static final double ALGAE_INTAKE_CURRENT_LIMIT = 20.0;
+    private static final double ALGAE_EJECTION_CURRENT = 80.0;    
+    private static final double HOLD_CURRENT = 5.0;
 
     private final TalonFX intakeMotor;
+    private final TorqueCurrentFOC torqueCurrentFOC;
 
     private final TimeOfFlight tof_coral_inner;
     private final TimeOfFlight tof_coral_outer;
@@ -34,6 +43,8 @@ public class EndEffector extends SubsystemBase {
     public EndEffector() {        
 
         intakeMotor = new TalonFX(MOTOR_ID, "rio");
+        torqueCurrentFOC = new TorqueCurrentFOC(0);
+
         tof_coral_inner = new TimeOfFlight(TOF1_ID);
         tof_coral_outer = new TimeOfFlight(TOF2_ID);
         tof_algae = new TimeOfFlight(TOF3_ID);
@@ -48,12 +59,8 @@ public class EndEffector extends SubsystemBase {
     private void configMotor() {
         TalonFXConfiguration config = new TalonFXConfiguration();
 
-        config.Slot0.kP = 0.1; // Example PID values, adjust as needed
-        config.Slot0.kI = 0.0;
-        config.Slot0.kD = 0.0;
-
-        config.TorqueCurrent.PeakForwardTorqueCurrent = 30;
-        config.TorqueCurrent.PeakReverseTorqueCurrent = -30;  // Example peak torque current limit
+        config.TorqueCurrent.PeakForwardTorqueCurrent = PEAK_FWD_TORQUE_CURRENT;
+        config.TorqueCurrent.PeakReverseTorqueCurrent = -PEAK_REV_TORQUE_CURRENT;
         
         intakeMotor.getConfigurator().apply(config);
     }
@@ -101,14 +108,14 @@ public class EndEffector extends SubsystemBase {
      * @param current The current to run the intake in Amps
      */
     public void runIntakeWithTorqueCurrentFOC(double current) {
-        intakeMotor.setControl(new TorqueCurrentFOC(current));
+        intakeMotor.setControl(torqueCurrentFOC.withOutput(current));
     }
 
     @Override
     public void periodic() {
 
         // Motor Metrics
-        SmartDashboard.putNumber("EndEffector Current", intakeMotor.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("EndEffector Current", intakeMotor.getTorqueCurrent().getValueAsDouble());
 
         // Coral Detection Metrics
         SmartDashboard.putNumber("Coral Inner Distance", tof_coral_inner.getRange());
@@ -143,7 +150,7 @@ public class EndEffector extends SubsystemBase {
      * Command to run the intake until `tof_coral_outer` detects coral then stops.
      */
     public Command intakeCoralCommand() {
-        return new RunCommand(() -> runIntake(0.5), this)
+        return new InstantCommand(() -> runIntake(CORAL_INTAKE_SPEED), this)
                 .until(() -> isDetecting(tof_coral_outer, CORAL_THRESHOLD)) // Stop when outer detection is true
                 .finallyDo(interrupted -> runIntake(0));
     }
@@ -158,11 +165,26 @@ public class EndEffector extends SubsystemBase {
     }
 
     /**
-     * Command to run the intake until algae is detected close then holds.
+     * Command to run the intake until current limit is hit then stops.
      */
-    public Command intakeAlgaeCommand() {
+    public Command intakeAlgaeCurrentLimitCommand() {
         return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(ALGAE_INTAKE_CURRENT), this)
-                .until(() -> isHoldingAlgae()).andThen(() -> runIntakeWithTorqueCurrentFOC(HOLD_CURRENT), this);
+            .until(() -> intakeMotor.getStatorCurrent().getValueAsDouble() >= ALGAE_INTAKE_CURRENT_LIMIT)
+            .finallyDo(interrupted -> runIntake(0));
+    }
+
+    /**
+     * Command to run the intake at holding current.
+     */
+    public Command holdAlgaeCommand() {
+        return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(HOLD_CURRENT), this);
+    }
+
+    /**
+     * Command to intake algae then hold.
+     */
+    public Command intakeAlgaeAndHoldCommand() {
+        return intakeAlgaeCurrentLimitCommand().andThen(holdAlgaeCommand());
     }
 
     /**
@@ -171,14 +193,7 @@ public class EndEffector extends SubsystemBase {
     public Command ejectAlgaeCommand() {
         return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(-ALGAE_EJECTION_CURRENT), this)
                 .until(() -> !isHoldingAlgae()).andThen(() -> runIntake(0), this);
-    }
-
-    /**
-     * Continuous command to run the intake at a given speed until interrupted.
-     */
-    public Command runIntakeContinuousCommand(double speed) {
-        return new RunCommand(() -> runIntake(speed), this);
-    }
+    }    
 
     // ========================= TRIGGERS ======================================
 

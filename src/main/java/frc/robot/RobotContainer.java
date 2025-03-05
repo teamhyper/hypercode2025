@@ -12,23 +12,28 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.math.filter.SlewRateLimiter;
-
+import frc.robot.commands.ledCommands.BlinkLEDCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.joysticks.ApemHF45Joystick;
 import frc.robot.joysticks.VKBGladiatorJoystick;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.LEDStrip;
 import frc.robot.subsystems.VisionSubsystem;
 import frc.robot.subsystems.Pivot;
+import frc.robot.subsystems.Ramp;
+import frc.robot.subsystems.Ratchet;
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -65,9 +70,12 @@ public class RobotContainer {
     // Subsytem Initialization
     public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
     public final EndEffector endEffector = new EndEffector();
+    public final Climber climber = new Climber();
     // public final VisionSubsystem vision = new VisionSubsystem();
     public final Elevator elevator = new Elevator();
     public final Pivot pivot = new Pivot();
+    public final Ratchet ratchet = new Ratchet();
+    public final Ramp ramp = new Ramp();
     public final LEDStrip ledStrip = new LEDStrip();
 
     private final SendableChooser<Command> autoChooser;
@@ -85,10 +93,8 @@ public class RobotContainer {
     }
 
     private void configureBindings() {
-        // Note that X is defined as forward according to WPILib convention,
-        // and Y is defined as to the left according to WPILib convention.
-        // In your RobotContainer class, somewhere in configureBindings()
 
+        // Drivetrain Bindings
         drivetrain.setDefaultCommand(
             drivetrain.applyRequest(() -> {
                 // Check which mode to use
@@ -145,6 +151,18 @@ public class RobotContainer {
         );
 
         // Climber Bindings
+        // Pull BACK on the joystick to move the elevator up
+        operatorJoystickLeft.f1Button().whileTrue(climber.rotateClimberVariableCommad(operatorJoystickLeft::getY));
+
+        operatorJoystickLeft.f2Button().onTrue(
+            new ParallelCommandGroup(ramp.detachRampCommand(), ratchet.unlockRatchetCommand())
+            .andThen(climber.rotateClimberOutCommand()));
+        operatorJoystickLeft.f3Button().onTrue(climber.rotateClimberInCommand());
+
+        operatorJoystickRight.f2Button().onTrue(
+            new ParallelCommandGroup(ramp.detachRampCommand(), ratchet.unlockRatchetCommand())
+            .andThen(climber.rotateClimberOutCommand()));
+        operatorJoystickRight.f3Button().onTrue(ratchet.lockRatchetCommand().andThen(climber.rotateClimberInCommand()));
 
         // Elevator Bindings
         operatorJoystickLeft.outerHatUp().whileTrue(elevator.moveUpCommand(20));
@@ -157,16 +175,14 @@ public class RobotContainer {
         operatorJoystickRight.f1Button().whileTrue(elevator.moveVariableCommand(operatorJoystickRight::getY));
 
         // EndEffector Bindings
-        // operatorJoystickLeft.triggerPrimary().whileTrue(endEffector.runIntakeCommand(.3));
-        operatorJoystickLeft.redButton().onTrue(endEffector.ejectCoralCommand());
-        endEffector.getAlgaeDetectionTrigger().onTrue(endEffector.intakeAlgaeCommand());
+        operatorJoystickLeft.triggerPrimary().onTrue(endEffector.ejectAlgaeCommand());
+        operatorJoystickLeft.redButton().onTrue(endEffector.intakeAlgaeAndHoldCommand());        
         operatorJoystickLeft.thumbButton().onTrue(endEffector.stopIntakeCommand());
-
-        // operatorJoystickRight.triggerPrimary().whileTrue(endEffector.runIntakeCommand(.3));
-        operatorJoystickRight.redButton().onTrue(endEffector.ejectCoralCommand());
+        
+        operatorJoystickRight.triggerPrimary().onTrue(endEffector.ejectCoralCommand());
+        operatorJoystickRight.redButton().whileTrue(endEffector.runIntakeCommand(.3));
         endEffector.getCoralInnerDetectionTrigger().onTrue(endEffector.intakeCoralCommand());
         operatorJoystickLeft.thumbButton().onTrue(endEffector.stopIntakeCommand());
-
 
         // Pivot Bindings
         operatorJoystickLeft.innerHatUp().whileTrue(pivot.runPivotOut(.15));
@@ -174,6 +190,14 @@ public class RobotContainer {
 
         operatorJoystickRight.innerHatUp().whileTrue(pivot.runPivotOut(.15));
         operatorJoystickRight.innerHatDown().whileTrue(pivot.runPivotIn(.15));
+
+        // Ramp Bindings
+
+        // Ratchet Bindings
+
+        // LED Bindings
+        new Trigger(RobotState::isEnabled)
+        .onTrue(new BlinkLEDCommand(ledStrip));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
