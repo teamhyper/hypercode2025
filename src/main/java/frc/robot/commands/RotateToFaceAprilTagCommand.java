@@ -1,9 +1,9 @@
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.VisionSubsystem;
-import frc.robot.subsystems.Drivetrain;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.VisionSubsystem;
 
 /*
  * A command that rotates the robot to face a specific AprilTag.
