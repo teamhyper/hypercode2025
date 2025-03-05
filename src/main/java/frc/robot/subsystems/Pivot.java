@@ -20,7 +20,7 @@ public class Pivot extends SubsystemBase {
     // TODO: get positions
     // SCORE_CORAL_POSITION_OFFSET is a guesstimate of the midpoint (45deg) between the ALL_IN and ALL_OUT positions
     public static final double COLLECT_CORAL_POSITION_OFFSET = 0.0, COLLECT_ALGAE_POSITION_OFFSET = 0.0, SCORE_ALGAE_POSITION_OFFSET = 0.0, SCORE_CORAL_POSITION_OFFSET = 48.0;
-    private static final double ALL_IN_POSITION = 212.5, ALL_OUT_POSITION = 308.5;
+    public static final double ALL_IN_POSITION = 212.5, ALL_OUT_POSITION = 308.5;
     // PID coefficients
     // from REV example p = 0.1, i = 1e-4, d = 1
     private static final double kP = 0.0075, kI = 0.0, kD = 0.0;
