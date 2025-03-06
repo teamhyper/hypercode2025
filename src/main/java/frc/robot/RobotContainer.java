@@ -156,6 +156,8 @@ public class RobotContainer {
         //     .andThen(climber.rotateClimberOutCommand()));
         // operatorJoystickRight.f3Button().onTrue(ratchet.lockRatchetCommand().andThen(climber.rotateClimberInCommand()));
 
+        operatorJoystickLeft.f1Button().whileTrue(climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));
+
         // Elevator Bindings
         operatorJoystickRight.outerHatUp().whileTrue(elevator.moveUpCommand(20)); //TODO set this to pass position jog up/down 1 inch
         operatorJoystickRight.outerHatDown().whileTrue(elevator.moveDownCommand(20));
