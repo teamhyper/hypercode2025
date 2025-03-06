@@ -151,10 +151,11 @@ public class RobotContainer {
         );
 
         // Climber Bindings
-        // operatorJoystickRight.f2Button().onTrue(
-        //     new ParallelCommandGroup(ramp.detachRampCommand(), ratchet.unlockRatchetCommand())
-        //     .andThen(climber.rotateClimberOutCommand()));
-        // operatorJoystickRight.f3Button().onTrue(ratchet.lockRatchetCommand().andThen(climber.rotateClimberInCommand()));
+        operatorJoystickRight.f2Button().onTrue(
+            new ParallelCommandGroup(ramp.detachRampCommand(), ratchet.unlockRatchetCommand())
+            .andThen(climber.rotateClimberOutCommand()));
+        operatorJoystickRight.f3Button().onTrue(ratchet.lockRatchetCommand()
+            .andThen(climber.rotateClimberInCommand()));
 
         operatorJoystickLeft.f1Button().whileTrue(climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));
 
