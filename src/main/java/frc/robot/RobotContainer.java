@@ -4,14 +4,10 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
-
-import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -20,57 +16,17 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import frc.robot.commands.ledCommands.BlinkLEDCommand;
 import frc.robot.commands.ledCommands.SetLEDPatternCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.joysticks.ApemHF45Joystick;
 import frc.robot.joysticks.VKBGladiatorJoystick;
-import frc.robot.subsystems.Climber;
-import frc.robot.subsystems.Drivetrain;
-import frc.robot.subsystems.Elevator;
-import frc.robot.subsystems.EndEffector;
-import frc.robot.subsystems.LEDStrip;
-import frc.robot.subsystems.VisionSubsystem;
-import frc.robot.subsystems.Pivot;
-import frc.robot.subsystems.Ramp;
-import frc.robot.subsystems.Ratchet;
+import frc.robot.subsystems.*;
+
+import static edu.wpi.first.units.Units.*;
 
 public class RobotContainer {
-    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
-    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-
-    // Slew Rate Limiter
-    private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(Constants.xSpeedLimiter);
-    private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(Constants.ySpeedLimiter);
-    private final SlewRateLimiter rotLimiter    = new SlewRateLimiter(Constants.rotLimiter);
-
-    /* Setting up bindings for necessary control of the swerve drive platform */
-    // Field-Centric request
-    private final SwerveRequest.FieldCentric fieldCentricDrive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.01).withRotationalDeadband(MaxAngularRate * 0.01) // Add a 1% deadband
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
-
-    // Robot-Centric request
-    private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
-            .withDeadband(MaxSpeed * 0.01)
-            .withRotationalDeadband(MaxAngularRate * 0.01)
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-
-    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
-
-    private final Telemetry logger = new Telemetry(MaxSpeed);
-
-    // Controller Initialization
-    ApemHF45Joystick driverJoystickLeft = new ApemHF45Joystick(0);
-    ApemHF45Joystick driverJoystickRight = new ApemHF45Joystick(1);
-    VKBGladiatorJoystick operatorJoystickLeft = new VKBGladiatorJoystick(2);
-    VKBGladiatorJoystick operatorJoystickRight = new VKBGladiatorJoystick(3);
-
     // Subsytem Initialization
     public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
     public final EndEffector endEffector = new EndEffector();
@@ -81,8 +37,31 @@ public class RobotContainer {
     public final Ratchet ratchet = new Ratchet();
     public final Ramp ramp = new Ramp();
     public final LEDStrip ledStrip = new LEDStrip();
-
+    // Slew Rate Limiter
+    private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(Constants.xSpeedLimiter);
+    private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(Constants.ySpeedLimiter);
+    private final SlewRateLimiter rotLimiter = new SlewRateLimiter(Constants.rotLimiter);
+    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
     private final SendableChooser<Command> autoChooser;
+    // Controller Initialization
+    ApemHF45Joystick driverJoystickLeft = new ApemHF45Joystick(0);
+    ApemHF45Joystick driverJoystickRight = new ApemHF45Joystick(1);
+    VKBGladiatorJoystick operatorJoystickLeft = new VKBGladiatorJoystick(2);
+    VKBGladiatorJoystick operatorJoystickRight = new VKBGladiatorJoystick(3);
+    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+    private final Telemetry logger = new Telemetry(MaxSpeed);
+    private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    /* Setting up bindings for necessary control of the swerve drive platform */
+    // Field-Centric request
+    private final SwerveRequest.FieldCentric fieldCentricDrive = new SwerveRequest.FieldCentric()
+            .withDeadband(MaxSpeed * 0.01).withRotationalDeadband(MaxAngularRate * 0.01) // Add a 1% deadband
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+    // Robot-Centric request
+    private final SwerveRequest.RobotCentric robotCentricDrive = new SwerveRequest.RobotCentric()
+            .withDeadband(MaxSpeed * 0.01)
+            .withRotationalDeadband(MaxAngularRate * 0.01)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
     public RobotContainer() {
         configureBindings();
@@ -100,58 +79,58 @@ public class RobotContainer {
 
         // Drivetrain Bindings
         drivetrain.setDefaultCommand(
-            drivetrain.applyRequest(() -> {
-                // Check which mode to use
-                boolean isRobotCentric = false;
-                // Check if slow mode is active
-                boolean slowMode = false;
+                drivetrain.applyRequest(() -> {
+                    // Check which mode to use
+                    boolean isRobotCentric = false;
+                    // Check if slow mode is active
+                    boolean slowMode = false;
 
-                boolean trackTag = driverJoystickRight.rightButton().getAsBoolean() || driverJoystickRight.leftButton().getAsBoolean();
+                    boolean trackTag = driverJoystickRight.rightButton().getAsBoolean() || driverJoystickRight.leftButton().getAsBoolean();
 
-                // Decide on your normal top speed/rotation
-                double speed = MaxSpeed;
-                double angular = MaxAngularRate;
+                    // Decide on your normal top speed/rotation
+                    double speed = MaxSpeed;
+                    double angular = MaxAngularRate;
 
-                // If slow mode is on, reduce them
-                // if (slowMode) {
-                //     speed *= 0.10;    // 10% of normal speed
-                //     angular *= 0.10; // 10% of normal turn rate
-                // }
+                    // If slow mode is on, reduce them
+                    // if (slowMode) {
+                    //     speed *= 0.10;    // 10% of normal speed
+                    //     angular *= 0.10; // 10% of normal turn rate
+                    // }
 
-                // Read the raw joystick
-                double rawX  = squareInput(driverJoystickLeft.getYAxis())  * speed;   // forward/back (note sign)
-                double rawY  = squareInput(driverJoystickLeft.getXAxis())  * speed;   // strafe
-                double rawRot = squareInput(-driverJoystickRight.getZRotation()) * angular; // rotation
-                
-                // Pass through the limiters
-                double vx    = xSpeedLimiter.calculate(rawX);
-                double vy    = ySpeedLimiter.calculate(rawY);
-                double omega = rotLimiter.calculate(rawRot);
-                
-                SmartDashboard.putBoolean("Robot-Centric Drive", isRobotCentric);
-                SmartDashboard.putBoolean("Slow Mode", slowMode);
-                SmartDashboard.putBoolean("Track Tag", trackTag);
+                    // Read the raw joystick
+                    double rawX = squareInput(driverJoystickLeft.getYAxis()) * speed;   // forward/back (note sign)
+                    double rawY = squareInput(driverJoystickLeft.getXAxis()) * speed;   // strafe
+                    double rawRot = squareInput(-driverJoystickRight.getZRotation()) * angular; // rotation
 
-                // if (trackTag && vision.getTagIfInView(16).isPresent()) {
-                //     // If we are tracking a tag, use the vision subsystem to get the angle to the tag
-                //     // and rotate towards it.
-                //     omega = -1.0 * vision.getTagIfInView(16).get().getYaw() * omega * .01;
-                // }
-                // Return the proper request
-                if (isRobotCentric) {
-                    // Robot-centric mode
-                    return robotCentricDrive
-                        .withVelocityX(vx)
-                        .withVelocityY(vy)
-                        .withRotationalRate(omega);
-                } else {
-                    // Field-centric mode
-                    return fieldCentricDrive
-                        .withVelocityX(vx)
-                        .withVelocityY(vy)
-                        .withRotationalRate(omega);
-                }
-            })
+                    // Pass through the limiters
+                    double vx = xSpeedLimiter.calculate(rawX);
+                    double vy = ySpeedLimiter.calculate(rawY);
+                    double omega = rotLimiter.calculate(rawRot);
+
+                    SmartDashboard.putBoolean("Robot-Centric Drive", isRobotCentric);
+                    SmartDashboard.putBoolean("Slow Mode", slowMode);
+                    SmartDashboard.putBoolean("Track Tag", trackTag);
+
+                    // if (trackTag && vision.getTagIfInView(16).isPresent()) {
+                    //     // If we are tracking a tag, use the vision subsystem to get the angle to the tag
+                    //     // and rotate towards it.
+                    //     omega = -1.0 * vision.getTagIfInView(16).get().getYaw() * omega * .01;
+                    // }
+                    // Return the proper request
+                    if (isRobotCentric) {
+                        // Robot-centric mode
+                        return robotCentricDrive
+                                .withVelocityX(vx)
+                                .withVelocityY(vy)
+                                .withRotationalRate(omega);
+                    } else {
+                        // Field-centric mode
+                        return fieldCentricDrive
+                                .withVelocityX(vx)
+                                .withVelocityY(vy)
+                                .withRotationalRate(omega);
+                    }
+                })
         );
 
         // Climber Bindings
@@ -160,15 +139,15 @@ public class RobotContainer {
          * OP RIGHT F2 - Prepare Climber
          */
         operatorJoystickRight.f2Button().onTrue(
-            new ParallelDeadlineGroup(new ParallelCommandGroup(ramp.detachRampCommand(), ratchet.unlockRatchetCommand())
-            .andThen(climber.rotateClimberOutCommand()), new BlinkLEDCommand(ledStrip, Color.kYellow, 0.25))
-            .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)));
-        
+                new ParallelDeadlineGroup(new ParallelCommandGroup(ramp.detachRampCommand(), ratchet.unlockRatchetCommand())
+                        .andThen(climber.rotateClimberOutCommand()), new BlinkLEDCommand(ledStrip, Color.kYellow, 0.25))
+                        .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)));
+
         /*
          * OP RIGHT F3 - Climb
-         */        
+         */
         operatorJoystickRight.f3Button().onTrue(ratchet.lockRatchetCommand()
-            .andThen(climber.rotateClimberInCommand()).andThen(new SetLEDPatternCommand(ledStrip)));
+                .andThen(climber.rotateClimberInCommand()).andThen(new SetLEDPatternCommand(ledStrip)));
 
         // Elevator Bindings
         operatorJoystickRight.outerHatUp().whileTrue(elevator.moveUpCommand(20)); //TODO set this to pass position jog up/down 1 inch
@@ -179,28 +158,32 @@ public class RobotContainer {
 
         // EndEffector Bindings
         operatorJoystickRight.triggerPrimary()
-            .onTrue(endEffector.scoreGamePieceCommand().andThen(new BlinkLEDCommand(ledStrip, Color.kRed, 0.25)));
+                .onTrue(endEffector.scoreGamePieceCommand().andThen(new BlinkLEDCommand(ledStrip, Color.kRed, 0.25)));
 
         operatorJoystickRight.redButton()
-            .onTrue(endEffector.intakeAlgaeCurrentLimitCommand()
-            .andThen(new ParallelDeadlineGroup(
-                endEffector.holdAlgaeCommand(),
-                new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25))));
+                .onTrue(endEffector.intakeAlgaeCurrentLimitCommand()
+                        .andThen(new ParallelDeadlineGroup(
+                                endEffector.holdAlgaeCommand(),
+                                new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25))));
 
         endEffector.getCoralInnerDetectionTrigger()
-            .onTrue(new SequentialCommandGroup(endEffector.intakeCoralCommand())
-            .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)));
+                .onTrue(new SequentialCommandGroup(endEffector.intakeCoralCommand())
+                        .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)));
 
         operatorJoystickRight.indexButon().onTrue(endEffector.stopIntakeCommand());
 
         // Pivot Bindings
         operatorJoystickRight.innerHatUp().whileTrue(pivot.runPivotOutAtSpeed(.15));
         operatorJoystickRight.innerHatDown().whileTrue(pivot.runPivotInAtSpeed(.15));
-        // operatorJoystickRight.f1Button().whileTrue(pivot.run)        
+        // operatorJoystickRight.f1Button().whileTrue(pivot.run)
+        operatorJoystickLeft.innerHatLeft().onTrue(pivot.setTargetPositionCommand(() -> Pivot.ALL_IN_POSITION));
+        operatorJoystickLeft.innerHatUp().onTrue(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_CORAL_POSITION_OFFSET));
+        operatorJoystickLeft.innerHatRight().onTrue(pivot.setTargetPositionCommand(() -> Pivot.ALL_OUT_POSITION + 5));
+        operatorJoystickLeft.innerHatUp().onTrue(pivot.setTargetPositionOffsetCommand(Pivot.CARRY_ALGAE_POSITION_OFFSET));
 
         // LED Bindings
         new Trigger(RobotState::isEnabled)
-        .onTrue(new BlinkLEDCommand(ledStrip, Color.kRed, 0.25));
+                .onTrue(new BlinkLEDCommand(ledStrip, Color.kRed, 0.25));
 
         // TEST COMMANDS
 
