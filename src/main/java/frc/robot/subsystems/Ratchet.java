@@ -9,8 +9,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Ratchet extends SubsystemBase{
 
     private static final int RATCHET_PWM_ID = 1;
-    private static final double RATCHET_LOCK_POSITION = 1.0; // TODO
-    private static final double RATCHET_UNLOCK_POSITION  = 0.0; // TODO
+    private static final double RATCHET_LOCK_POSITION = 0.5; // TODO
+    private static final double RATCHET_UNLOCK_POSITION  = 0.1; // TODO
 
     private final Servo s_ratchet;
 
@@ -25,8 +25,8 @@ public class Ratchet extends SubsystemBase{
     /**
      * Returns boolean of last commanded ratchet position.
      */
-    private boolean getRatchetLocked() {
-        return s_ratchet.get() == RATCHET_LOCK_POSITION;
+    private boolean getRatchetUnlocked() {
+        return s_ratchet.get() == RATCHET_UNLOCK_POSITION;
     }
     
     /**
@@ -39,7 +39,7 @@ public class Ratchet extends SubsystemBase{
 
     @Override
     public void periodic() {
-      SmartDashboard.putBoolean("Ratchet Locked", getRatchetLocked());
+      SmartDashboard.putBoolean("Ratchet Unlocked", getRatchetUnlocked());
     }
     
     /**

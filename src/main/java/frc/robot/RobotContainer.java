@@ -151,47 +151,34 @@ public class RobotContainer {
         );
 
         // Climber Bindings
-        // Pull BACK on the joystick to move the elevator up
-        operatorJoystickLeft.f1Button().whileTrue(climber.rotateClimberVariableCommad(operatorJoystickLeft::getY));
+        // operatorJoystickRight.f2Button().onTrue(
+        //     new ParallelCommandGroup(ramp.detachRampCommand(), ratchet.unlockRatchetCommand())
+        //     .andThen(climber.rotateClimberOutCommand()));
+        // operatorJoystickRight.f3Button().onTrue(ratchet.lockRatchetCommand().andThen(climber.rotateClimberInCommand()));
 
-        operatorJoystickLeft.f2Button().onTrue(
-            new ParallelCommandGroup(ramp.detachRampCommand(), ratchet.unlockRatchetCommand())
-            .andThen(climber.rotateClimberOutCommand()));
-        operatorJoystickLeft.f3Button().onTrue(climber.rotateClimberInCommand());
-
-        operatorJoystickRight.f2Button().onTrue(
-            new ParallelCommandGroup(ramp.detachRampCommand(), ratchet.unlockRatchetCommand())
-            .andThen(climber.rotateClimberOutCommand()));
-        operatorJoystickRight.f3Button().onTrue(ratchet.lockRatchetCommand().andThen(climber.rotateClimberInCommand()));
+        operatorJoystickLeft.f1Button().whileTrue(climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));
 
         // Elevator Bindings
-        operatorJoystickLeft.outerHatUp().whileTrue(elevator.moveUpCommand(20));
-        operatorJoystickLeft.outerHatDown().whileTrue(elevator.moveDownCommand(20));
-
-        operatorJoystickRight.outerHatUp().whileTrue(elevator.moveUpCommand(20));
+        operatorJoystickRight.outerHatUp().whileTrue(elevator.moveUpCommand(20)); //TODO set this to pass position jog up/down 1 inch
         operatorJoystickRight.outerHatDown().whileTrue(elevator.moveDownCommand(20));
 
         // Pull BACK on the joystick to move the elevator up
-        operatorJoystickRight.f1Button().whileTrue(elevator.moveVariableCommand(operatorJoystickRight::getY));
+        operatorJoystickRight.pinkyButton().whileTrue(elevator.moveVariableCommand(operatorJoystickRight::getY));
 
-        // EndEffector Bindings
-        operatorJoystickLeft.triggerPrimary().onTrue(endEffector.ejectAlgaeCommand());
-        operatorJoystickLeft.redButton().onTrue(endEffector.intakeAlgaeAndHoldCommand());        
-        operatorJoystickLeft.thumbButton().onTrue(endEffector.stopIntakeCommand());
-        
+        // EndEffector Bindings        
         operatorJoystickRight.triggerPrimary().onTrue(endEffector.ejectCoralCommand());
         operatorJoystickRight.redButton().whileTrue(endEffector.runIntakeCommand(.3));
         endEffector.getCoralInnerDetectionTrigger().onTrue(endEffector.intakeCoralCommand());
-        operatorJoystickLeft.thumbButton().onTrue(endEffector.stopIntakeCommand());
 
         // Pivot Bindings
-        operatorJoystickLeft.innerHatUp().whileTrue(pivot.runPivotOut(.15));
-        operatorJoystickLeft.innerHatDown().whileTrue(pivot.runPivotIn(.15));
-
         operatorJoystickRight.innerHatUp().whileTrue(pivot.runPivotOut(.15));
         operatorJoystickRight.innerHatDown().whileTrue(pivot.runPivotIn(.15));
+        // operatorJoystickRight.f1Button().whileTrue(pivot.run)
 
         // Ramp Bindings
+        operatorJoystickLeft.f2Button().onTrue(ramp.detachRampCommand());
+        operatorJoystickLeft.f1Button().onTrue(ratchet.unlockRatchetCommand());
+        operatorJoystickLeft.f3Button().onTrue(ratchet.lockRatchetCommand());
 
         // Ratchet Bindings
 

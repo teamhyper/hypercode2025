@@ -11,6 +11,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Servo;
@@ -24,7 +25,7 @@ public class Climber extends SubsystemBase {
     private static final int CLIMBER_ID = 19;
     private static final int CLIMBER_ABS_ENC_ID = 24;
 
-    private static final double CLIMBER_ENCODER_OFFSET = 10; // TODO: set when calculated
+    private static final double CLIMBER_ENCODER_OFFSET = 163; // (Degrees)
     private static final double PREPARE_CURRENT = 30.0;
     private static final double CLIMB_CURRENT = 80.0;
 
@@ -49,12 +50,9 @@ public class Climber extends SubsystemBase {
     private void configMotors() {
 
         TalonFXConfiguration config = new TalonFXConfiguration();
-
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-        // config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
 
         m_climber.getConfigurator().apply(config);
-
     }
 
     /**
@@ -63,17 +61,16 @@ public class Climber extends SubsystemBase {
     private void configSensors() {
         
         CANcoderConfiguration config = new CANcoderConfiguration();
-        MagnetSensorConfigs magnetConfig = new MagnetSensorConfigs();
-
-        // magnetConfig
+        config.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
         
+        e_climber.getConfigurator().apply(config);
     }
 
     /**
      * Returns the climber absolute position in degrees.
      */
     private double getClimberAngle() {
-        return e_climber.getPosition().getValueAsDouble() - CLIMBER_ENCODER_OFFSET; // TODO: fix
+        return (e_climber.getAbsolutePosition().getValueAsDouble() * 360.0) + CLIMBER_ENCODER_OFFSET;
     }    
 
     /**
