@@ -11,6 +11,7 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -21,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import frc.robot.commands.MoveToPoseRelativeToAprilTagCommand;
 import frc.robot.commands.ledCommands.BlinkLEDCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.joysticks.ApemHF45Joystick;
@@ -71,7 +73,7 @@ public class RobotContainer {
     public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
     public final EndEffector endEffector = new EndEffector();
     public final Climber climber = new Climber();
-    // public final VisionSubsystem vision = new VisionSubsystem();
+    public final VisionSubsystem vision = new VisionSubsystem(drivetrain);
     public final Elevator elevator = new Elevator();
     public final Pivot pivot = new Pivot();
     public final Ratchet ratchet = new Ratchet();
@@ -186,12 +188,11 @@ public class RobotContainer {
         new Trigger(RobotState::isEnabled)
         .onTrue(new BlinkLEDCommand(ledStrip));
 
-        // Run SysId routines when holding back/start and X/Y.
-        // Note that each routine should be run exactly once in a single log.
-        // joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        // joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        // joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        // joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        // Vision Bindings
+
+        Command poseToScoreTag = new MoveToPoseRelativeToAprilTagCommand(vision, drivetrain, 16, new Pose2d());
+        operatorJoystickLeft.pinkyButton().whileTrue(poseToScoreTag); // TODO Pick a button
+
 
         // reset the field-centric heading on left bumper press
         // joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
