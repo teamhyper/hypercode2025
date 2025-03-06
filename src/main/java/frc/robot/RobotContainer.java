@@ -154,7 +154,7 @@ public class RobotContainer {
             })
         );
 
-        // Climber Bindings
+        // ==================== Climber Bindings ====================
 
         /*
          * OP RIGHT F2 - Prepare Climber
@@ -170,18 +170,37 @@ public class RobotContainer {
         operatorJoystickRight.f3Button().onTrue(ratchet.lockRatchetCommand()
             .andThen(climber.rotateClimberInCommand()).andThen(new SetLEDPatternCommand(ledStrip)));
 
-        // Elevator Bindings
+        // ==================== Elevator Bindings ====================
+
+        // Coral Positions
+        operatorJoystickRight.lowerHatUp()
+            .onTrue(elevator.moveToPositionCommand(0));
+        operatorJoystickRight.lowerHatLeft().or(operatorJoystickRight.lowerHatRight())
+            .onTrue(elevator.moveToPositionCommand(0));
+        operatorJoystickRight.lowerHatDown().onTrue(elevator.moveToPositionCommand(0));
+
+        // Algae Positions -- TODO add pivot commands to set the correct angle
+        operatorJoystickRight.innerHatUp()
+            .onTrue(elevator.moveToPositionCommand(0));
+        operatorJoystickRight.innerHatLeft().or(operatorJoystickRight.innerHatRight())
+            .onTrue(elevator.moveToPositionCommand(0));
+        operatorJoystickRight.innerHatDown().onTrue(elevator.moveToPositionCommand(0));
+
+        // Elevator to floor
+        operatorJoystickRight.thumbButton().onTrue(elevator.moveToPositionCommand(0));
+
+        // Manual Elevator Commands
         operatorJoystickRight.outerHatUp().whileTrue(elevator.moveUpCommand(20)); //TODO set this to pass position jog up/down 1 inch
         operatorJoystickRight.outerHatDown().whileTrue(elevator.moveDownCommand(20));
 
         // Pull BACK on the joystick to move the elevator up
         operatorJoystickRight.pinkyButton().whileTrue(elevator.moveVariableCommand(operatorJoystickRight::getY));
 
-        // EndEffector Bindings
+        // ==================== EndEffector Bindings ====================
         operatorJoystickRight.triggerPrimary()
             .onTrue(endEffector.scoreGamePieceCommand().andThen(new BlinkLEDCommand(ledStrip, Color.kRed, 0.25)));
 
-        operatorJoystickRight.redButton()
+        operatorJoystickRight.redButton() // TODO add pivot command to set pivot to correct position?
             .onTrue(endEffector.intakeAlgaeCurrentLimitCommand()
             .andThen(new ParallelDeadlineGroup(
                 endEffector.holdAlgaeCommand(), 
@@ -193,7 +212,7 @@ public class RobotContainer {
             
         operatorJoystickRight.indexButon().onTrue(endEffector.stopIntakeCommand());
 
-        // Pivot Bindings
+        // ==================== Pivot Bindings ====================
         operatorJoystickRight.innerHatUp().whileTrue(pivot.runPivotOut(.15));
         operatorJoystickRight.innerHatDown().whileTrue(pivot.runPivotIn(.15));
         // operatorJoystickRight.f1Button().whileTrue(pivot.run)        
@@ -210,11 +229,13 @@ public class RobotContainer {
         operatorJoystickLeft.f1Button().onTrue(ratchet.unlockRatchetCommand());
         operatorJoystickLeft.f3Button().onTrue(ratchet.lockRatchetCommand());
 
-        operatorJoystickLeft.thumbButton().onTrue(new SetLEDPatternCommand(ledStrip));
+        // operatorJoystickLeft.thumbButton().onTrue(new SetLEDPatternCommand(ledStrip));
 
-        operatorJoystickLeft.lowerHatUp().onTrue(elevator.moveToPositionCommand(20));
-        operatorJoystickLeft.lowerHatDown().onTrue(elevator.moveToPositionCommand(10));
+        operatorJoystickLeft.lowerHatUp().onTrue(elevator.moveToPositionCommand(50));
+        operatorJoystickLeft.lowerHatDown().onTrue(elevator.moveToPositionCommand(30));
         operatorJoystickLeft.thumbButton().onTrue(elevator.moveToPositionCommand(0));
+
+        // operatorJoystickLeft.triggerPrimary().whileTrue(elevator.testGravityCommand());
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.

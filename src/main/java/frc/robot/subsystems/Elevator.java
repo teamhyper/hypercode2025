@@ -11,6 +11,7 @@ import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
+import com.ctre.phoenix6.controls.MotionMagicVelocityDutyCycle;
 
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -26,7 +27,7 @@ public class Elevator extends SubsystemBase {
     private static final int LIM_SWITCH_ID = 1;
 
     private static final double BOTTOM_POSITION = 0.0;
-    private static final double TOP_POSITION = 80.0;
+    private static final double TOP_POSITION = 88.0;
 
     private static final double POSITION_1 = 10.0;
     private static final double POSITION_2 = 20.0;
@@ -34,14 +35,16 @@ public class Elevator extends SubsystemBase {
     private static final double POSITION_4 = 40.0;
     private static final double POSITION_5 = 50.0;
 
-
+    private static final double STAGE_1 = 24.93;
+    private static final double STAGE_2 = 59.3;
+    private static final double STAGE_3 = 88.0;
     
     private final TalonFX masterMotor;
     private final TalonFX followerMotor;
 
     private final DigitalInput bottomLimitSwitch;
 
-    private final MotionMagicTorqueCurrentFOC motionMagicControl;
+    private final MotionMagicTorqueCurrentFOC motionMagicTorqueCurrentFOC;
 
     private double lastPosition = 0.0;
     private boolean hasResetZero = false;
@@ -55,9 +58,11 @@ public class Elevator extends SubsystemBase {
         followerMotor = new TalonFX(followerID, "hyperbus");
 
         bottomLimitSwitch = new DigitalInput(limSwitchID);
-        motionMagicControl = new MotionMagicTorqueCurrentFOC(0);
+        motionMagicTorqueCurrentFOC = new MotionMagicTorqueCurrentFOC(0);
 
         configMotors();
+
+        setDefaultCommand(holdElevatorPositionCommand());
     }
     
     /**
@@ -87,22 +92,44 @@ public class Elevator extends SubsystemBase {
         // config.CurrentLimits.StatorCurrentLimitEnable = true;
 
         // ✅ Set Motion Magic parameters
-        config.MotionMagic.MotionMagicAcceleration = 5000;  // Acceleration (ticks/sec²)
-        config.MotionMagic.MotionMagicCruiseVelocity = 8000; // Max velocity (ticks/sec)
+        config.MotionMagic.MotionMagicAcceleration = 3;  // Acceleration (ticks/sec²)
+        config.MotionMagic.MotionMagicCruiseVelocity = 2; // Max velocity (ticks/sec)
 
         // ✅ Tune PID values (adjust as needed)
-        config.Slot0.kP = 0.1;  // Proportional Gain (response to error)
+        config.Slot0.kP = 10.0;  // Proportional Gain (response to error)
         config.Slot0.kI = 0.0;  // Integral Gain (only if you need fine corrections)
         config.Slot0.kD = 0.0;  // Derivative Gain (smooths response)
-
         // ✅ Set Feedforward Gains (for smooth motion)
-        config.Slot0.kS = 0.05;  // Static friction compensation (helps start moving)
-        config.Slot0.kV = 0.12;  // Velocity feedforward (scales output based on velocity)
-        config.Slot0.kA = 0.01;  // Acceleration feedforward (scales output based on acceleration)
-        config.Slot0.kG = 0.08;  // Gravity compensation (counteracts elevator weight)
-
+        config.Slot0.kS = 0.0000;  // Static friction compensation (helps start moving)
+        config.Slot0.kV = 0.0000;  // Velocity feedforward (scales output based on velocity)
+        config.Slot0.kA = 0.0000;  // Acceleration feedforward (scales output based on acceleration)
+        config.Slot0.kG = 4.0000;  // Gravity compensation (counteracts elevator weight)
         // ✅ Set Gravity Type (for elevators)
         config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
+
+        // ✅ Tune PID values (adjust as needed)
+        config.Slot1.kP = 10.0;  // Proportional Gain (response to error)
+        config.Slot1.kI = 0.0;  // Integral Gain (only if you need fine corrections)
+        config.Slot1.kD = 0.0;  // Derivative Gain (smooths response)
+        // ✅ Set Feedforward Gains (for smooth motion)
+        config.Slot1.kS = 0.0000;  // Static friction compensation (helps start moving)
+        config.Slot1.kV = 0.0000;  // Velocity feedforward (scales output based on velocity)
+        config.Slot1.kA = 0.0000;  // Acceleration feedforward (scales output based on acceleration)
+        config.Slot1.kG = 7.0000;  // Gravity compensation (counteracts elevator weight)
+        // ✅ Set Gravity Type (for elevators)
+        config.Slot1.GravityType = GravityTypeValue.Elevator_Static;
+
+        // ✅ Tune PID values (adjust as needed)
+        config.Slot2.kP = 10.0;  // Proportional Gain (response to error)
+        config.Slot2.kI = 0.0;  // Integral Gain (only if you need fine corrections)
+        config.Slot2.kD = 0.0;  // Derivative Gain (smooths response)
+        // ✅ Set Feedforward Gains (for smooth motion)
+        config.Slot2.kS = 0.0000;  // Static friction compensation (helps start moving)
+        config.Slot2.kV = 0.0000;  // Velocity feedforward (scales output based on velocity)
+        config.Slot2.kA = 0.0000;  // Acceleration feedforward (scales output based on acceleration)
+        config.Slot2.kG = 12.0000;  // Gravity compensation (counteracts elevator weight)
+        // ✅ Set Gravity Type (for elevators)
+        config.Slot2.GravityType = GravityTypeValue.Elevator_Static;
 
         masterMotor.getConfigurator().apply(config);
         followerMotor.getConfigurator().apply(config);
@@ -112,6 +139,18 @@ public class Elevator extends SubsystemBase {
 
         masterMotor.setPosition(0.0);  // Set initial encoder position
         followerMotor.setPosition(0.0);
+    }
+
+    private int getSlotFromPosition() {
+        double currentPosition = masterMotor.getPosition().getValueAsDouble();
+        if (currentPosition <= STAGE_1) {
+            return 0;
+        } else if (currentPosition <= STAGE_2) {
+            return 1;
+        } else { 
+            return 2;
+        }
+
     }
 
     private void zeroElevator() {
@@ -131,6 +170,7 @@ public class Elevator extends SubsystemBase {
      */
     public void runElevator(double current) {
         masterMotor.setControl(new TorqueCurrentFOC(current));
+        lastPosition = masterMotor.getPosition().getValueAsDouble();
     }
 
     /**
@@ -139,14 +179,19 @@ public class Elevator extends SubsystemBase {
      */
     public void runElevatorVariable(double output) {
         masterMotor.setControl(new DutyCycleOut(output));
+        lastPosition = masterMotor.getPosition().getValueAsDouble();
     }
 
     /**
      * Holds the elevator at its current position.
      */
     public void holdPosition() {
-        motionMagicControl.withSlot(0).withPosition(lastPosition);
-        masterMotor.setControl(motionMagicControl);
+        if (masterMotor.getPosition().getValueAsDouble() <= 0.1) {
+            masterMotor.setControl( new TorqueCurrentFOC(0));
+        } else {
+            masterMotor.setControl(motionMagicTorqueCurrentFOC
+                .withSlot(getSlotFromPosition()).withPosition(lastPosition));
+        }        
     }
 
     /**
@@ -158,8 +203,7 @@ public class Elevator extends SubsystemBase {
         targetPosition = Math.max(BOTTOM_POSITION, Math.min(TOP_POSITION, targetPosition));
 
         // Apply Motion Magic control with FOC
-        motionMagicControl.withSlot(0).withPosition(targetPosition);
-        masterMotor.setControl(motionMagicControl);
+        masterMotor.setControl(motionMagicTorqueCurrentFOC.withSlot(getSlotFromPosition()).withPosition(targetPosition));
 
         lastPosition = targetPosition;
     }
@@ -213,7 +257,7 @@ public class Elevator extends SubsystemBase {
      * @param position The position to move the elevator to in rotations
      */
     public Command moveToPositionCommand(double position) {
-        return new InstantCommand(() -> setElevatorPosition(position), this);
+        return new RunCommand(() -> setElevatorPosition(position), this);
     }
 
     /**
@@ -221,6 +265,19 @@ public class Elevator extends SubsystemBase {
      */
     public Command holdElevatorPositionCommand() {
         return new RunCommand(() -> holdPosition(), this);
+    }
+
+    public Command testGravityCommand() {
+        return new RunCommand(() -> {
+            double holdPosition = masterMotor.getPosition().getValueAsDouble(); // Get current position
+            masterMotor.setControl(new MotionMagicTorqueCurrentFOC(holdPosition).withSlot(getSlotFromPosition()));
+        }, this);
+    }
+
+    public Command testCommand() {
+        return new RunCommand(() -> {
+            masterMotor.setControl(new TorqueCurrentFOC(5.0)); // Small torque to overcome friction
+        }, this);
     }
 
 }
