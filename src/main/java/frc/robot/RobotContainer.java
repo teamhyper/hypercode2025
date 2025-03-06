@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -177,9 +178,19 @@ public class RobotContainer {
         operatorJoystickRight.pinkyButton().whileTrue(elevator.moveVariableCommand(operatorJoystickRight::getY));
 
         // EndEffector Bindings
-        operatorJoystickRight.triggerPrimary().onTrue(endEffector.scoreGamePieceCommand());
-        operatorJoystickRight.redButton().onTrue(endEffector.intakeAlgaeAndHoldCommand());
-        endEffector.getCoralInnerDetectionTrigger().onTrue(endEffector.intakeCoralCommand());
+        operatorJoystickRight.triggerPrimary()
+            .onTrue(endEffector.scoreGamePieceCommand().andThen(new BlinkLEDCommand(ledStrip, Color.kRed, 0.25)));
+
+        operatorJoystickRight.redButton()
+            .onTrue(endEffector.intakeAlgaeCurrentLimitCommand()
+            .andThen(new ParallelDeadlineGroup(
+                endEffector.holdAlgaeCommand(), 
+                new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25))));
+
+        endEffector.getCoralInnerDetectionTrigger()
+            .onTrue(new SequentialCommandGroup(endEffector.intakeCoralCommand())
+            .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)));
+            
         operatorJoystickRight.indexButon().onTrue(endEffector.stopIntakeCommand());
 
         // Pivot Bindings
