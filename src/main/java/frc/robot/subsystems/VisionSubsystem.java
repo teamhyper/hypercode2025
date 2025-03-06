@@ -32,8 +32,8 @@ public class VisionSubsystem extends SubsystemBase {
      * Constructs a new VisionSubsystem.
      */
     public VisionSubsystem(Drivetrain drivetrain) {
-        camera_2 = new PhotonCamera("arducam-ov9281-usb-02");
-        camera_1 = new PhotonCamera("arducam-ov9281-usb-01");
+        camera_2 = new PhotonCamera("hypercam-02");
+        camera_1 = new PhotonCamera("hypercam-01");
         this.drivetrain = drivetrain;
     }
 
@@ -68,6 +68,9 @@ public class VisionSubsystem extends SubsystemBase {
     }
 
     public Optional<EstimatedRobotPose> getPhotonPosition() {
+        if (latestCamera1Results.isEmpty()) {
+            return Optional.empty();
+        }
         return poseEstimator.update(latestCamera1Results.get(latestCamera1Results.size() - 1));
     }
 
@@ -96,22 +99,29 @@ public class VisionSubsystem extends SubsystemBase {
         if (latestCamera2Results.isEmpty() && latestCamera1Results.isEmpty()) {
             return Optional.empty();
         }
-        final var frame1 = latestCamera1Results.get(latestCamera1Results.size() - 1);
-        if (frame1.hasTargets()) {
-            for (var target : frame1.targets) {
-                if (target.getFiducialId() == fiducialId) {
-                    return Optional.of(target);
+
+        if (!latestCamera1Results.isEmpty()) {
+            final var frame1 = latestCamera1Results.get(latestCamera1Results.size() - 1);
+            if (frame1.hasTargets()) {
+                for (var target : frame1.targets) {
+                    if (target.getFiducialId() == fiducialId) {
+                        return Optional.of(target);
+                    }
                 }
             }
         }
-        final var frame2 = latestCamera2Results.get(latestCamera2Results.size() - 1);
-        if (frame2.hasTargets()) {
-            for (var target : frame2.targets) {
-                if (target.getFiducialId() == fiducialId) {
-                    return Optional.of(target);
+        
+        if (!latestCamera2Results.isEmpty()) {
+            final var frame2 = latestCamera2Results.get(latestCamera2Results.size() - 1);
+            if (frame2.hasTargets()) {
+                for (var target : frame2.targets) {
+                    if (target.getFiducialId() == fiducialId) {
+                        return Optional.of(target);
+                    }
                 }
             }
         }
+
 
         return Optional.empty();
     }
