@@ -176,10 +176,11 @@ public class RobotContainer {
         // Pull BACK on the joystick to move the elevator up
         operatorJoystickRight.pinkyButton().whileTrue(elevator.moveVariableCommand(operatorJoystickRight::getY));
 
-        // EndEffector Bindings        
-        operatorJoystickRight.triggerPrimary().onTrue(endEffector.ejectCoralCommand());
-        operatorJoystickRight.redButton().whileTrue(endEffector.runIntakeCommand(.3));
+        // EndEffector Bindings
+        operatorJoystickRight.triggerPrimary().onTrue(endEffector.scoreGamePieceCommand());
+        operatorJoystickRight.redButton().onTrue(endEffector.intakeAlgaeAndHoldCommand());
         endEffector.getCoralInnerDetectionTrigger().onTrue(endEffector.intakeCoralCommand());
+        operatorJoystickRight.indexButon().onTrue(endEffector.stopIntakeCommand());
 
         // Pivot Bindings
         operatorJoystickRight.innerHatUp().whileTrue(pivot.runPivotOut(.15));

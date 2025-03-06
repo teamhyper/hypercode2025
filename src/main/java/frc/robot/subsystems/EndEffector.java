@@ -4,6 +4,9 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.playingwithfusion.TimeOfFlight;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -20,16 +23,15 @@ public class EndEffector extends SubsystemBase {
     private static final double PEAK_FWD_TORQUE_CURRENT = 80;
     private static final double PEAK_REV_TORQUE_CURRENT = 80;
     
-    private static final double TOF_SAMPLE_TIME_MS = 30;
-    private static final double CORAL_THRESHOLD = 100;    
-    private static final double ALGAE_OUT_THRESHOLD = 250;
-    private static final double ALGAE_IN_THRESHOLD = 100;
+    private static final double TOF_SAMPLE_TIME_MS = 40;
+    private static final double CORAL_THRESHOLD = 100.0;
+    private static final double ALGAE_IN_THRESHOLD = 75.2;
 
-    private static final double CORAL_INTAKE_SPEED = .3;
+    private static final double CORAL_INTAKE_SPEED = .5;
     private static final double CORAL_EJECTION_SPEED = .5;
     
-    private static final double ALGAE_INTAKE_CURRENT = 20.0;
-    private static final double ALGAE_INTAKE_CURRENT_LIMIT = 20.0;
+    private static final double ALGAE_INTAKE_CURRENT = 30.0;
+    private static final double ALGAE_INTAKE_CURRENT_LIMIT = 50.0;
     private static final double ALGAE_EJECTION_CURRENT = 80.0;    
     private static final double HOLD_CURRENT = 5.0;
 
@@ -40,6 +42,8 @@ public class EndEffector extends SubsystemBase {
     private final TimeOfFlight tof_coral_outer;
     private final TimeOfFlight tof_algae;
 
+    private final Debouncer debouncer;
+
     public EndEffector() {        
 
         intakeMotor = new TalonFX(MOTOR_ID, "rio");
@@ -48,6 +52,8 @@ public class EndEffector extends SubsystemBase {
         tof_coral_inner = new TimeOfFlight(TOF1_ID);
         tof_coral_outer = new TimeOfFlight(TOF2_ID);
         tof_algae = new TimeOfFlight(TOF3_ID);
+
+        debouncer = new Debouncer(0.2, DebounceType.kRising);
 
         configMotor();
         configSensors();
@@ -80,15 +86,21 @@ public class EndEffector extends SubsystemBase {
      * @param range Range threshold in mm for positive detection
      */
     private boolean isDetecting(TimeOfFlight sensor, double range){
-        // TODO: Test if isRangeValid() works as intended
-        return sensor.getRange() < range && sensor.isRangeValid();
+        return sensor.getRange() < range;
     }
 
     /**
      * Returns true if the intake is holding algae.
      */
     private boolean isHoldingAlgae() {
-        return isDetecting(tof_algae, ALGAE_OUT_THRESHOLD) && isDetecting(tof_algae, ALGAE_IN_THRESHOLD);
+        return debouncer.calculate(isDetecting(tof_algae, ALGAE_IN_THRESHOLD));
+    }
+
+    /**
+     * Returns true if the intake is holding algae.
+     */
+    private boolean isHoldingCoral() {
+        return isDetecting(tof_coral_outer, CORAL_THRESHOLD);
     }
 
     /**
@@ -124,8 +136,7 @@ public class EndEffector extends SubsystemBase {
         SmartDashboard.putBoolean("Coral Outer", isDetecting(tof_coral_outer, CORAL_THRESHOLD));
 
         // Coral & Algae Detection Metrics
-        SmartDashboard.putNumber("Algae Distance", tof_algae.getRange());        
-        SmartDashboard.putBoolean("Algae Present", isDetecting(tof_algae, ALGAE_OUT_THRESHOLD));
+        SmartDashboard.putNumber("Algae Distance", tof_algae.getRange());
         SmartDashboard.putBoolean("Algae Present Close", isDetecting(tof_algae, ALGAE_IN_THRESHOLD));
         SmartDashboard.putBoolean("isHoldingAlgae", isHoldingAlgae());
     }
@@ -150,7 +161,7 @@ public class EndEffector extends SubsystemBase {
      * Command to run the intake until `tof_coral_outer` detects coral then stops.
      */
     public Command intakeCoralCommand() {
-        return new InstantCommand(() -> runIntake(CORAL_INTAKE_SPEED), this)
+        return new RunCommand(() -> runIntake(CORAL_INTAKE_SPEED), this)
                 .until(() -> isDetecting(tof_coral_outer, CORAL_THRESHOLD)) // Stop when outer detection is true
                 .finallyDo(interrupted -> runIntake(0));
     }
@@ -169,7 +180,7 @@ public class EndEffector extends SubsystemBase {
      */
     public Command intakeAlgaeCurrentLimitCommand() {
         return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(ALGAE_INTAKE_CURRENT), this)
-            .until(() -> intakeMotor.getStatorCurrent().getValueAsDouble() >= ALGAE_INTAKE_CURRENT_LIMIT)
+            .until(() -> intakeMotor.getTorqueCurrent().getValueAsDouble() >= ALGAE_INTAKE_CURRENT_LIMIT)
             .finallyDo(interrupted -> runIntake(0));
     }
 
@@ -193,7 +204,18 @@ public class EndEffector extends SubsystemBase {
     public Command ejectAlgaeCommand() {
         return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(-ALGAE_EJECTION_CURRENT), this)
                 .until(() -> !isHoldingAlgae()).andThen(() -> runIntake(0), this);
-    }    
+    }
+
+    /**
+     * Command to run the score game piece depending on which is held.
+     */
+    public Command scoreGamePieceCommand() {
+        if (isHoldingCoral()) {
+            return ejectCoralCommand();
+        } else {
+            return ejectCoralCommand();
+        }
+    }
 
     // ========================= TRIGGERS ======================================
 
@@ -204,11 +226,4 @@ public class EndEffector extends SubsystemBase {
         return new Trigger(() -> isDetecting(tof_coral_inner, CORAL_THRESHOLD));
     }
 
-    /**
-     * Trigger to run the intake when algae is detected.
-     */
-    public Trigger getAlgaeDetectionTrigger() {
-        return new Trigger(() -> (isDetecting(tof_algae, ALGAE_OUT_THRESHOLD) && !isDetecting(tof_algae, ALGAE_IN_THRESHOLD)));
-    }
-    
 }
