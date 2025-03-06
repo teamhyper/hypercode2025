@@ -1,7 +1,7 @@
 package frc.robot.subsystems;
 
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
-import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -23,22 +23,24 @@ import java.util.function.DoubleSupplier;
 public class Pivot extends SubsystemBase {
     // TODO: get positions
     // SCORE_CORAL_POSITION_OFFSET is a guesstimate of the midpoint (45deg) between the ALL_IN and ALL_OUT positions
-    public static final double COLLECT_CORAL_POSITION_OFFSET = 35.0, COLLECT_ALGAE_POSITION_OFFSET = 94.0, SCORE_ALGAE_POSITION_OFFSET = 0.0, SCORE_CORAL_POSITION_OFFSET = 48.0, CARRY_ALGAE_POSITION_OFFSET = 60.0;
-    public static final double ALL_IN_POSITION = 211.5, ALL_OUT_POSITION = 306;
+    public static final double ALL_IN_POSITION = 211.5, ALL_OUT_POSITION = 304;
+    public static final double COLLECT_CORAL_POSITION_OFFSET = 41.0, COLLECT_ALGAE_POSITION_OFFSET = ALL_OUT_POSITION - ALL_IN_POSITION, SCORE_ALGAE_POSITION_OFFSET = 0.0, SCORE_CORAL_POSITION_OFFSET = 48.0, CARRY_ALGAE_POSITION_OFFSET = 60.0;
+
     // PID coefficients
     // from REV example p = 0.1, i = 1e-4, d = 1
-    private static final double kP = 0.01, kI = 0.0, kD = 0.0001;
-    private static final double kFF = 0.0, kMinOutput = -1.0, kMaxOutput = 1.0;
+    private static final double P = 0.0125, I = 0.0, D = 0.01;
+    private static final double aFF = 0.01, MIN_OUTPUT = -0.1, MAX_OUTPUT = 0.225;
     // Max Motion parameters
-    private static final double kMaxVelocity = 1000.0, kMaxAcceleration = 500.0, kAllowedError = 0.001;
+    private static final double MAX_VELOCITY = 3000.0, MAX_ACCELERATION = MAX_VELOCITY * 100000, ALLOWED_ERROR = 2.5;
     // REV soft limit parameters
-    private static final boolean kForwardSoftLimitEnabled = true, kReverseSoftLimitEnabled = true;
+    private static final boolean FORWARD_SOFT_LIMIT_ENABLED = true, REVERSE_SOFT_LIMIT_ENABLED = true;
     private static final int PIVOT_MOTOR_ID = 20;
-    private static final double kS = 0, kG = 0, kV = 0, kA = 0;
-    private final SparkMax m_pivot;
+    private static final double G = 1.51, V = 0.78, A = 0.07, S = 0.0;
+    private final SparkMax motor;
     private final SparkAbsoluteEncoder encoder;
     private final SparkClosedLoopController pidController;
-    private final ArmFeedforward pivotFeedforward = new ArmFeedforward(kS, kG, kV, kA);
+    private final ArmFeedforward pivotFeedforward = new ArmFeedforward(S, G, V, A);
+    private final ClosedLoopSlot pidSlotMain = ClosedLoopSlot.kSlot0;
     private double target;
 
 
@@ -47,7 +49,7 @@ public class Pivot extends SubsystemBase {
     }
 
     public Pivot(int motorId) {
-        m_pivot = new SparkMax(motorId, MotorType.kBrushless);
+        motor = new SparkMax(motorId, MotorType.kBrushless);
         SparkMaxConfig config = new SparkMaxConfig();
 
         config
@@ -61,54 +63,31 @@ public class Pivot extends SubsystemBase {
         // TODO: tune PID values
         config.closedLoop
                 .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
-                .pid(kP, kI, kD)
-                .outputRange(kMinOutput, kMaxOutput);
+                .pid(P, I, D, pidSlotMain)
+                .outputRange(MIN_OUTPUT, MAX_OUTPUT);
 
         // TODO: tune maxMotion values
         config.closedLoop.maxMotion
-                .maxVelocity(kMaxVelocity)
-                .maxAcceleration(kMaxAcceleration)
-                .allowedClosedLoopError(kAllowedError);
+                .maxVelocity(MAX_VELOCITY, pidSlotMain)
+                .maxAcceleration(MAX_ACCELERATION, pidSlotMain)
+                .allowedClosedLoopError(ALLOWED_ERROR, pidSlotMain);
 
         config.softLimit
-                .forwardSoftLimitEnabled(kForwardSoftLimitEnabled)
-                .reverseSoftLimitEnabled(kReverseSoftLimitEnabled)
+                .forwardSoftLimitEnabled(FORWARD_SOFT_LIMIT_ENABLED)
+                .reverseSoftLimitEnabled(REVERSE_SOFT_LIMIT_ENABLED)
                 .reverseSoftLimit(ALL_IN_POSITION)
                 .forwardSoftLimit(ALL_OUT_POSITION);
 
-        m_pivot.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        pidController = m_pivot.getClosedLoopController();
-        encoder = m_pivot.getAbsoluteEncoder();
+        pidController = motor.getClosedLoopController();
+        encoder = motor.getAbsoluteEncoder();
 
         setPosition(encoder::getPosition);
 
         // place the subsystem on SmartDashboard
         SmartDashboard.putData(this);
         setDefaultCommand(setPositionAndHoldCommand());
-    }
-
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        super.initSendable(builder);
-        builder.addBooleanProperty("On Target", this::onTarget, null);
-        builder.addDoubleProperty("Target", this::getTarget, null);
-        builder.addDoubleProperty("EncoderPosition (Actual)", this::getPosition, null);
-        builder.addDoubleProperty("EncoderPosition (Offset)", () -> getPosition() - ALL_IN_POSITION, null);
-        builder.addBooleanProperty("CanMove In", () -> getPosition() > ALL_IN_POSITION, null);
-        builder.addBooleanProperty("CanMove Out", () -> getPosition() < ALL_OUT_POSITION, null);
-        builder.addDoubleProperty("Speed", m_pivot::get, null);
-        builder.addDoubleProperty("Applied Output", m_pivot::getAppliedOutput, null);
-    }
-
-
-    /**
-     * Method to get the current position
-     *
-     * @return - current position of the absolute encoder
-     */
-    public double getPosition() {
-        return encoder.getPosition();
     }
 
     /**
@@ -120,8 +99,31 @@ public class Pivot extends SubsystemBase {
         this.target = position.getAsDouble();
 
         System.out.printf("Pivot.setPosition(): Position: %.2f%n", this.target);
-        pidController.setReference(this.target, SparkMax.ControlType.kMAXMotionPositionControl); // testing if this is why the "go to positions" commands operate so slowly
-//        pidController.setReference(this.target, SparkMax.ControlType.kPosition);
+//        pidController.setReference(this.target, SparkMax.ControlType.kMAXMotionPositionControl, pidSlotMain, aFF);
+        pidController.setReference(this.target, SparkMax.ControlType.kPosition, pidSlotMain, aFF);
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        super.initSendable(builder);
+        builder.addBooleanProperty("On Target", this::onTarget, null);
+        builder.addDoubleProperty("Target", this::getTarget, null);
+        builder.addDoubleProperty("EncoderPosition (Actual)", this::getPosition, null);
+        builder.addDoubleProperty("EncoderPosition (Offset)", () -> getPosition() - ALL_IN_POSITION, null);
+        builder.addBooleanProperty("CanMove In", () -> getPosition() > ALL_IN_POSITION, null);
+        builder.addBooleanProperty("CanMove Out", () -> getPosition() < ALL_OUT_POSITION, null);
+        builder.addDoubleProperty("Speed", motor::get, null);
+        builder.addDoubleProperty("Applied Output", motor::getAppliedOutput, null);
+    }
+
+
+    /**
+     * Method to get the current position
+     *
+     * @return - current position of the absolute encoder
+     */
+    public double getPosition() {
+        return encoder.getPosition();
     }
 
     /**
@@ -138,11 +140,10 @@ public class Pivot extends SubsystemBase {
      * stop the motor (speed 0)
      */
     public void stop() {
-        m_pivot.stopMotor();
+        motor.stopMotor();
     }
 
     /**
-     *
      * @return the stored target value
      */
     private double getTarget() {
@@ -151,15 +152,17 @@ public class Pivot extends SubsystemBase {
 
     /**
      * is the Pivot encoder position at the given target
+     *
      * @param target the specific target position to check against
      * @return if the Pivot is at the given target
      */
     public boolean onTarget(DoubleSupplier target) {
-        return Math.abs(encoder.getPosition() - target.getAsDouble()) <= kAllowedError;
+        return Math.abs(encoder.getPosition() - target.getAsDouble()) <= ALLOWED_ERROR;
     }
 
     /**
      * is the Pivot encoder position at the previously set target
+     *
      * @return if the Pivot is at the set target
      */
     public boolean onTarget() {
@@ -173,7 +176,7 @@ public class Pivot extends SubsystemBase {
      * @return command to run the motor outward at a speed
      */
     public Command runPivotOutAtSpeed(double speed) {
-        return new RunCommand(() -> m_pivot.set(speed), this).finallyDo(interrupted -> stop());
+        return new RunCommand(() -> motor.set(speed), this).finallyDo(interrupted -> stop());
     }
 
     /**
@@ -183,7 +186,7 @@ public class Pivot extends SubsystemBase {
      * @return command to run the motor inward at a speed
      */
     public Command runPivotInAtSpeed(double speed) {
-        return new RunCommand(() -> m_pivot.set(-speed), this).finallyDo(interrupted -> stop());
+        return new RunCommand(() -> motor.set(-speed), this).finallyDo(interrupted -> stop());
     }
 
     /**
@@ -193,7 +196,7 @@ public class Pivot extends SubsystemBase {
      * @return command to run the motor at the given speed
      */
     public Command runPivotAtSpeed(double speed) {
-        return new RunCommand(() -> m_pivot.set(speed), this).finallyDo(interrupted -> stop());
+        return new RunCommand(() -> motor.set(speed), this).finallyDo(interrupted -> stop());
     }
 
     /**
@@ -203,11 +206,7 @@ public class Pivot extends SubsystemBase {
      * @return command to set the PID setpoint to the given offset from the base position
      */
     public Command setTargetPositionOffsetCommand(double offset, boolean hold) {
-        return setTargetPositionCommand(() -> {
-            double position = offset + ALL_IN_POSITION;
-            System.out.printf("Pivot.setPositionOffset(): Offset: %.2f, Calculated: %.2f%n", offset, position);
-            return position;
-        }, hold);
+        return setTargetPositionCommand(() -> offset + ALL_IN_POSITION, hold);
     }
 
     public Command setTargetPositionOffsetCommand(double offset) {
