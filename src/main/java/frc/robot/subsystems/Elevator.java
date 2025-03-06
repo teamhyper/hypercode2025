@@ -26,13 +26,13 @@ public class Elevator extends SubsystemBase {
     private static final int LIM_SWITCH_ID = 1;
 
     private static final double BOTTOM_POSITION = 0.0;
-    private static final double TOP_POSITION = 100000.0;
+    private static final double TOP_POSITION = 80.0;
 
-    private static final double POSITION_1 = 10;
-    private static final double POSITION_2 = 20;
-    private static final double POSITION_3 = 30;
-    private static final double POSITION_4 = 40;
-    private static final double POSITION_5 = 50;
+    private static final double POSITION_1 = 10.0;
+    private static final double POSITION_2 = 20.0;
+    private static final double POSITION_3 = 30.0;
+    private static final double POSITION_4 = 40.0;
+    private static final double POSITION_5 = 50.0;
 
 
     
@@ -44,6 +44,7 @@ public class Elevator extends SubsystemBase {
     private final MotionMagicTorqueCurrentFOC motionMagicControl;
 
     private double lastPosition = 0.0;
+    private boolean hasResetZero = false;
 
     public Elevator() {
         this(MASTER_ID, FOLLOWER_ID, LIM_SWITCH_ID);
@@ -73,17 +74,17 @@ public class Elevator extends SubsystemBase {
 
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        config.TorqueCurrent.TorqueNeutralDeadband = 0.01; // Prevents small unintended movements
-        config.MotorOutput.DutyCycleNeutralDeadband = 0.01;
-        config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 0.5; // 0.5s to reach full speed in open-loop mode
-        config.ClosedLoopRamps.DutyCycleClosedLoopRampPeriod = 0.3; // 0.3s in closed-loop mode
+        // config.TorqueCurrent.TorqueNeutralDeadband = 0.01; // Prevents small unintended movements
+        // config.MotorOutput.DutyCycleNeutralDeadband = 0.01;
+        // config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 0.5; // 0.5s to reach full speed in open-loop mode
+        // config.ClosedLoopRamps.DutyCycleClosedLoopRampPeriod = 0.3; // 0.3s in closed-loop mode
 
-        config.CurrentLimits.SupplyCurrentLimit = 40;
-        config.CurrentLimits.SupplyCurrentLowerLimit = 40;
-        config.CurrentLimits.SupplyCurrentLowerTime = 1.0;
-        config.CurrentLimits.SupplyCurrentLimitEnable = true;
-        config.CurrentLimits.StatorCurrentLimit = 60; // Limit stator current to 60A
-        config.CurrentLimits.StatorCurrentLimitEnable = true;
+        // config.CurrentLimits.SupplyCurrentLimit = 40;
+        // config.CurrentLimits.SupplyCurrentLowerLimit = 40;
+        // config.CurrentLimits.SupplyCurrentLowerTime = 1.0;
+        // config.CurrentLimits.SupplyCurrentLimitEnable = true;
+        // config.CurrentLimits.StatorCurrentLimit = 60; // Limit stator current to 60A
+        // config.CurrentLimits.StatorCurrentLimitEnable = true;
 
         // ✅ Set Motion Magic parameters
         config.MotionMagic.MotionMagicAcceleration = 5000;  // Acceleration (ticks/sec²)
@@ -113,6 +114,17 @@ public class Elevator extends SubsystemBase {
         followerMotor.setPosition(0.0);
     }
 
+    private void zeroElevator() {
+        if (bottomLimitSwitch.get() && !hasResetZero) {
+            // Set the motor's position to zero
+            masterMotor.setPosition(0);
+            followerMotor.setPosition(0);
+            hasResetZero = true;  // Prevent constant resetting
+        } else if (!bottomLimitSwitch.get()) {
+            hasResetZero = false;  // Reset the flag when the switch is not pressed
+        }
+    }
+
     /**
      * Runs the elevator at a given current output.
      * @param current Current output in Amps
@@ -133,7 +145,7 @@ public class Elevator extends SubsystemBase {
      * Holds the elevator at its current position.
      */
     public void holdPosition() {
-        motionMagicControl.withPosition(lastPosition);
+        motionMagicControl.withSlot(0).withPosition(lastPosition);
         masterMotor.setControl(motionMagicControl);
     }
 
@@ -146,7 +158,7 @@ public class Elevator extends SubsystemBase {
         targetPosition = Math.max(BOTTOM_POSITION, Math.min(TOP_POSITION, targetPosition));
 
         // Apply Motion Magic control with FOC
-        motionMagicControl.withPosition(targetPosition);
+        motionMagicControl.withSlot(0).withPosition(targetPosition);
         masterMotor.setControl(motionMagicControl);
 
         lastPosition = targetPosition;
@@ -155,11 +167,14 @@ public class Elevator extends SubsystemBase {
     @Override
     public void periodic() {
 
+        zeroElevator();
         SmartDashboard.putBoolean("Bottom Limit Switch", bottomLimitSwitch.get());
 
-        SmartDashboard.putNumber("Elevator Position", masterMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Elevator Position Master", masterMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Elevator Position Follower", followerMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Elevator Current Master", masterMotor.getStatorCurrent().getValueAsDouble());
         SmartDashboard.putNumber("Elevator Current Follower", followerMotor.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("lastPosition", this.lastPosition);
     }
     
     /**
