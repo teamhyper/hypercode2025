@@ -147,7 +147,6 @@ public class Elevator extends SubsystemBase {
         } else { 
             return 2;
         }
-
     }
 
     private void zeroElevator() {
