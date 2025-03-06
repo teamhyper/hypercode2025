@@ -15,13 +15,16 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import frc.robot.commands.ledCommands.BlinkLEDCommand;
+import frc.robot.commands.ledCommands.SetLEDPatternCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.joysticks.ApemHF45Joystick;
 import frc.robot.joysticks.VKBGladiatorJoystick;
@@ -151,13 +154,20 @@ public class RobotContainer {
         );
 
         // Climber Bindings
-        operatorJoystickRight.f2Button().onTrue(
-            new ParallelCommandGroup(ramp.detachRampCommand(), ratchet.unlockRatchetCommand())
-            .andThen(climber.rotateClimberOutCommand()));
-        operatorJoystickRight.f3Button().onTrue(ratchet.lockRatchetCommand()
-            .andThen(climber.rotateClimberInCommand()));
 
-        operatorJoystickLeft.f1Button().whileTrue(climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));
+        /*
+         * OP RIGHT F2 - Prepare Climber
+         */
+        operatorJoystickRight.f2Button().onTrue(
+            new ParallelDeadlineGroup(new ParallelCommandGroup(ramp.detachRampCommand(), ratchet.unlockRatchetCommand())
+            .andThen(climber.rotateClimberOutCommand()), new BlinkLEDCommand(ledStrip, Color.kYellow, 0.25))
+            .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)));
+        
+        /*
+         * OP RIGHT F3 - Climb
+         */        
+        operatorJoystickRight.f3Button().onTrue(ratchet.lockRatchetCommand()
+            .andThen(climber.rotateClimberInCommand()).andThen(new SetLEDPatternCommand(ledStrip)));
 
         // Elevator Bindings
         operatorJoystickRight.outerHatUp().whileTrue(elevator.moveUpCommand(20)); //TODO set this to pass position jog up/down 1 inch
@@ -174,18 +184,21 @@ public class RobotContainer {
         // Pivot Bindings
         operatorJoystickRight.innerHatUp().whileTrue(pivot.runPivotOut(.15));
         operatorJoystickRight.innerHatDown().whileTrue(pivot.runPivotIn(.15));
-        // operatorJoystickRight.f1Button().whileTrue(pivot.run)
-
-        // Ramp Bindings
-        operatorJoystickLeft.f2Button().onTrue(ramp.detachRampCommand());
-        operatorJoystickLeft.f1Button().onTrue(ratchet.unlockRatchetCommand());
-        operatorJoystickLeft.f3Button().onTrue(ratchet.lockRatchetCommand());
-
-        // Ratchet Bindings
+        // operatorJoystickRight.f1Button().whileTrue(pivot.run)        
 
         // LED Bindings
         new Trigger(RobotState::isEnabled)
-        .onTrue(new BlinkLEDCommand(ledStrip));
+        .onTrue(new BlinkLEDCommand(ledStrip, Color.kRed, 0.25));
+
+        // TEST COMMANDS
+
+        operatorJoystickLeft.f1Button().whileTrue(climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));
+        operatorJoystickLeft.f2Button().onTrue(climber.rotateClimberToStartingPositionCommand());
+
+        operatorJoystickLeft.f1Button().onTrue(ratchet.unlockRatchetCommand());
+        operatorJoystickLeft.f3Button().onTrue(ratchet.lockRatchetCommand());
+
+        operatorJoystickLeft.thumbButton().onTrue(new SetLEDPatternCommand(ledStrip));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
