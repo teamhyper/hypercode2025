@@ -1,12 +1,18 @@
 package frc.robot.subsystems;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import java.util.List;
 import java.util.Optional;
 
+import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
@@ -16,19 +22,35 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 public class VisionSubsystem extends SubsystemBase {
     private final PhotonCamera camera_2;
     private final PhotonCamera camera_1;
-    private List<PhotonPipelineResult> latestResults;
+    private final Drivetrain drivetrain;
+    private List<PhotonPipelineResult> latestCamera1Results;
+    private List<PhotonPipelineResult> latestCamera2Results;
+    AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+    PhotonPoseEstimator poseEstimator = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, new Transform3d());
 
     /**
      * Constructs a new VisionSubsystem.
      */
-    public VisionSubsystem() {
+    public VisionSubsystem(Drivetrain drivetrain) {
         camera_2 = new PhotonCamera("arducam-ov9281-usb-02");
         camera_1 = new PhotonCamera("arducam-ov9281-usb-01");
+        this.drivetrain = drivetrain;
     }
 
     @Override
     public void periodic() {
-        updateLatestResults();
+        updateLatestCameraResults();
+        var visionMeasurement = getPhotonPosition().orElse(null);
+        if (visionMeasurement != null) {
+            SmartDashboard.putNumber("Vision X", visionMeasurement.estimatedPose.getTranslation().getX());
+            SmartDashboard.putNumber("Vision Y", visionMeasurement.estimatedPose.getTranslation().getY());
+            SmartDashboard.putNumber("Vision Rotation", visionMeasurement.estimatedPose.getRotation().getAngle());
+
+            var visionMeasurement2d = visionMeasurement.estimatedPose.toPose2d();
+
+            drivetrain.addVisionMeasurement(visionMeasurement2d, 0);
+        }
+
         // Check if tag 16 is in view and put the result on the SmartDashboard
         SmartDashboard.putBoolean("Tag 16 Visible", tagInView(16));
         // Report the yaw of tag 16 to SmartDashboard
@@ -40,16 +62,25 @@ public class VisionSubsystem extends SubsystemBase {
      * Updates the latest results from the camera.
      * This method should be called periodically.
      */
-    public void updateLatestResults() {
-        latestResults = camera_2.getAllUnreadResults();
+    public void updateLatestCameraResults() {
+        latestCamera1Results = camera_1.getAllUnreadResults();
+        latestCamera2Results = camera_2.getAllUnreadResults();
+    }
+
+    public Optional<EstimatedRobotPose> getPhotonPosition() {
+        return poseEstimator.update(latestCamera1Results.get(latestCamera1Results.size() - 1));
     }
 
     /**
      * Gets the latest results from the camera.
      * @return The latest results from the camera.
      */
-    public List<PhotonPipelineResult> getLatestResults() {
-        return latestResults;
+    public List<PhotonPipelineResult> getLatestCamera2Results() {
+        return latestCamera2Results;
+    }
+
+    public List<PhotonPipelineResult> getLatestCamera1Results() {
+        return latestCamera1Results;
     }
 
     /**
@@ -62,12 +93,20 @@ public class VisionSubsystem extends SubsystemBase {
     }
 
     public Optional<PhotonTrackedTarget> getTagIfInView(int fiducialId) {
-        if (latestResults.isEmpty()) {
+        if (latestCamera2Results.isEmpty() && latestCamera1Results.isEmpty()) {
             return Optional.empty();
         }
-        final var frame = latestResults.get(latestResults.size() - 1);
-        if (frame.hasTargets()) {
-            for (var target : frame.targets) {
+        final var frame1 = latestCamera1Results.get(latestCamera1Results.size() - 1);
+        if (frame1.hasTargets()) {
+            for (var target : frame1.targets) {
+                if (target.getFiducialId() == fiducialId) {
+                    return Optional.of(target);
+                }
+            }
+        }
+        final var frame2 = latestCamera2Results.get(latestCamera2Results.size() - 1);
+        if (frame2.hasTargets()) {
+            for (var target : frame2.targets) {
                 if (target.getFiducialId() == fiducialId) {
                     return Optional.of(target);
                 }
