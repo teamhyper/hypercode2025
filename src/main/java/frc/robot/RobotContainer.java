@@ -184,18 +184,18 @@ public class RobotContainer {
         operatorJoystickRight.redButton()
             .onTrue(endEffector.intakeAlgaeCurrentLimitCommand()
             .andThen(new ParallelDeadlineGroup(
-                endEffector.holdAlgaeCommand(), 
+                endEffector.holdAlgaeCommand(),
                 new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25))));
 
         endEffector.getCoralInnerDetectionTrigger()
             .onTrue(new SequentialCommandGroup(endEffector.intakeCoralCommand())
             .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)));
-            
+
         operatorJoystickRight.indexButon().onTrue(endEffector.stopIntakeCommand());
 
         // Pivot Bindings
-        operatorJoystickRight.innerHatUp().whileTrue(pivot.runPivotOut(.15));
-        operatorJoystickRight.innerHatDown().whileTrue(pivot.runPivotIn(.15));
+        operatorJoystickRight.innerHatUp().whileTrue(pivot.runPivotOutAtSpeed(.15));
+        operatorJoystickRight.innerHatDown().whileTrue(pivot.runPivotInAtSpeed(.15));
         // operatorJoystickRight.f1Button().whileTrue(pivot.run)        
 
         // LED Bindings
