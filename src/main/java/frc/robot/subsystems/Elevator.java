@@ -93,7 +93,7 @@ public class Elevator extends SubsystemBase {
         config.MotionMagic.MotionMagicCruiseVelocity = 2; // Max velocity (ticks/sec)
 
         // ✅ Tune PID values (adjust as needed)
-        config.Slot0.kP = 10.0;  // Proportional Gain (response to error)
+        config.Slot0.kP = 15.0;  // Proportional Gain (response to error)
         config.Slot0.kI = 0.0;  // Integral Gain (only if you need fine corrections)
         config.Slot0.kD = 0.0;  // Derivative Gain (smooths response)
         // ✅ Set Feedforward Gains (for smooth motion)
@@ -105,7 +105,7 @@ public class Elevator extends SubsystemBase {
         config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
 
         // ✅ Tune PID values (adjust as needed)
-        config.Slot1.kP = 10.0;  // Proportional Gain (response to error)
+        config.Slot1.kP = 15.0;  // Proportional Gain (response to error)
         config.Slot1.kI = 0.0;  // Integral Gain (only if you need fine corrections)
         config.Slot1.kD = 0.0;  // Derivative Gain (smooths response)
         // ✅ Set Feedforward Gains (for smooth motion)
@@ -117,7 +117,7 @@ public class Elevator extends SubsystemBase {
         config.Slot1.GravityType = GravityTypeValue.Elevator_Static;
 
         // ✅ Tune PID values (adjust as needed)
-        config.Slot2.kP = 10.0;  // Proportional Gain (response to error)
+        config.Slot2.kP = 15.0;  // Proportional Gain (response to error)
         config.Slot2.kI = 0.0;  // Integral Gain (only if you need fine corrections)
         config.Slot2.kD = 0.0;  // Derivative Gain (smooths response)
         // ✅ Set Feedforward Gains (for smooth motion)
@@ -212,8 +212,8 @@ public class Elevator extends SubsystemBase {
 
         SmartDashboard.putNumber("Elevator Position Master", masterMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Elevator Position Follower", followerMotor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Elevator Current Master", masterMotor.getStatorCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Elevator Current Follower", followerMotor.getStatorCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Elevator Current Master", masterMotor.getTorqueCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Elevator Current Follower", followerMotor.getTorqueCurrent().getValueAsDouble());
         SmartDashboard.putNumber("lastPosition", this.lastPosition);
     }
     
