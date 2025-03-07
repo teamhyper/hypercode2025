@@ -180,8 +180,7 @@ public class RobotContainer {
         operatorJoystickRight.triggerPrimary()
                 .onTrue(endEffector.scoreGamePieceCommand().andThen(new BlinkLEDCommand(ledStrip, Color.kRed, 0.25)));
 
-        operatorJoystickRight.redButton() // TODO add pivot command to set pivot to correct position?
-                .onTrue(collectAlgae());
+        operatorJoystickRight.redButton().onTrue(collectAlgaeFromGround());
 
         endEffector.getCoralInnerDetectionTrigger()
                 .onTrue(new SequentialCommandGroup(endEffector.intakeCoralCommand())
@@ -246,7 +245,7 @@ public class RobotContainer {
      * and then auto trigger collecting algae when it is detected
      * and then move the pivot to the carry position
      */
-    private Command collectAlgae() {
+    private Command collectAlgaeFromGround() {
         return moveToCollectAlgaeFromGround()
                 .andThen(endEffector.intakeAlgaeCurrentLimitCommand())
                 .andThen(new ParallelDeadlineGroup(
