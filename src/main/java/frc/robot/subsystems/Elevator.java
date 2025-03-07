@@ -8,6 +8,8 @@ import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -39,6 +41,8 @@ public class Elevator extends SubsystemBase {
     private final DigitalInput bottomLimitSwitch;
 
     private final MotionMagicTorqueCurrentFOC motionMagicTorqueCurrentFOC;
+
+    private final Debouncer limitSwitchDebouncer = new Debouncer(0.5, Debouncer.DebounceType.kRising); // 100ms debounce
 
     private boolean hasResetZero = false;
 
@@ -147,7 +151,8 @@ public class Elevator extends SubsystemBase {
     }
 
     private void zeroElevator() {
-        if (bottomLimitSwitch.get() && !hasResetZero) {
+        boolean debouncedLimitSwitch = limitSwitchDebouncer.calculate(bottomLimitSwitch.get());
+        if (debouncedLimitSwitch && !hasResetZero) {
             // Set the motor's position to zero
             masterMotor.setPosition(0);
             followerMotor.setPosition(0);
