@@ -133,7 +133,16 @@ public class Pivot extends SubsystemBase {
      * @return command that sets the PID setpoint to the current position and holds
      */
     public Command setPositionAndHoldCommand() {
-        return setTargetPositionCommand(encoder::getPosition, true);
+        return setPositionAndHoldCommand(encoder::getPosition);
+    }
+
+    /**
+     *
+     * @param position
+     * @return
+     */
+    public Command setPositionAndHoldCommand(DoubleSupplier position) {
+        return setTargetPositionCommand(position, true);
     }
 
     /**
