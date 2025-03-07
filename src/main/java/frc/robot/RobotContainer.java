@@ -192,11 +192,12 @@ public class RobotContainer {
         operatorJoystickRight.indexButon().onTrue(endEffector.stopIntakeCommand());
 
         // ==================== Pivot Bindings ====================
-        operatorJoystickRight.innerHatUp().whileTrue(pivot.runPivotOutAtSpeed(.15));
-        operatorJoystickRight.innerHatDown().whileTrue(pivot.runPivotInAtSpeed(.15));
+        operatorJoystickRight.outerHatLeft().whileTrue(pivot.runPivotOutAtSpeed(.15));
+        operatorJoystickRight.outerHatRight().whileTrue(pivot.runPivotInAtSpeed(.15));
+
         operatorJoystickLeft.innerHatLeft().onTrue(pivot.setTargetPositionCommand(() -> Pivot.ALL_IN_POSITION));
         operatorJoystickLeft.innerHatDown().onTrue(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_CORAL_POSITION_OFFSET));
-        operatorJoystickLeft.innerHatRight().onTrue(pivot.setTargetPositionCommand(() -> 60));
+        operatorJoystickLeft.innerHatRight().onTrue(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_ALGAE_POSITION_OFFSET));
         operatorJoystickLeft.innerHatUp().onTrue(pivot.setTargetPositionOffsetCommand(Pivot.CARRY_ALGAE_POSITION_OFFSET));
 
         // LED Bindings

@@ -23,26 +23,26 @@ import java.util.function.DoubleSupplier;
 public class Pivot extends SubsystemBase {
     // TODO: get positions
     // SCORE_CORAL_POSITION_OFFSET is a guesstimate of the midpoint (45deg) between the ALL_IN and ALL_OUT positions
-    public static final double ALL_IN_POSITION = 211.5, ALL_OUT_POSITION = 304;
+    public static final double ALL_IN_POSITION = 211.5, ALL_OUT_POSITION = 299.0;
     public static final double COLLECT_CORAL_POSITION_OFFSET = 41.0, COLLECT_ALGAE_POSITION_OFFSET = ALL_OUT_POSITION - ALL_IN_POSITION, SCORE_ALGAE_POSITION_OFFSET = 0.0, SCORE_CORAL_POSITION_OFFSET = 48.0, CARRY_ALGAE_POSITION_OFFSET = 60.0;
 
     // PID coefficients
     // from REV example p = 0.1, i = 1e-4, d = 1
     private static final double P = 0.0125, I = 0.0, D = 0.01;
+    private static final double P2 = 0.001, I2 = 0.0, D2 = 0.01;
     private static final double aFF = 0.01, MIN_OUTPUT = -0.1, MAX_OUTPUT = 0.225;
-    // Max Motion parameters
-    private static final double MAX_VELOCITY = 3000.0, MAX_ACCELERATION = MAX_VELOCITY * 100000, ALLOWED_ERROR = 2.5;
     // REV soft limit parameters
-    private static final boolean FORWARD_SOFT_LIMIT_ENABLED = true, REVERSE_SOFT_LIMIT_ENABLED = true;
-    private static final int PIVOT_MOTOR_ID = 20;
+    private static final boolean FORWARD_SOFT_LIMIT_ENABLED = true, REVERSE_SOFT_LIMIT_ENABLED = true;    // Max Motion parameters
+    private static final int PIVOT_MOTOR_ID = 20;    private static final double MAX_VELOCITY = 3000.0, MAX_ACCELERATION = MAX_VELOCITY * 100000, ALLOWED_ERROR = 2.5;
     private static final double G = 1.51, V = 0.78, A = 0.07, S = 0.0;
     private final SparkMax motor;
     private final SparkAbsoluteEncoder encoder;
     private final SparkClosedLoopController pidController;
     private final ArmFeedforward pivotFeedforward = new ArmFeedforward(S, G, V, A);
     private final ClosedLoopSlot pidSlotMain = ClosedLoopSlot.kSlot0;
+    private final ClosedLoopSlot pidSlotExtended = ClosedLoopSlot.kSlot1;
     private double target;
-
+    private boolean isUsingSlot1PID = false;
 
     public Pivot() {
         this(PIVOT_MOTOR_ID);
@@ -64,6 +64,7 @@ public class Pivot extends SubsystemBase {
         config.closedLoop
                 .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
                 .pid(P, I, D, pidSlotMain)
+                .pid(P2, I2, D2, pidSlotExtended)
                 .outputRange(MIN_OUTPUT, MAX_OUTPUT);
 
         // TODO: tune maxMotion values
@@ -90,19 +91,6 @@ public class Pivot extends SubsystemBase {
         setDefaultCommand(setPositionAndHoldCommand());
     }
 
-    /**
-     * Method to set the pivot position using Max Motion Profiling
-     *
-     * @param position target value for the PID
-     */
-    public void setPosition(DoubleSupplier position) {
-        this.target = position.getAsDouble();
-
-        System.out.printf("Pivot.setPosition(): Position: %.2f%n", this.target);
-//        pidController.setReference(this.target, SparkMax.ControlType.kMAXMotionPositionControl, pidSlotMain, aFF);
-        pidController.setReference(this.target, SparkMax.ControlType.kPosition, pidSlotMain, aFF);
-    }
-
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
@@ -116,7 +104,6 @@ public class Pivot extends SubsystemBase {
         builder.addDoubleProperty("Applied Output", motor::getAppliedOutput, null);
     }
 
-
     /**
      * Method to get the current position
      *
@@ -124,6 +111,36 @@ public class Pivot extends SubsystemBase {
      */
     public double getPosition() {
         return encoder.getPosition();
+    }
+
+    /**
+     * Method to set the pivot position using Max Motion Profiling
+     *
+     * @param position target value for the PID
+     */
+    public void setPosition(DoubleSupplier position) {
+        encoder.getPosition();
+        this.target = position.getAsDouble();
+
+        System.out.printf("Pivot.setPosition(): Position: %.2f%n", this.target);
+
+        pidController.setReference(this.target, SparkMax.ControlType.kPosition, pidSlotMain, aFF);
+    }
+
+    /**
+     * decide which pid slot to use based on the current position
+     */
+    private void pidSlotBasedOnPositionTarget() {
+        double position = encoder.getPosition();
+        boolean shouldUseSlot1PID = position >= ALL_OUT_POSITION + COLLECT_ALGAE_POSITION_OFFSET;
+
+        if( shouldUseSlot1PID && !isUsingSlot1PID ) {
+                pidController.setReference(this.target, SparkMax.ControlType.kPosition, pidSlotExtended);
+        }
+
+        if(!shouldUseSlot1PID && isUsingSlot1PID) {
+            pidController.setReference(this.target, SparkMax.ControlType.kPosition, pidSlotMain, aFF);
+        }
     }
 
     /**
@@ -137,7 +154,6 @@ public class Pivot extends SubsystemBase {
     }
 
     /**
-     *
      * @param position
      * @return
      */
@@ -231,7 +247,7 @@ public class Pivot extends SubsystemBase {
     public Command setTargetPositionCommand(DoubleSupplier position, boolean hold) {
         return new FunctionalCommand(
                 () -> setPosition(position),
-                this::doNothing,
+                this::pidSlotBasedOnPositionTarget,
                 (interrupted) -> stop(),
                 () -> !hold && onTarget(position),
                 this
@@ -248,4 +264,8 @@ public class Pivot extends SubsystemBase {
     private Command doNothingCmd() {
         return new RunCommand(this::doNothing, this);
     }
+
+
+
+
 }
