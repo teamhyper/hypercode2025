@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -261,36 +260,41 @@ public class RobotContainer {
      * move the elevator and pivot to positions to collect algae
      */
     private Command moveToCollectAlgaeFromGround() {
-        return moveElevatorToPosition(Elevator.BOTTOM_POSITION, Pivot.SCORE_CORAL_POSITION_OFFSET)
+        return moveElevatorToPosition(Elevator.BOTTOM_POSITION, Pivot.CLEAR_RAMP)
                 .andThen(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_ALGAE_POSITION_OFFSET));
     }
 
     private Command moveToCollectAlgaeFromReef(double position) {
-        return moveElevatorToPosition(position, Pivot.CARRY_ALGAE_POSITION_OFFSET)
+        return moveElevatorToPosition(position, Pivot.CLEAR_RAMP)
                 .andThen(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_ALGAE_POSITION_OFFSET));
     }
 
     private Command moveToScoreAlgae() {
-        return moveElevatorToPosition(Elevator.TOP_POSITION, Pivot.SCORE_ALGAE_POSITION_OFFSET).andThen(pivot.setTargetPositionOffsetCommand(Pivot.SCORE_ALGAE_POSITION_OFFSET));
+        return moveElevatorToPosition(Elevator.TOP_POSITION, Pivot.CARRY_ALGAE_POSITION_OFFSET).andThen(pivot.setTargetPositionOffsetCommand(Pivot.SCORE_ALGAE_POSITION_OFFSET));
     }
 
     /**
      * move the elevator and pivot to positions to collect coral
      */
     private Command moveToCollectCoral() {
-        return moveElevatorToPosition(Elevator.BOTTOM_POSITION, Pivot.SCORE_CORAL_POSITION_OFFSET)
+        return moveElevatorToPosition(Elevator.BOTTOM_POSITION, Pivot.CLEAR_RAMP)
                 .andThen(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_CORAL_POSITION_OFFSET));
     }
 
     private Command moveToScoreCoral(double position) {
-        return moveElevatorToPosition(position, Pivot.SCORE_CORAL_POSITION_OFFSET);
+        return moveElevatorToPosition(position, Pivot.CLEAR_RAMP)
+                .andThen(pivot.setTargetPositionOffsetCommand(Pivot.SCORE_CORAL_POSITION_OFFSET));
     }
 
     /**
      * move the end effector out of the way to the given position, then the elevator to the given height
      */
     private Command moveElevatorToPosition(double elevatorPosition, double pivotPositionOffset) {
-        return pivot.setTargetPositionOffsetCommand(pivotPositionOffset).andThen(elevator.moveToPositionCommand(elevatorPosition));
+        return pivot.setTargetPositionOffsetCommand(pivotPositionOffset)
+                .andThen(new ParallelDeadlineGroup(
+                        pivot.setPositionAndHoldCommand(),
+                        elevator.moveToPositionCommand(elevatorPosition))
+                );
 
     }
 

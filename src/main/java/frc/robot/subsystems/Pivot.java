@@ -24,16 +24,17 @@ public class Pivot extends SubsystemBase {
     // TODO: get positions
     // SCORE_CORAL_POSITION_OFFSET is a guesstimate of the midpoint (45deg) between the ALL_IN and ALL_OUT positions
     public static final double ALL_IN_POSITION = 211.5, ALL_OUT_POSITION = 299.0;
-    public static final double COLLECT_CORAL_POSITION_OFFSET = 41.0, COLLECT_ALGAE_POSITION_OFFSET = ALL_OUT_POSITION - ALL_IN_POSITION, SCORE_ALGAE_POSITION_OFFSET = 0.0, SCORE_CORAL_POSITION_OFFSET = 48.0, CARRY_ALGAE_POSITION_OFFSET = 60.0;
+    public static final double CLEAR_RAMP = 55.0, COLLECT_CORAL_POSITION_OFFSET = 41.0, COLLECT_ALGAE_POSITION_OFFSET = ALL_OUT_POSITION - ALL_IN_POSITION, SCORE_CORAL_POSITION_OFFSET = 48.0, CARRY_ALGAE_POSITION_OFFSET = 60.0, SCORE_ALGAE_POSITION_OFFSET = 60.0;
 
     // PID coefficients
     // from REV example p = 0.1, i = 1e-4, d = 1
-    private static final double P = 0.0125, I = 0.0, D = 0.01;
-    private static final double P2 = 0.001, I2 = 0.0, D2 = 0.01;
+    private static final double P = 0.02, I = 0.0, D = 0.01;
+    private static final double P2 = 0.002, I2 = 0.0, D2 = 0.01;
     private static final double aFF = 0.01, MIN_OUTPUT = -0.1, MAX_OUTPUT = 0.225;
     // REV soft limit parameters
     private static final boolean FORWARD_SOFT_LIMIT_ENABLED = true, REVERSE_SOFT_LIMIT_ENABLED = true;    // Max Motion parameters
-    private static final int PIVOT_MOTOR_ID = 20;    private static final double MAX_VELOCITY = 3000.0, MAX_ACCELERATION = MAX_VELOCITY * 100000, ALLOWED_ERROR = 2.5;
+    private static final int PIVOT_MOTOR_ID = 20;
+    private static final double MAX_VELOCITY = 3000.0, MAX_ACCELERATION = MAX_VELOCITY * 100000, ALLOWED_ERROR = 3;
     private static final double G = 1.51, V = 0.78, A = 0.07, S = 0.0;
     private final SparkMax motor;
     private final SparkAbsoluteEncoder encoder;
@@ -135,10 +136,12 @@ public class Pivot extends SubsystemBase {
         boolean shouldUseSlot1PID = position >= ALL_OUT_POSITION + COLLECT_ALGAE_POSITION_OFFSET;
 
         if( shouldUseSlot1PID && !isUsingSlot1PID ) {
+                isUsingSlot1PID = true;
                 pidController.setReference(this.target, SparkMax.ControlType.kPosition, pidSlotExtended);
         }
 
         if(!shouldUseSlot1PID && isUsingSlot1PID) {
+            isUsingSlot1PID = false;
             pidController.setReference(this.target, SparkMax.ControlType.kPosition, pidSlotMain, aFF);
         }
     }
