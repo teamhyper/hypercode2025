@@ -32,7 +32,7 @@ public class RobotContainer {
     public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
     public final EndEffector endEffector = new EndEffector();
     public final Climber climber = new Climber();
-    // public final VisionSubsystem vision = new VisionSubsystem();
+    // public final VisionSubsystem vision = new VisionSubsystem(drivetrain);
     public final Elevator elevator = new Elevator();
     public final Pivot pivot = new Pivot();
     public final Ratchet ratchet = new Ratchet();
