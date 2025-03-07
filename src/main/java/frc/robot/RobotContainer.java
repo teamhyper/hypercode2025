@@ -113,8 +113,8 @@ public class RobotContainer {
                     if (Drivetrain.isRobotCentric) {
                         // Robot-centric mode
                         return robotCentricDrive
-                                .withVelocityX(vx)
-                                .withVelocityY(vy)
+                                .withVelocityX(-vx)
+                                .withVelocityY(-vy)
                                 .withRotationalRate(omega);
                     } else {
                         // Field-centric mode
