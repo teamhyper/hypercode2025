@@ -24,7 +24,7 @@ public class Climber extends SubsystemBase {
 
     private static final double CLIMBER_ENCODER_OFFSET = 163; // (Degrees)
     private static final double PREPARE_CURRENT = 30.0;
-    private static final double CLIMB_CURRENT = 120.0;
+    private static final double CLIMB_CURRENT = 180.0;
 
     private final TalonFX m_climber;
     private final CANcoder e_climber;
@@ -134,7 +134,7 @@ public class Climber extends SubsystemBase {
      * Command to move the climber to lifting position.
      */
     public Command rotateClimberInCommand() {
-        return rotateClimberCommand(CLIMB_CURRENT).until(() -> getClimberAngle() <= 100).andThen(stopClimberCommand());
+        return rotateClimberCommand(CLIMB_CURRENT).until(() -> getClimberAngle() <= 90).andThen(stopClimberCommand());
     }
 
 }

@@ -26,11 +26,12 @@ public class Elevator extends SubsystemBase {
     private static final double BOTTOM_POSITION = 0.0;
     private static final double TOP_POSITION = 88.0;
 
-    private static final double POSITION_1 = 10.0;
-    private static final double POSITION_2 = 20.0;
-    private static final double POSITION_3 = 30.0;
-    private static final double POSITION_4 = 40.0;
-    private static final double POSITION_5 = 50.0;
+    private static final double POSITION_CORAL_L2 = 34.5;
+    private static final double POSITION_CORAL_L3 = 51.0;
+    private static final double POSITION_CORAL_L4 = 81.5;
+    private static final double POSITION_ALGAE_LOW = 26.5;
+    private static final double POSITION_ALGAE_HIGH = 41.0;
+    private static final double POSITION_ALGAE_BARGE = 85.0; // or 88 with carry algae position
 
     private static final double STAGE_1 = 24.93;
     private static final double STAGE_2 = 59.3;
@@ -89,11 +90,11 @@ public class Elevator extends SubsystemBase {
         // config.CurrentLimits.StatorCurrentLimitEnable = true;
 
         // ✅ Set Motion Magic parameters
-        config.MotionMagic.MotionMagicAcceleration = 3;  // Acceleration (ticks/sec²)
-        config.MotionMagic.MotionMagicCruiseVelocity = 2; // Max velocity (ticks/sec)
+        config.MotionMagic.MotionMagicAcceleration = 80;  // Acceleration (ticks/sec²)
+        config.MotionMagic.MotionMagicCruiseVelocity = 60; // Max velocity (ticks/sec)
 
         // ✅ Tune PID values (adjust as needed)
-        config.Slot0.kP = 15.0;  // Proportional Gain (response to error)
+        config.Slot0.kP = 20.0;  // Proportional Gain (response to error)
         config.Slot0.kI = 0.0;  // Integral Gain (only if you need fine corrections)
         config.Slot0.kD = 0.0;  // Derivative Gain (smooths response)
         // ✅ Set Feedforward Gains (for smooth motion)
@@ -105,7 +106,7 @@ public class Elevator extends SubsystemBase {
         config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
 
         // ✅ Tune PID values (adjust as needed)
-        config.Slot1.kP = 15.0;  // Proportional Gain (response to error)
+        config.Slot1.kP = 20.0;  // Proportional Gain (response to error)
         config.Slot1.kI = 0.0;  // Integral Gain (only if you need fine corrections)
         config.Slot1.kD = 0.0;  // Derivative Gain (smooths response)
         // ✅ Set Feedforward Gains (for smooth motion)
@@ -117,7 +118,7 @@ public class Elevator extends SubsystemBase {
         config.Slot1.GravityType = GravityTypeValue.Elevator_Static;
 
         // ✅ Tune PID values (adjust as needed)
-        config.Slot2.kP = 15.0;  // Proportional Gain (response to error)
+        config.Slot2.kP = 20.0;  // Proportional Gain (response to error)
         config.Slot2.kI = 0.0;  // Integral Gain (only if you need fine corrections)
         config.Slot2.kD = 0.0;  // Derivative Gain (smooths response)
         // ✅ Set Feedforward Gains (for smooth motion)
@@ -133,9 +134,6 @@ public class Elevator extends SubsystemBase {
         
         // Ensure follower motor runs in the opposite direction of the master motor
         followerMotor.setControl(new Follower(masterMotor.getDeviceID(), true));
-
-        masterMotor.setPosition(0.0);  // Set initial encoder position
-        followerMotor.setPosition(0.0);
     }
 
     private int getSlotFromPosition() {
@@ -199,7 +197,7 @@ public class Elevator extends SubsystemBase {
         targetPosition = Math.max(BOTTOM_POSITION, Math.min(TOP_POSITION, targetPosition));
 
         // Apply Motion Magic control with FOC
-        masterMotor.setControl(motionMagicTorqueCurrentFOC.withSlot(getSlotFromPosition()).withPosition(targetPosition));
+        masterMotor.setControl(new MotionMagicTorqueCurrentFOC(targetPosition).withSlot(getSlotFromPosition()));
 
         lastPosition = targetPosition;
     }
