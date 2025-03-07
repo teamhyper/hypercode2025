@@ -170,7 +170,7 @@ public class RobotContainer {
         operatorJoystickRight.innerHatDown().onTrue(moveToCollectAlgaeFromReef(Elevator.POSITION_ALGAE_LOW));
 
         // Elevator to floor
-        operatorJoystickRight.thumbButton().onTrue(moveElevatorToPosition(Elevator.BOTTOM_POSITION, Pivot.SCORE_CORAL_POSITION_OFFSET));
+        operatorJoystickRight.thumbButton().onTrue(moveToCollectCoral());
 
         // Manual Elevator Commands
         operatorJoystickRight.outerHatUp().whileTrue(elevator.moveUpCommand(20)); //TODO set this to pass position jog up/down 1 inch
