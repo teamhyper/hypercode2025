@@ -26,7 +26,7 @@ public class Elevator extends SubsystemBase {
     public static final double BOTTOM_POSITION = 0.0;
     public static final double TOP_POSITION = 88.0;
 
-    public static final double POSITION_CORAL_L1 = 17.0;
+    public static final double POSITION_CORAL_L1 = 17.0; // TODO: find actual value for L1
     public static final double POSITION_CORAL_L2 = 34.5;
     public static final double POSITION_CORAL_L3 = 51.0;
     public static final double POSITION_CORAL_L4 = 81.5;
