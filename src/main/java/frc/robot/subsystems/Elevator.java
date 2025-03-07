@@ -239,15 +239,17 @@ public class Elevator extends SubsystemBase {
     }
 
     /**
-     * Command to move the elevator down.
+     * Command to move the elevator up.
      *
-     * @param rotations The current to run the elevator in Amps
+     * @param rotation The current to run the elevator in Amps
      */
-    public Command moveDownCommand(double rotations) {
-        double target = masterMotor.getPosition().getValueAsDouble() - rotations;
-        return new RunCommand(() -> setElevatorPosition(target), this);
-        // .until(() -> Math.abs(masterMotor.getPosition().getValueAsDouble() - target) < 0.05)
-        // .finallyDo(interrupted -> runElevator(0));
+    public Command moveDownCommand(double rotation) {
+        return new FunctionalCommand(
+                () -> target = masterMotor.getPosition().getValueAsDouble() - rotation,
+                () -> setElevatorPosition(target),
+                (interrupted) -> runElevator(0),
+                this::isOnTarget
+        );
     }
 
     /**
