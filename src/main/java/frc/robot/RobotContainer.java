@@ -12,10 +12,7 @@ import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.ledCommands.BlinkLEDCommand;
 import frc.robot.commands.ledCommands.SetLEDPatternCommand;
@@ -81,11 +78,6 @@ public class RobotContainer {
         // Drivetrain Bindings
         drivetrain.setDefaultCommand(
                 drivetrain.applyRequest(() -> {
-                    // Check which mode to use
-                    boolean isRobotCentric = false;
-                    // Check if slow mode is active
-                    boolean slowMode = false;
-
                     boolean trackTag = driverJoystickRight.rightButton().getAsBoolean() || driverJoystickRight.leftButton().getAsBoolean();
 
                     // Decide on your normal top speed/rotation
@@ -108,8 +100,8 @@ public class RobotContainer {
                     double vy = DriverInput.filterAllowZero(rawY, ySpeedLimiter, rawY == 0);
                     double omega = DriverInput.filterAllowZero(rawRot, rotLimiter, rawRot == 0);
 
-                    SmartDashboard.putBoolean("Robot-Centric Drive", isRobotCentric);
-                    SmartDashboard.putBoolean("Slow Mode", slowMode);
+                    SmartDashboard.putBoolean("Robot-Centric Drive", Drivetrain.isRobotCentric);
+                    SmartDashboard.putBoolean("Slow Mode", Drivetrain.isSlowMode);
                     SmartDashboard.putBoolean("Track Tag", trackTag);
 
                     // if (trackTag && vision.getTagIfInView(16).isPresent()) {
@@ -118,7 +110,7 @@ public class RobotContainer {
                     //     omega = -1.0 * vision.getTagIfInView(16).get().getYaw() * omega * .01;
                     // }
                     // Return the proper request
-                    if (isRobotCentric) {
+                    if (Drivetrain.isRobotCentric) {
                         // Robot-centric mode
                         return robotCentricDrive
                                 .withVelocityX(vx)
@@ -133,6 +125,9 @@ public class RobotContainer {
                     }
                 })
         );
+
+        driverJoystickLeft.leftButton().onTrue(new InstantCommand(() -> Drivetrain.isRobotCentric = true));
+        driverJoystickLeft.rightButton().onTrue(new InstantCommand(() -> Drivetrain.isRobotCentric = false));
 
         // ==================== Climber Bindings ====================
 
