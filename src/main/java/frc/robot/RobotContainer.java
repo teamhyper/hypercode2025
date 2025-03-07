@@ -154,10 +154,13 @@ public class RobotContainer {
 
         // Coral Positions
         operatorJoystickRight.lowerHatUp()
-                .onTrue(elevator.moveToPositionCommand(0));
-        operatorJoystickRight.lowerHatLeft().or(operatorJoystickRight.lowerHatRight())
-                .onTrue(elevator.moveToPositionCommand(0));
-        operatorJoystickRight.lowerHatDown().onTrue(elevator.moveToPositionCommand(0));
+                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L4));
+        operatorJoystickRight.lowerHatLeft()
+                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L3));
+        operatorJoystickRight.lowerHatRight()
+                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L2));
+        operatorJoystickRight.lowerHatDown()
+                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L1));
 
         // Algae Positions -- TODO add pivot commands to set the correct angle
         operatorJoystickRight.innerHatUp()
@@ -277,6 +280,10 @@ public class RobotContainer {
     private Command moveToCollectCoral() {
         return moveElevatorToPosition(Elevator.BOTTOM_POSITION, Pivot.SCORE_CORAL_POSITION_OFFSET)
                 .andThen(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_CORAL_POSITION_OFFSET));
+    }
+
+    private Command moveToScoreCoral(double position) {
+        return moveElevatorToPosition(position, Pivot.SCORE_CORAL_POSITION_OFFSET);
     }
 
     /**
