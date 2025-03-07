@@ -23,15 +23,15 @@ public class Elevator extends SubsystemBase {
     private static final int FOLLOWER_ID = 18;
     private static final int LIM_SWITCH_ID = 1;
 
-    private static final double BOTTOM_POSITION = 0.0;
-    private static final double TOP_POSITION = 88.0;
+    public static final double BOTTOM_POSITION = 0.0;
+    public static final double TOP_POSITION = 88.0;
 
-    private static final double POSITION_CORAL_L2 = 34.5;
-    private static final double POSITION_CORAL_L3 = 51.0;
-    private static final double POSITION_CORAL_L4 = 81.5;
-    private static final double POSITION_ALGAE_LOW = 26.5;
-    private static final double POSITION_ALGAE_HIGH = 41.0;
-    private static final double POSITION_ALGAE_BARGE = 85.0; // or 88 with carry algae position
+    public static final double POSITION_CORAL_L2 = 34.5;
+    public static final double POSITION_CORAL_L3 = 51.0;
+    public static final double POSITION_CORAL_L4 = 81.5;
+    public static final double POSITION_ALGAE_LOW = 26.5;
+    public static final double POSITION_ALGAE_HIGH = 41.0;
+    public static final double POSITION_ALGAE_BARGE = 85.0; // or 88 with carry algae position
 
     private static final double STAGE_1 = 24.93;
     private static final double STAGE_2 = 59.3;
