@@ -154,12 +154,15 @@ public class RobotContainer {
 
         // Coral Positions
         operatorJoystickRight.lowerHatUp()
-                .onTrue(elevator.moveToPositionCommand(0));
-        operatorJoystickRight.lowerHatLeft().or(operatorJoystickRight.lowerHatRight())
-                .onTrue(elevator.moveToPositionCommand(0));
-        operatorJoystickRight.lowerHatDown().onTrue(elevator.moveToPositionCommand(0));
+                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L4));
+        operatorJoystickRight.lowerHatLeft()
+                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L3));
+        operatorJoystickRight.lowerHatRight()
+                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L2));
+        operatorJoystickRight.lowerHatDown()
+                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L1));
 
-        // Algae Positions -- TODO add pivot commands to set the correct angle
+        // Algae Positions
         operatorJoystickRight.innerHatUp()
                 .onTrue(moveToScoreAlgae());
         operatorJoystickRight.innerHatLeft().or(operatorJoystickRight.innerHatRight())
@@ -167,7 +170,7 @@ public class RobotContainer {
         operatorJoystickRight.innerHatDown().onTrue(moveToCollectAlgaeFromReef(Elevator.POSITION_ALGAE_LOW));
 
         // Elevator to floor
-        operatorJoystickRight.thumbButton().onTrue(moveElevatorToPosition(Elevator.BOTTOM_POSITION, Pivot.SCORE_CORAL_POSITION_OFFSET));
+        operatorJoystickRight.thumbButton().onTrue(moveToCollectCoral());
 
         // Manual Elevator Commands
         operatorJoystickRight.outerHatUp().whileTrue(elevator.moveUpCommand(20)); //TODO set this to pass position jog up/down 1 inch
@@ -189,11 +192,12 @@ public class RobotContainer {
         operatorJoystickRight.indexButon().onTrue(endEffector.stopIntakeCommand());
 
         // ==================== Pivot Bindings ====================
-        operatorJoystickRight.innerHatUp().whileTrue(pivot.runPivotOutAtSpeed(.15));
-        operatorJoystickRight.innerHatDown().whileTrue(pivot.runPivotInAtSpeed(.15));
+        operatorJoystickRight.outerHatLeft().whileTrue(pivot.runPivotOutAtSpeed(.15));
+        operatorJoystickRight.outerHatRight().whileTrue(pivot.runPivotInAtSpeed(.15));
+
         operatorJoystickLeft.innerHatLeft().onTrue(pivot.setTargetPositionCommand(() -> Pivot.ALL_IN_POSITION));
         operatorJoystickLeft.innerHatDown().onTrue(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_CORAL_POSITION_OFFSET));
-        operatorJoystickLeft.innerHatRight().onTrue(pivot.setTargetPositionCommand(() -> 60));
+        operatorJoystickLeft.innerHatRight().onTrue(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_ALGAE_POSITION_OFFSET));
         operatorJoystickLeft.innerHatUp().onTrue(pivot.setTargetPositionOffsetCommand(Pivot.CARRY_ALGAE_POSITION_OFFSET));
 
         // LED Bindings
@@ -279,11 +283,16 @@ public class RobotContainer {
                 .andThen(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_CORAL_POSITION_OFFSET));
     }
 
+    private Command moveToScoreCoral(double position) {
+        return moveElevatorToPosition(position, Pivot.SCORE_CORAL_POSITION_OFFSET);
+    }
+
     /**
      * move the end effector out of the way to the given position, then the elevator to the given height
      */
     private Command moveElevatorToPosition(double elevatorPosition, double pivotPositionOffset) {
         return pivot.setTargetPositionOffsetCommand(pivotPositionOffset).andThen(elevator.moveToPositionCommand(elevatorPosition));
+
     }
 
     /**
