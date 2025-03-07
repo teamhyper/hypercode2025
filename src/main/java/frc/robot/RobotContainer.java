@@ -25,8 +25,6 @@ import frc.robot.joysticks.ApemHF45Joystick;
 import frc.robot.joysticks.VKBGladiatorJoystick;
 import frc.robot.subsystems.*;
 
-import java.util.function.DoubleSupplier;
-
 import static edu.wpi.first.units.Units.*;
 
 public class RobotContainer {
@@ -156,20 +154,20 @@ public class RobotContainer {
 
         // Coral Positions
         operatorJoystickRight.lowerHatUp()
-                .onTrue(moveToScoreAlgae());
+                .onTrue(elevator.moveToPositionCommand(0));
         operatorJoystickRight.lowerHatLeft().or(operatorJoystickRight.lowerHatRight())
                 .onTrue(elevator.moveToPositionCommand(0));
         operatorJoystickRight.lowerHatDown().onTrue(elevator.moveToPositionCommand(0));
 
         // Algae Positions -- TODO add pivot commands to set the correct angle
         operatorJoystickRight.innerHatUp()
-                .onTrue(elevator.moveToPositionCommand(0));
+                .onTrue(moveToScoreAlgae());
         operatorJoystickRight.innerHatLeft().or(operatorJoystickRight.innerHatRight())
-                .onTrue(elevator.moveToPositionCommand(0));
-        operatorJoystickRight.innerHatDown().onTrue(elevator.moveToPositionCommand(0));
+                .onTrue(moveToCollectAlgaeFromReef(Elevator.POSITION_ALGAE_HIGH));
+        operatorJoystickRight.innerHatDown().onTrue(moveToCollectAlgaeFromReef(Elevator.POSITION_ALGAE_LOW));
 
         // Elevator to floor
-        operatorJoystickRight.thumbButton().onTrue(moveElevatorToBottom());
+        operatorJoystickRight.thumbButton().onTrue(moveElevatorToPosition(Elevator.BOTTOM_POSITION, Pivot.SCORE_CORAL_POSITION_OFFSET));
 
         // Manual Elevator Commands
         operatorJoystickRight.outerHatUp().whileTrue(elevator.moveUpCommand(20)); //TODO set this to pass position jog up/down 1 inch
@@ -261,34 +259,32 @@ public class RobotContainer {
      * move the elevator and pivot to positions to collect algae
      */
     private Command moveToCollectAlgaeFromGround() {
-        return moveElevatorToBottom()
+        return moveElevatorToPosition(Elevator.BOTTOM_POSITION, Pivot.SCORE_CORAL_POSITION_OFFSET)
+                .andThen(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_ALGAE_POSITION_OFFSET));
+    }
+
+    private Command moveToCollectAlgaeFromReef(double position) {
+        return moveElevatorToPosition(position, Pivot.CARRY_ALGAE_POSITION_OFFSET)
                 .andThen(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_ALGAE_POSITION_OFFSET));
     }
 
     private Command moveToScoreAlgae() {
-        return moveElevatorToPosition(() -> Elevator.TOP_POSITION).andThen(pivot.setTargetPositionOffsetCommand(Pivot.SCORE_ALGAE_POSITION_OFFSET));
+        return moveElevatorToPosition(Elevator.TOP_POSITION, Pivot.SCORE_ALGAE_POSITION_OFFSET).andThen(pivot.setTargetPositionOffsetCommand(Pivot.SCORE_ALGAE_POSITION_OFFSET));
     }
 
     /**
      * move the elevator and pivot to positions to collect coral
      */
     private Command moveToCollectCoral() {
-        return moveElevatorToBottom()
+        return moveElevatorToPosition(Elevator.BOTTOM_POSITION, Pivot.SCORE_CORAL_POSITION_OFFSET)
                 .andThen(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_CORAL_POSITION_OFFSET));
     }
 
     /**
-     * move the end effector out of the way, then the elevator to the bottom
+     * move the end effector out of the way to the given position, then the elevator to the given height
      */
-    private Command moveElevatorToBottom() {
-        return pivot.setTargetPositionOffsetCommand(Pivot.SCORE_CORAL_POSITION_OFFSET).andThen(elevator.moveToPositionCommand(Elevator.BOTTOM_POSITION));
-    }
-
-    /**
-     * move the end effector out of the way, then the elevator to the given height
-     */
-    private Command moveElevatorToPosition(DoubleSupplier elevatorPosition) {
-        return pivot.setTargetPositionOffsetCommand(Pivot.CARRY_ALGAE_POSITION_OFFSET).andThen(elevator.moveToPositionCommand(elevatorPosition.getAsDouble()));
+    private Command moveElevatorToPosition(double elevatorPosition, double pivotPositionOffset) {
+        return pivot.setTargetPositionOffsetCommand(pivotPositionOffset).andThen(elevator.moveToPositionCommand(elevatorPosition));
     }
 
     /**
