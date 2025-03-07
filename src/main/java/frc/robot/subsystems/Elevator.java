@@ -9,8 +9,10 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -45,8 +47,9 @@ public class Elevator extends SubsystemBase {
 
     private final MotionMagicTorqueCurrentFOC motionMagicTorqueCurrentFOC;
 
-    private double lastPosition = 0.0;
     private boolean hasResetZero = false;
+
+    private double target = 0.0;
 
     public Elevator() {
         this(MASTER_ID, FOLLOWER_ID, LIM_SWITCH_ID);
@@ -165,7 +168,6 @@ public class Elevator extends SubsystemBase {
      */
     public void runElevator(double current) {
         masterMotor.setControl(new TorqueCurrentFOC(current));
-        lastPosition = masterMotor.getPosition().getValueAsDouble();
     }
 
     /**
@@ -173,19 +175,20 @@ public class Elevator extends SubsystemBase {
      * @param output Speed output in duty cycle
      */
     public void runElevatorVariable(double output) {
-        masterMotor.setControl(new DutyCycleOut(output));
-        lastPosition = masterMotor.getPosition().getValueAsDouble();
+        masterMotor.setControl(new DutyCycleOut(output).withIgnoreHardwareLimits(true));
     }
 
     /**
      * Holds the elevator at its current position.
      */
     public void holdPosition() {
+        // do nothing if elevator at bottom
         if (masterMotor.getPosition().getValueAsDouble() <= 0.1) {
             masterMotor.setControl( new TorqueCurrentFOC(0));
+        // apply holding current otherwise
         } else {
             masterMotor.setControl(motionMagicTorqueCurrentFOC
-                .withSlot(getSlotFromPosition()).withPosition(lastPosition));
+                .withSlot(getSlotFromPosition()).withPosition(masterMotor.getPosition().getValueAsDouble()));
         }        
     }
 
@@ -199,8 +202,6 @@ public class Elevator extends SubsystemBase {
 
         // Apply Motion Magic control with FOC
         masterMotor.setControl(new MotionMagicTorqueCurrentFOC(targetPosition).withSlot(getSlotFromPosition()));
-
-        lastPosition = targetPosition;
     }
     
     @Override
@@ -209,27 +210,34 @@ public class Elevator extends SubsystemBase {
         zeroElevator();
         SmartDashboard.putBoolean("Bottom Limit Switch", bottomLimitSwitch.get());
 
+        target = masterMotor.getPosition().getValueAsDouble();
+
         SmartDashboard.putNumber("Elevator Position Master", masterMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Elevator Position Follower", followerMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Elevator Current Master", masterMotor.getTorqueCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Elevator Current Follower", followerMotor.getTorqueCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("lastPosition", this.lastPosition);
+        SmartDashboard.putNumber("Elevator Current Follower", followerMotor.getTorqueCurrent().getValueAsDouble());        
     }
     
     /**
      * Command to move the elevator up.
-     * @param current The current to run the elevator in Amps
+     * @param rotations The current to run the elevator in Amps
      */
-    public Command moveUpCommand(double current) {
-        return new RunCommand(() -> runElevator(current), this).finallyDo(interrupted -> runElevator(0));
+    public Command moveUpCommand(double rotations) {
+        target = target + rotations;
+        SmartDashboard.putNumber("target", target);
+        return new RunCommand(() -> setElevatorPosition(target), this)
+            .until(() -> Math.abs(masterMotor.getPosition().getValueAsDouble() - target) < 0.1);
     }
     
     /**
      * Command to move the elevator down.
-     * @param current The current to run the elevator in Amps
+     * @param rotations The current to run the elevator in Amps
      */
-    public Command moveDownCommand(double current) {
-        return new RunCommand(() -> runElevator(-current), this).finallyDo(interrupted -> runElevator(0));
+    public Command moveDownCommand(double rotations) {
+        double target = masterMotor.getPosition().getValueAsDouble() - rotations;
+        return new RunCommand(() -> setElevatorPosition(target), this);
+            // .until(() -> Math.abs(masterMotor.getPosition().getValueAsDouble() - target) < 0.05)
+            // .finallyDo(interrupted -> runElevator(0));
     }
 
     /**
@@ -260,19 +268,6 @@ public class Elevator extends SubsystemBase {
      */
     public Command holdElevatorPositionCommand() {
         return new RunCommand(() -> holdPosition(), this);
-    }
-
-    public Command testGravityCommand() {
-        return new RunCommand(() -> {
-            double holdPosition = masterMotor.getPosition().getValueAsDouble(); // Get current position
-            masterMotor.setControl(new MotionMagicTorqueCurrentFOC(holdPosition).withSlot(getSlotFromPosition()));
-        }, this);
-    }
-
-    public Command testCommand() {
-        return new RunCommand(() -> {
-            masterMotor.setControl(new TorqueCurrentFOC(5.0)); // Small torque to overcome friction
-        }, this);
     }
 
 }

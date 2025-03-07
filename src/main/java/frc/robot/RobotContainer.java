@@ -12,6 +12,11 @@ import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.ledCommands.BlinkLEDCommand;
@@ -151,9 +156,9 @@ public class RobotContainer {
         operatorJoystickRight.lowerHatUp()
                 .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L4));
         operatorJoystickRight.lowerHatLeft()
-                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L3));
-        operatorJoystickRight.lowerHatRight()
                 .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L2));
+        operatorJoystickRight.lowerHatRight()
+                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L3));
         operatorJoystickRight.lowerHatDown()
                 .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L1));
 
@@ -168,9 +173,8 @@ public class RobotContainer {
         operatorJoystickRight.thumbButton().onTrue(moveToCollectCoral());
 
         // Manual Elevator Commands
-        operatorJoystickRight.outerHatUp().whileTrue(elevator.moveUpCommand(20)); //TODO set this to pass position jog up/down 1 inch
-        operatorJoystickRight.outerHatDown().whileTrue(elevator.moveDownCommand(20));
-
+        operatorJoystickRight.outerHatUp().onTrue(elevator.moveUpCommand(2));
+        operatorJoystickRight.outerHatDown().onTrue(elevator.moveDownCommand(2));
         // Pull BACK on the joystick to move the elevator up
         operatorJoystickRight.pinkyButton().whileTrue(elevator.moveVariableCommand(operatorJoystickRight::getY));
 
