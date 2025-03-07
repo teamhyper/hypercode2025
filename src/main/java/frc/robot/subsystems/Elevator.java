@@ -210,7 +210,8 @@ public class Elevator extends SubsystemBase {
         zeroElevator();
         SmartDashboard.putBoolean("Bottom Limit Switch", bottomLimitSwitch.get());
 
-        target = masterMotor.getPosition().getValueAsDouble();
+        // target = masterMotor.getPosition().getValueAsDouble();
+        SmartDashboard.putNumber("target", target);
 
         SmartDashboard.putNumber("Elevator Position Master", masterMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Elevator Position Follower", followerMotor.getPosition().getValueAsDouble());
@@ -222,11 +223,13 @@ public class Elevator extends SubsystemBase {
      * Command to move the elevator up.
      * @param rotations The current to run the elevator in Amps
      */
-    public Command moveUpCommand(double rotations) {
-        target = target + rotations;
-        SmartDashboard.putNumber("target", target);
-        return new RunCommand(() -> setElevatorPosition(target), this)
-            .until(() -> Math.abs(masterMotor.getPosition().getValueAsDouble() - target) < 0.1);
+    public Command moveUpCommand(double rotation) {
+        return new FunctionalCommand(
+            () -> {target = rotation + masterMotor.getPosition().getValueAsDouble();},
+            () -> setElevatorPosition(rotation),
+            (interrupted)-> runElevator(0),
+            () -> Math.abs(masterMotor.getPosition().getValueAsDouble() - target) < 0.01
+        );
     }
     
     /**
@@ -260,7 +263,12 @@ public class Elevator extends SubsystemBase {
      * @param position The position to move the elevator to in rotations
      */
     public Command moveToPositionCommand(double position) {
-        return new RunCommand(() -> setElevatorPosition(position), this);
+        return new FunctionalCommand(
+            () -> {},
+            () -> setElevatorPosition(target),
+            (interrupted)-> runElevator(0),
+            () -> Math.abs(masterMotor.getPosition().getValueAsDouble() - position) < 0.01
+        );
     }
 
     /**
