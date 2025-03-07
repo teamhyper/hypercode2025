@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.ledCommands.BlinkLEDCommand;
 import frc.robot.commands.ledCommands.SetLEDPatternCommand;
@@ -82,11 +83,6 @@ public class RobotContainer {
         // Drivetrain Bindings
         drivetrain.setDefaultCommand(
                 drivetrain.applyRequest(() -> {
-                    // Check which mode to use
-                    boolean isRobotCentric = false;
-                    // Check if slow mode is active
-                    boolean slowMode = false;
-
                     boolean trackTag = driverJoystickRight.rightButton().getAsBoolean() || driverJoystickRight.leftButton().getAsBoolean();
 
                     // Decide on your normal top speed/rotation
@@ -109,8 +105,8 @@ public class RobotContainer {
                     double vy = DriverInput.filterAllowZero(rawY, ySpeedLimiter, rawY == 0);
                     double omega = DriverInput.filterAllowZero(rawRot, rotLimiter, rawRot == 0);
 
-                    SmartDashboard.putBoolean("Robot-Centric Drive", isRobotCentric);
-                    SmartDashboard.putBoolean("Slow Mode", slowMode);
+                    SmartDashboard.putBoolean("Robot-Centric Drive", Drivetrain.isRobotCentric);
+                    SmartDashboard.putBoolean("Slow Mode", Drivetrain.isSlowMode);
                     SmartDashboard.putBoolean("Track Tag", trackTag);
 
                     // if (trackTag && vision.getTagIfInView(16).isPresent()) {
@@ -119,11 +115,11 @@ public class RobotContainer {
                     //     omega = -1.0 * vision.getTagIfInView(16).get().getYaw() * omega * .01;
                     // }
                     // Return the proper request
-                    if (isRobotCentric) {
+                    if (Drivetrain.isRobotCentric) {
                         // Robot-centric mode
                         return robotCentricDrive
-                                .withVelocityX(vx)
-                                .withVelocityY(vy)
+                                .withVelocityX(-vx)
+                                .withVelocityY(-vy)
                                 .withRotationalRate(omega);
                     } else {
                         // Field-centric mode
@@ -134,6 +130,9 @@ public class RobotContainer {
                     }
                 })
         );
+
+        driverJoystickLeft.leftButton().onTrue(new InstantCommand(() -> Drivetrain.isRobotCentric = true));
+        driverJoystickLeft.rightButton().onTrue(new InstantCommand(() -> Drivetrain.isRobotCentric = false));
 
         // ==================== Climber Bindings ====================
 
@@ -262,36 +261,41 @@ public class RobotContainer {
      * move the elevator and pivot to positions to collect algae
      */
     private Command moveToCollectAlgaeFromGround() {
-        return moveElevatorToPosition(Elevator.BOTTOM_POSITION, Pivot.SCORE_CORAL_POSITION_OFFSET)
+        return moveElevatorToPosition(Elevator.BOTTOM_POSITION, Pivot.CLEAR_RAMP)
                 .andThen(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_ALGAE_POSITION_OFFSET));
     }
 
     private Command moveToCollectAlgaeFromReef(double position) {
-        return moveElevatorToPosition(position, Pivot.CARRY_ALGAE_POSITION_OFFSET)
+        return moveElevatorToPosition(position, Pivot.CLEAR_RAMP)
                 .andThen(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_ALGAE_POSITION_OFFSET));
     }
 
     private Command moveToScoreAlgae() {
-        return moveElevatorToPosition(Elevator.TOP_POSITION, Pivot.SCORE_ALGAE_POSITION_OFFSET).andThen(pivot.setTargetPositionOffsetCommand(Pivot.SCORE_ALGAE_POSITION_OFFSET));
+        return moveElevatorToPosition(Elevator.TOP_POSITION, Pivot.CARRY_ALGAE_POSITION_OFFSET).andThen(pivot.setTargetPositionOffsetCommand(Pivot.SCORE_ALGAE_POSITION_OFFSET));
     }
 
     /**
      * move the elevator and pivot to positions to collect coral
      */
     private Command moveToCollectCoral() {
-        return moveElevatorToPosition(Elevator.BOTTOM_POSITION, Pivot.SCORE_CORAL_POSITION_OFFSET)
+        return moveElevatorToPosition(Elevator.BOTTOM_POSITION, Pivot.CLEAR_RAMP)
                 .andThen(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_CORAL_POSITION_OFFSET));
     }
 
     private Command moveToScoreCoral(double position) {
-        return moveElevatorToPosition(position, Pivot.SCORE_CORAL_POSITION_OFFSET);
+        return moveElevatorToPosition(position, Pivot.CLEAR_RAMP)
+                .andThen(pivot.setTargetPositionOffsetCommand(Pivot.SCORE_CORAL_POSITION_OFFSET));
     }
 
     /**
      * move the end effector out of the way to the given position, then the elevator to the given height
      */
     private Command moveElevatorToPosition(double elevatorPosition, double pivotPositionOffset) {
-        return pivot.setTargetPositionOffsetCommand(pivotPositionOffset).andThen(elevator.moveToPositionCommand(elevatorPosition));
+        return pivot.setTargetPositionOffsetCommand(pivotPositionOffset)
+                .andThen(new ParallelDeadlineGroup(
+                        pivot.setPositionAndHoldCommand(),
+                        elevator.moveToPositionCommand(elevatorPosition))
+                );
 
     }
 
