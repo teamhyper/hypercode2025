@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.ledCommands.BlinkLEDCommand;
 import frc.robot.commands.ledCommands.SetLEDPatternCommand;
 import frc.robot.generated.TunerConstants;
+import frc.robot.hyperlib.DriverInput;
 import frc.robot.joysticks.ApemHF45Joystick;
 import frc.robot.joysticks.VKBGladiatorJoystick;
 import frc.robot.subsystems.*;
@@ -103,9 +104,9 @@ public class RobotContainer {
                     double rawRot = -driverJoystickRight.getZRotation() * angular; // rotation
 
                     // Pass through the limiters
-                    double vx = xSpeedLimiter.calculate(rawX);
-                    double vy = ySpeedLimiter.calculate(rawY);
-                    double omega = rotLimiter.calculate(rawRot);
+                    double vx = DriverInput.filterAllowZero(rawX, xSpeedLimiter, rawX == 0);
+                    double vy = DriverInput.filterAllowZero(rawY, ySpeedLimiter, rawY == 0);
+                    double omega = DriverInput.filterAllowZero(rawRot, rotLimiter, rawRot == 0);
 
                     SmartDashboard.putBoolean("Robot-Centric Drive", isRobotCentric);
                     SmartDashboard.putBoolean("Slow Mode", slowMode);
