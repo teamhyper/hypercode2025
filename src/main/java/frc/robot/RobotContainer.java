@@ -154,13 +154,13 @@ public class RobotContainer {
 
         // Coral Positions
         operatorJoystickRight.lowerHatUp()
-                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L4));
+                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L4, Pivot.SCORE_CORAL_L4_POSITION_OFFSET));
         operatorJoystickRight.lowerHatLeft()
-                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L2));
+                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L2, Pivot.SCORE_CORAL_L2L3_POSITION_OFFSET));
         operatorJoystickRight.lowerHatRight()
-                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L3));
+                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L3, Pivot.SCORE_CORAL_L2L3_POSITION_OFFSET));
         operatorJoystickRight.lowerHatDown()
-                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L1));
+                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L1, Pivot.SCORE_CORAL_L1_POSITION_OFFSET));
 
         // Algae Positions
         operatorJoystickRight.innerHatUp()
@@ -204,6 +204,8 @@ public class RobotContainer {
                 .onTrue(new BlinkLEDCommand(ledStrip, Color.kRed, 0.25));
 
         // TEST COMMANDS
+
+        // operatorJoystickLeft.lowerHatUp().onTrue(elevator.moveToPositionCommand(0).);
 
         operatorJoystickLeft.f1Button().whileTrue(climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));
         operatorJoystickLeft.f2Button().onTrue(climber.rotateClimberToStartingPositionCommand());
@@ -282,9 +284,9 @@ public class RobotContainer {
                 .andThen(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_CORAL_POSITION_OFFSET));
     }
 
-    private Command moveToScoreCoral(double position) {
-        return moveElevatorToPosition(position, Pivot.CLEAR_RAMP)
-                .andThen(pivot.setTargetPositionOffsetCommand(Pivot.SCORE_CORAL_POSITION_OFFSET));
+    private Command moveToScoreCoral(double elevatorPosition, double pivotPosition) {
+        return moveElevatorToPosition(elevatorPosition, Pivot.CLEAR_RAMP)
+                .andThen(pivot.setTargetPositionOffsetCommand(pivotPosition));
     }
 
     /**
@@ -293,8 +295,8 @@ public class RobotContainer {
     private Command moveElevatorToPosition(double elevatorPosition, double pivotPositionOffset) {
         return pivot.setTargetPositionOffsetCommand(pivotPositionOffset)
                 .andThen(new ParallelDeadlineGroup(
-                        pivot.setPositionAndHoldCommand(),
-                        elevator.moveToPositionCommand(elevatorPosition))
+                        elevator.moveToPositionCommand(elevatorPosition),
+                        pivot.setPositionAndHoldCommand())
                 );
 
     }
