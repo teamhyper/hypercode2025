@@ -162,7 +162,7 @@ public class RobotContainer {
         operatorJoystickRight.lowerHatDown()
                 .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L1));
 
-        // Algae Positions -- TODO add pivot commands to set the correct angle
+        // Algae Positions
         operatorJoystickRight.innerHatUp()
                 .onTrue(moveToScoreAlgae());
         operatorJoystickRight.innerHatLeft().or(operatorJoystickRight.innerHatRight())
@@ -291,6 +291,7 @@ public class RobotContainer {
      */
     private Command moveElevatorToPosition(double elevatorPosition, double pivotPositionOffset) {
         return pivot.setTargetPositionOffsetCommand(pivotPositionOffset).andThen(elevator.moveToPositionCommand(elevatorPosition));
+
     }
 
     /**
