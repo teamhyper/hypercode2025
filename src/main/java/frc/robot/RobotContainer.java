@@ -129,7 +129,7 @@ public class RobotContainer {
         driverJoystickLeft.rightButton().onTrue(
             new InstantCommand(() -> Drivetrain.isRobotCentric = true));
         driverJoystickRight.rightButton().onTrue(
-            drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+            drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         // ==================== Climber Bindings ====================
 

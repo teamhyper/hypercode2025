@@ -24,7 +24,7 @@ public class Pivot extends SubsystemBase {
     // TODO: get positions
     // SCORE_CORAL_POSITION_OFFSET is a guesstimate of the midpoint (45deg) between the ALL_IN and ALL_OUT positions
     public static final double ALL_IN_POSITION = 211.5, ALL_OUT_POSITION = 297.0;
-    public static final double CLEAR_RAMP = 55.0, COLLECT_CORAL_POSITION_OFFSET = 40.5, COLLECT_ALGAE_POSITION_OFFSET = ALL_OUT_POSITION - ALL_IN_POSITION, SCORE_CORAL_L1_POSITION_OFFSET = 0.0, SCORE_CORAL_L2L3_POSITION_OFFSET = 30.0, SCORE_CORAL_L4_POSITION_OFFSET = 48.0, CARRY_ALGAE_POSITION_OFFSET = 60.0, SCORE_ALGAE_POSITION_OFFSET = 60.0;
+    public static final double CLEAR_RAMP = 55.0, COLLECT_CORAL_POSITION_OFFSET = 40.0, COLLECT_ALGAE_POSITION_OFFSET = ALL_OUT_POSITION - ALL_IN_POSITION, SCORE_CORAL_L1_POSITION_OFFSET = 0.0, SCORE_CORAL_L2L3_POSITION_OFFSET = 30.0, SCORE_CORAL_L4_POSITION_OFFSET = 48.0, CARRY_ALGAE_POSITION_OFFSET = 60.0, SCORE_ALGAE_POSITION_OFFSET = 60.0;
 
     // PID coefficients
     // from REV example p = 0.1, i = 1e-4, d = 1
@@ -77,7 +77,7 @@ public class Pivot extends SubsystemBase {
         config.softLimit
                 .forwardSoftLimitEnabled(FORWARD_SOFT_LIMIT_ENABLED)
                 .reverseSoftLimitEnabled(REVERSE_SOFT_LIMIT_ENABLED)
-                .reverseSoftLimit(ALL_IN_POSITION)
+                .reverseSoftLimit(ALL_IN_POSITION + COLLECT_CORAL_POSITION_OFFSET)
                 .forwardSoftLimit(ALL_OUT_POSITION);
 
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
@@ -99,7 +99,7 @@ public class Pivot extends SubsystemBase {
         builder.addDoubleProperty("Target", this::getTarget, null);
         builder.addDoubleProperty("EncoderPosition (Actual)", this::getPosition, null);
         builder.addDoubleProperty("EncoderPosition (Offset)", () -> getPosition() - ALL_IN_POSITION, null);
-        builder.addBooleanProperty("CanMove In", () -> getPosition() > ALL_IN_POSITION, null);
+        builder.addBooleanProperty("CanMove In", () -> getPosition() > ALL_IN_POSITION + COLLECT_CORAL_POSITION_OFFSET, null);
         builder.addBooleanProperty("CanMove Out", () -> getPosition() < ALL_OUT_POSITION, null);
         builder.addDoubleProperty("Speed", motor::get, null);
         builder.addDoubleProperty("Applied Output", motor::getAppliedOutput, null);
