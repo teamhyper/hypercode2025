@@ -70,7 +70,13 @@ public class RobotContainer {
         autoChooser.addOption("Drive Off Line", new RunCommand(() -> robotCentricDrive
                 .withVelocityX(0.5) // positive goes backwards
                 .withVelocityY(0)
-                .withRotationalRate(0)).withTimeout(2.0));
+                .withRotationalRate(0))
+                .withTimeout(2.0)
+                .andThen(new RunCommand(() -> robotCentricDrive
+                        .withVelocityX(0) // positive goes backwards
+                        .withVelocityY(0)
+                        .withRotationalRate(0))
+                ));
 
         // Another option that allows you to specify the default auto by its name
         // autoChooser = AutoBuilder.buildAutoChooser("My Default Auto");
