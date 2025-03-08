@@ -67,13 +67,13 @@ public class RobotContainer {
                 // Build an auto chooser. This will use Commands.none() as the default option.
         autoChooser = AutoBuilder.buildAutoChooser();
 
-        autoChooser.addOption("Drive Off Line", new RunCommand(() -> robotCentricDrive
-                .withVelocityX(0.5) // positive goes backwards
-                .withVelocityY(0)
-                .withRotationalRate(0))
-                .withTimeout(2.0)
-                .andThen(new RunCommand(() -> robotCentricDrive
-                        .withVelocityX(0) // positive goes backwards
+        autoChooser.addOption("Drive Off Line", drivetrain.applyRequest(() -> robotCentricDrive
+        .withVelocityX(MaxSpeed*0.25) // positive goes backwards
+        .withVelocityY(0)
+        .withRotationalRate(0))
+                .withTimeout(1.0)
+                .andThen(drivetrain.applyRequest(() -> robotCentricDrive
+                        .withVelocityX(0)
                         .withVelocityY(0)
                         .withRotationalRate(0))
                 ));
