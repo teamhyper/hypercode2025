@@ -77,7 +77,7 @@ public class Pivot extends SubsystemBase {
         config.softLimit
                 .forwardSoftLimitEnabled(FORWARD_SOFT_LIMIT_ENABLED)
                 .reverseSoftLimitEnabled(REVERSE_SOFT_LIMIT_ENABLED)
-                .reverseSoftLimit(ALL_IN_POSITION + COLLECT_CORAL_POSITION_OFFSET)
+                .reverseSoftLimit(ALL_IN_POSITION + COLLECT_CORAL_POSITION_OFFSET - ALLOWED_ERROR)
                 .forwardSoftLimit(ALL_OUT_POSITION);
 
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
