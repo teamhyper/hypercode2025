@@ -12,7 +12,7 @@
             "x": 0.0,
             "y": 0.0,
             "width": 128.0,
-            "height": 256.0,
+            "height": 128.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/Field Centric",
@@ -29,7 +29,7 @@
             "x": 128.0,
             "y": 0.0,
             "width": 128.0,
-            "height": 256.0,
+            "height": 128.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/Robot Centric",
@@ -43,10 +43,10 @@
           },
           {
             "title": "Slow Mode",
-            "x": 256.0,
-            "y": 0.0,
+            "x": 128.0,
+            "y": 128.0,
             "width": 128.0,
-            "height": 256.0,
+            "height": 128.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/Slow Mode",
@@ -60,7 +60,7 @@
           },
           {
             "title": "Climber Angle",
-            "x": 1152.0,
+            "x": 1024.0,
             "y": 256.0,
             "width": 256.0,
             "height": 128.0,
@@ -74,7 +74,7 @@
           },
           {
             "title": "Climber Current Output",
-            "x": 1152.0,
+            "x": 1024.0,
             "y": 384.0,
             "width": 256.0,
             "height": 128.0,
@@ -88,7 +88,7 @@
           },
           {
             "title": "Ratchet Unlocked",
-            "x": 1152.0,
+            "x": 1024.0,
             "y": 0.0,
             "width": 256.0,
             "height": 128.0,
@@ -105,7 +105,7 @@
           },
           {
             "title": "Ratchet Locked",
-            "x": 1152.0,
+            "x": 1024.0,
             "y": 128.0,
             "width": 256.0,
             "height": 128.0,
@@ -122,8 +122,8 @@
           },
           {
             "title": "Elevator On Target",
-            "x": 640.0,
-            "y": 384.0,
+            "x": 256.0,
+            "y": 128.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Boolean Box",
@@ -139,8 +139,8 @@
           },
           {
             "title": "Elevator Position Master",
-            "x": 640.0,
-            "y": 128.0,
+            "x": 512.0,
+            "y": 0.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Large Text Display",
@@ -152,7 +152,7 @@
           },
           {
             "title": "Elevator at Bottom",
-            "x": 640.0,
+            "x": 256.0,
             "y": 0.0,
             "width": 256.0,
             "height": 128.0,
@@ -169,8 +169,8 @@
           },
           {
             "title": "Elevator Target",
-            "x": 640.0,
-            "y": 256.0,
+            "x": 512.0,
+            "y": 128.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Large Text Display",
@@ -182,8 +182,8 @@
           },
           {
             "title": "Elevator Current Master",
-            "x": 384.0,
-            "y": 384.0,
+            "x": 256.0,
+            "y": 256.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Text Display",
@@ -196,8 +196,8 @@
           },
           {
             "title": "isHoldingAlgae",
-            "x": 384.0,
-            "y": 128.0,
+            "x": 0.0,
+            "y": 384.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Boolean Box",
@@ -213,8 +213,8 @@
           },
           {
             "title": "isHoldingCoral",
-            "x": 384.0,
-            "y": 0.0,
+            "x": 0.0,
+            "y": 256.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Boolean Box",
@@ -230,7 +230,7 @@
           },
           {
             "title": "EncoderPosition (Offset)",
-            "x": 896.0,
+            "x": 768.0,
             "y": 128.0,
             "width": 256.0,
             "height": 128.0,
@@ -244,8 +244,8 @@
           },
           {
             "title": "Target",
-            "x": 896.0,
-            "y": 256.0,
+            "x": 768.0,
+            "y": 384.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Large Text Display",
@@ -257,8 +257,8 @@
           },
           {
             "title": "On Target",
-            "x": 896.0,
-            "y": 384.0,
+            "x": 768.0,
+            "y": 0.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Boolean Box",
@@ -270,6 +270,20 @@
               "false_color": 4294198070,
               "true_icon": "None",
               "false_icon": "None"
+            }
+          },
+          {
+            "title": "EncoderPosition (Actual)",
+            "x": 768.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Pivot/EncoderPosition (Actual)",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
             }
           }
         ]

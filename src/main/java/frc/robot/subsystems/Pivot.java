@@ -252,7 +252,8 @@ public class Pivot extends SubsystemBase {
                 () -> setPosition(position),
                 this::pidSlotBasedOnPositionTarget,
                 (interrupted) -> stop(),
-                () -> !hold && onTarget(position),
+                // assume if the PID output is below 1%, it's struggling to reach the setpoint but is close enough
+                () -> !hold && (onTarget(position) || Math.abs(motor.getAppliedOutput()) < 0.01),
                 this
         );
     }
@@ -267,8 +268,4 @@ public class Pivot extends SubsystemBase {
     private Command doNothingCmd() {
         return new RunCommand(this::doNothing, this);
     }
-
-
-
-
 }

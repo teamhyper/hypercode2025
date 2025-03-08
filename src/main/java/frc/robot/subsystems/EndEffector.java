@@ -30,7 +30,7 @@ public class EndEffector extends SubsystemBase {
     private static final double CORAL_INTAKE_SPEED = .25;
     private static final double CORAL_EJECTION_SPEED = .5;
     
-    // private static final double ALGAE_INTAKE_CURRENT = 30.0;
+    private static final double ALGAE_INTAKE_CURRENT = 20.0;
     private static final double ALGAE_INTAKE_CURRENT_LIMIT = 30.0;
     private static final double ALGAE_EJECTION_CURRENT = 70.0;    
     private static final double HOLD_CURRENT = 5.0;
@@ -184,8 +184,12 @@ public class EndEffector extends SubsystemBase {
      * Command to run the intake until current limit is hit then stops.
      */
     public Command intakeAlgaeCurrentLimitCommand() {
-        return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(ALGAE_INTAKE_CURRENT_LIMIT), this)
-            .until(() -> isHoldingAlgae())
+        return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(ALGAE_INTAKE_CURRENT), this)
+            .until(() -> {
+                boolean isAtLimit = intakeMotor.getTorqueCurrent().getValueAsDouble() >= ALGAE_INTAKE_CURRENT_LIMIT; 
+                // System.out.printf("End Effector: isAtLimit: %b", isAtLimit);
+            return isAtLimit;
+            })
             .finallyDo(interrupted -> runIntake(0));
     }
 
@@ -202,7 +206,7 @@ public class EndEffector extends SubsystemBase {
      */
     public Command ejectAlgaeCommand() {
         return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(-ALGAE_EJECTION_CURRENT), this)
-                .until(() -> !isHoldingAlgae()).withTimeout(1.0)
+                .until(() -> !isHoldingAlgae())
                 .andThen(() -> runIntake(0), this);
     }
 

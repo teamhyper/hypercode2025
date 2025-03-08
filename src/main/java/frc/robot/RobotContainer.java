@@ -128,7 +128,7 @@ public class RobotContainer {
             new InstantCommand(() -> Drivetrain.isRobotCentric = false));
         driverJoystickLeft.rightButton().onTrue(
             new InstantCommand(() -> Drivetrain.isRobotCentric = true));
-        driverJoystickLeft.rightButton().onTrue(
+        driverJoystickRight.rightButton().onTrue(
             drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         // ==================== Climber Bindings ====================
@@ -144,6 +144,8 @@ public class RobotContainer {
                         pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_ALGAE_POSITION_OFFSET)) // TODO TEST
                     .andThen(climber.rotateClimberOutCommand()), new BlinkLEDCommand(ledStrip, Color.kYellow, 0.25))
                 .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)));
+
+                // TODO: use CommandScheduler.removeComposedCommand(Command) to remove pivot so it defaults to holding?
 
         /*
          * OP RIGHT F3 - Climb
@@ -353,9 +355,13 @@ public class RobotContainer {
      * move the end effector out of the way to the given position, then the elevator to the given height
      */
     private Command moveElevatorToPosition(double elevatorPosition, double pivotPositionOffset) {
-        return pivot.setTargetPositionOffsetCommand(pivotPositionOffset)
+        // assume pivot is close enough if command is running for 1 second
+        // a command can be cleared from the compound withTimeout Command with CommandScheduler.removeComposedCommand(Command)
+        return pivot.setTargetPositionOffsetCommand(pivotPositionOffset).withTimeout(1.0)
                 .andThen(new ParallelDeadlineGroup(
-                        elevator.moveToPositionCommand(elevatorPosition),
+                        // assume elevator is close enough if command is running for 3 seconds
+                        // and the PID is just struggling
+                        elevator.moveToPositionCommand(elevatorPosition).withTimeout(3.0),
                         pivot.setPositionAndHoldCommand())
                 );
 
