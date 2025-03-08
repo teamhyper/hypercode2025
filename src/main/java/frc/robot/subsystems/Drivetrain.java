@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -24,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import org.json.simple.parser.ParseException;
 
@@ -51,6 +53,8 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
 
     public static boolean isRobotCentric = false;
     public static boolean isSlowMode = false;
+
+    private Pigeon2 pigeon = new Pigeon2(TunerConstants.kPigeonId);
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -283,6 +287,7 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
         }
         // Report the Pose to SmartDashboard
         SmartDashboard.putString("Pose", this.getState().Pose.toString());
+       SmartDashboard.putNumber("Pose Z",  this.getState().Pose.getRotation().getDegrees());
     }
 
     private void startSimThread() {
