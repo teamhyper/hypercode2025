@@ -270,6 +270,17 @@ public class RobotContainer {
         operatorJoystickLeft.thumbButton().onTrue(
             elevator.moveToPositionCommand(Elevator.BOTTOM_POSITION));
 
+        /*
+         * ==================== ENDEFFECTOR ====================
+         * Trigger - Intake Algae, Intake Coral, Score Coral
+         * Index - Score Algae, Reverse Coral
+         */
+
+         operatorJoystickLeft.triggerPrimary().whileTrue(
+            endEffector.runIntakeCommand(1.0));
+        operatorJoystickLeft.indexButon().whileTrue(
+            endEffector.runIntakeCommand(-1.0));
+
 
         /*
          * ==================== PIVOT ====================
