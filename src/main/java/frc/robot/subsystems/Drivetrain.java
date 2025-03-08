@@ -287,7 +287,10 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
         }
         // Report the Pose to SmartDashboard
         SmartDashboard.putString("Pose", this.getState().Pose.toString());
-       SmartDashboard.putNumber("Pose Z",  this.getState().Pose.getRotation().getDegrees());
+        SmartDashboard.putNumber("Pose Z",  this.getState().Pose.getRotation().getDegrees());
+        SmartDashboard.putBoolean("Robot Centric", Drivetrain.isRobotCentric);
+        SmartDashboard.putBoolean("Field Centric", !Drivetrain.isRobotCentric);
+        SmartDashboard.putBoolean("Slow Mode", Drivetrain.isSlowMode);
     }
 
     private void startSimThread() {

@@ -21,10 +21,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotPeriodic() {
-    CommandScheduler.getInstance().run();
-    SmartDashboard.putBoolean("Robot Centric", Drivetrain.isRobotCentric);
-    SmartDashboard.putBoolean("Field Centric", !Drivetrain.isRobotCentric);
-    SmartDashboard.putBoolean("Slow Mode", Drivetrain.isSlowMode);
+    CommandScheduler.getInstance().run();   
   }
 
   @Override

@@ -98,6 +98,9 @@ public class RobotContainer {
                     if (Drivetrain.isRobotCentric) {
                         speed *= 0.05;    // 5% of normal speed
                         angular *= 0.50; // 50% of normal turn rate
+                    } else if (Drivetrain.isSlowMode) {
+                        speed *= 0.10;
+                        angular *= 0.10;
                     }
 
                     // Read the raw joystick
@@ -139,8 +142,10 @@ public class RobotContainer {
             new InstantCommand(() -> Drivetrain.isRobotCentric = false));
         driverJoystickLeft.rightButton().onTrue(
             new InstantCommand(() -> Drivetrain.isRobotCentric = true));
+        driverJoystickRight.leftButton().onTrue(
+            new InstantCommand( () -> Drivetrain.isSlowMode = !Drivetrain.isSlowMode));
         driverJoystickRight.rightButton().onTrue(
-            drivetrain.runOnce(drivetrain::seedFieldCentric));
+            new InstantCommand(drivetrain::seedFieldCentric));
 
         // ==================== Climber Bindings ====================
 
