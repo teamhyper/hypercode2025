@@ -212,7 +212,7 @@ public class Elevator extends SubsystemBase {
     public void periodic() {
 
         zeroElevator();
-        SmartDashboard.putBoolean("Bottom Limit Switch", bottomLimitSwitch.get());
+        SmartDashboard.putBoolean("Elevator at Bottom", bottomLimitSwitch.get());
 
         // target = masterMotor.getPosition().getValueAsDouble();
         SmartDashboard.putNumber("Elevator Target", target);

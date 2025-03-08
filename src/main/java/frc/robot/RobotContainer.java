@@ -97,11 +97,7 @@ public class RobotContainer {
                     // Pass through the limiters
                     double vx = DriverInput.filterAllowZero(rawX, xSpeedLimiter, rawX == 0);
                     double vy = DriverInput.filterAllowZero(rawY, ySpeedLimiter, rawY == 0);
-                    double omega = DriverInput.filterAllowZero(rawRot, rotLimiter, rawRot == 0);
-
-                    SmartDashboard.putBoolean("Robot Centric", Drivetrain.isRobotCentric);
-                    SmartDashboard.putBoolean("Field Centric", !Drivetrain.isRobotCentric);
-                    SmartDashboard.putBoolean("Slow Mode", Drivetrain.isSlowMode);
+                    double omega = DriverInput.filterAllowZero(rawRot, rotLimiter, rawRot == 0);                  
 
                     // Return the proper request
                     if (Drivetrain.isRobotCentric) {

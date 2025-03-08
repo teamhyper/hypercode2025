@@ -40,6 +40,7 @@ public class Ratchet extends SubsystemBase {
     @Override
     public void periodic() {
       SmartDashboard.putBoolean("Ratchet Unlocked", getRatchetUnlocked());
+      SmartDashboard.putBoolean("Ratchet Locked", !getRatchetUnlocked());
     }
     
     /**
