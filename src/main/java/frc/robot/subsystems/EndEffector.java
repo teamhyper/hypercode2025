@@ -185,12 +185,11 @@ public class EndEffector extends SubsystemBase {
      */
     public Command intakeAlgaeCurrentLimitCommand() {
         return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(ALGAE_INTAKE_CURRENT), this)
-            .until(() -> {
-                boolean isAtLimit = intakeMotor.getTorqueCurrent().getValueAsDouble() >= ALGAE_INTAKE_CURRENT_LIMIT; 
-                // System.out.printf("End Effector: isAtLimit: %b", isAtLimit);
-            return isAtLimit;
-            })
-            .finallyDo(interrupted -> runIntake(0));
+            .until(() -> intakeMotor.getTorqueCurrent().getValueAsDouble() >= ALGAE_INTAKE_CURRENT_LIMIT)
+                .finallyDo(interrupted -> {
+                    System.out.println("intakeAlgaeCurrentLimitCommand: finallyDo()");
+                    runIntakeWithTorqueCurrentFOC(0);
+                });
     }
 
     /**
@@ -198,7 +197,10 @@ public class EndEffector extends SubsystemBase {
      */
     public Command holdAlgaeCommand() {
         return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(HOLD_CURRENT), this)
-            .finallyDo((interrupted) -> runIntakeWithTorqueCurrentFOC(0));
+            .finallyDo(interrupted -> {
+                System.out.println("holdAlgaeCommand: finallyDo()");
+                runIntakeWithTorqueCurrentFOC(0);
+            });
     }
 
     /**
