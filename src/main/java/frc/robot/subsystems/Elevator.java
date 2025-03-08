@@ -49,7 +49,7 @@ public class Elevator extends SubsystemBase {
 
     private double target = 0.0;
 
-    private double tolerance = 2;
+    private final double tolerance = 1.0;
 
     public Elevator() {
         this(MASTER_ID, FOLLOWER_ID, LIM_SWITCH_ID);
@@ -284,7 +284,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public boolean isOnTarget() {
-        return Math.abs(masterMotor.getPosition().getValueAsDouble() - target) < 1;
+        return Math.abs(masterMotor.getPosition().getValueAsDouble() - target) < tolerance;
     }
 
     /**
