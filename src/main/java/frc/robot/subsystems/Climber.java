@@ -127,7 +127,7 @@ public class Climber extends SubsystemBase {
      * Command to move the climber to climbing position.
      */
     public Command rotateClimberOutCommand() {
-        return rotateClimberCommand(-PREPARE_CURRENT).until(() -> getClimberAngle() >= 180).andThen(stopClimberCommand());
+        return rotateClimberCommand(-PREPARE_CURRENT).until(() -> getClimberAngle() >= 160).andThen(stopClimberCommand());
     }
 
     /**

@@ -75,20 +75,19 @@ public class RobotContainer {
 
     private void configureBindings() {
 
-        // Drivetrain Bindings
+        // ==================== Drivetrain Bindings ====================
         drivetrain.setDefaultCommand(
                 drivetrain.applyRequest(() -> {
-                    boolean trackTag = driverJoystickRight.rightButton().getAsBoolean() || driverJoystickRight.leftButton().getAsBoolean();
 
                     // Decide on your normal top speed/rotation
                     double speed = MaxSpeed;
                     double angular = MaxAngularRate;
 
                     // If slow mode is on, reduce them
-                    // if (slowMode) {
-                    //     speed *= 0.10;    // 10% of normal speed
-                    //     angular *= 0.10; // 10% of normal turn rate
-                    // }
+                    if (Drivetrain.isRobotCentric) {
+                        speed *= 0.05;    // 5% of normal speed
+                        angular *= 0.50; // 50% of normal turn rate
+                    }
 
                     // Read the raw joystick
                     double rawX = driverJoystickLeft.getYAxis() * speed;   // forward/back (note sign)
@@ -100,15 +99,10 @@ public class RobotContainer {
                     double vy = DriverInput.filterAllowZero(rawY, ySpeedLimiter, rawY == 0);
                     double omega = DriverInput.filterAllowZero(rawRot, rotLimiter, rawRot == 0);
 
-                    SmartDashboard.putBoolean("Robot-Centric Drive", Drivetrain.isRobotCentric);
+                    SmartDashboard.putBoolean("Robot Centric", Drivetrain.isRobotCentric);
+                    SmartDashboard.putBoolean("Field Centric", !Drivetrain.isRobotCentric);
                     SmartDashboard.putBoolean("Slow Mode", Drivetrain.isSlowMode);
-                    SmartDashboard.putBoolean("Track Tag", trackTag);
 
-                    // if (trackTag && vision.getTagIfInView(16).isPresent()) {
-                    //     // If we are tracking a tag, use the vision subsystem to get the angle to the tag
-                    //     // and rotate towards it.
-                    //     omega = -1.0 * vision.getTagIfInView(16).get().getYaw() * omega * .01;
-                    // }
                     // Return the proper request
                     if (Drivetrain.isRobotCentric) {
                         // Robot-centric mode
@@ -126,8 +120,20 @@ public class RobotContainer {
                 })
         );
 
-        driverJoystickLeft.leftButton().onTrue(new InstantCommand(() -> Drivetrain.isRobotCentric = true));
-        driverJoystickLeft.rightButton().onTrue(new InstantCommand(() -> Drivetrain.isRobotCentric = false));
+        /*
+         * ==================== DRIVER MODES ====================
+         * LEFT JOYSTICK LEFT - FIELD CENTRIC MODE
+         * LEFT JOYSTICK RIGHT - ROBOT CENTRIC + SLOW MODE
+         * RIGHT JOYSTICK LEFT - 
+         * RIGHT JOYSTICK RIGHT - RESET FIELD CENTRIC HEADING
+         */
+
+        driverJoystickLeft.leftButton().onTrue(
+            new InstantCommand(() -> Drivetrain.isRobotCentric = false));
+        driverJoystickLeft.rightButton().onTrue(
+            new InstantCommand(() -> Drivetrain.isRobotCentric = true));
+        driverJoystickLeft.rightButton().onTrue(
+            drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
 
         // ==================== Climber Bindings ====================
 
@@ -135,102 +141,154 @@ public class RobotContainer {
          * OP RIGHT F2 - Prepare Climber
          */
         operatorJoystickRight.f2Button().onTrue(
-                new ParallelDeadlineGroup(new ParallelCommandGroup(ramp.detachRampCommand(), ratchet.unlockRatchetCommand())
-                        .andThen(climber.rotateClimberOutCommand()), new BlinkLEDCommand(ledStrip, Color.kYellow, 0.25))
-                        .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)));
+                new ParallelDeadlineGroup(
+                    new ParallelDeadlineGroup(
+                        ramp.detachRampCommand(), 
+                        ratchet.unlockRatchetCommand(), 
+                        pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_ALGAE_POSITION_OFFSET)) // TODO TEST
+                    .andThen(climber.rotateClimberOutCommand()), new BlinkLEDCommand(ledStrip, Color.kYellow, 0.25))
+                .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)));
 
         /*
          * OP RIGHT F3 - Climb
          */
-        operatorJoystickRight.f3Button().onTrue(ratchet.lockRatchetCommand()
-                .andThen(climber.rotateClimberInCommand()).andThen(new SetLEDPatternCommand(ledStrip)));
+        operatorJoystickRight.f3Button().onTrue(
+            ratchet.lockRatchetCommand()
+            .andThen(climber.rotateClimberInCommand()).withTimeout(3.0) // TODO TEST
+            .andThen(new SetLEDPatternCommand(ledStrip)));
 
         // ==================== Elevator Bindings ====================
 
         // Coral Positions
-        operatorJoystickRight.lowerHatUp()
-                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L4, Pivot.SCORE_CORAL_L4_POSITION_OFFSET));
-        operatorJoystickRight.lowerHatLeft()
-                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L2, Pivot.SCORE_CORAL_L2L3_POSITION_OFFSET));
-        operatorJoystickRight.lowerHatRight()
-                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L3, Pivot.SCORE_CORAL_L2L3_POSITION_OFFSET));
-        operatorJoystickRight.lowerHatDown()
-                .onTrue(moveToScoreCoral(Elevator.POSITION_CORAL_L1, Pivot.SCORE_CORAL_L1_POSITION_OFFSET));
+        operatorJoystickRight.lowerHatUp().onTrue(
+            moveToScoreCoral(Elevator.POSITION_CORAL_L4, Pivot.SCORE_CORAL_L4_POSITION_OFFSET));
+        operatorJoystickRight.lowerHatLeft().onTrue(
+            moveToScoreCoral(Elevator.POSITION_CORAL_L2, Pivot.SCORE_CORAL_L2L3_POSITION_OFFSET));
+        operatorJoystickRight.lowerHatRight().onTrue(
+            moveToScoreCoral(Elevator.POSITION_CORAL_L3, Pivot.SCORE_CORAL_L2L3_POSITION_OFFSET));
+        operatorJoystickRight.lowerHatDown().onTrue(
+            moveToScoreCoral(Elevator.POSITION_CORAL_L1, Pivot.SCORE_CORAL_L1_POSITION_OFFSET));
 
         // Algae Positions
-        operatorJoystickRight.innerHatUp()
-                .onTrue(moveToScoreAlgae());
-        operatorJoystickRight.innerHatLeft().or(operatorJoystickRight.innerHatRight())
-                .onTrue(moveToCollectAlgaeFromReef(Elevator.POSITION_ALGAE_HIGH));
-        operatorJoystickRight.innerHatDown().onTrue(moveToCollectAlgaeFromReef(Elevator.POSITION_ALGAE_LOW));
+        operatorJoystickRight.innerHatUp().onTrue(
+            moveToScoreAlgae());
+        operatorJoystickRight.innerHatLeft().or(operatorJoystickRight.innerHatRight()).onTrue(
+            moveToCollectAlgaeFromReef(Elevator.POSITION_ALGAE_HIGH));
+        operatorJoystickRight.innerHatDown().onTrue(
+            moveToCollectAlgaeFromReef(Elevator.POSITION_ALGAE_LOW));
 
-        // Elevator to floor
-        operatorJoystickRight.thumbButton().onTrue(moveToCollectCoral());
+        // Floor Position
+        operatorJoystickRight.thumbButton().onTrue(
+            moveToCollectCoral());
 
-        // Manual Elevator Commands
-        operatorJoystickRight.outerHatUp().onTrue(elevator.moveUpCommand(2));
-        operatorJoystickRight.outerHatDown().onTrue(elevator.moveDownCommand(2));
+        // Manual Elevator Jogging
+        operatorJoystickRight.outerHatUp().onTrue( // TODO TEST
+            elevator.moveUpCommand(2));
+        operatorJoystickRight.outerHatDown().onTrue(
+            elevator.moveDownCommand(2));
         // Pull BACK on the joystick to move the elevator up
-        operatorJoystickRight.pinkyButton().whileTrue(elevator.moveVariableCommand(operatorJoystickRight::getY));
+        operatorJoystickRight.pinkyButton().whileTrue(
+            elevator.moveVariableCommand(operatorJoystickRight::getY));
 
         // ==================== EndEffector Bindings ====================
-        operatorJoystickRight.triggerPrimary()
-                .onTrue(endEffector.scoreGamePieceCommand().andThen(new BlinkLEDCommand(ledStrip, Color.kRed, 0.25)));
 
-        operatorJoystickRight.redButton().onTrue(collectAlgaeFromGround());
+        operatorJoystickRight.triggerPrimary().onTrue(
+            endEffector.scoreGamePieceCommand()
+            .andThen(new BlinkLEDCommand(ledStrip, Color.kRed, 0.25)).withTimeout(1.0)
+            .andThen(new InstantCommand(() -> ledStrip.setColor(Color.kRed))));
 
-        endEffector.getCoralInnerDetectionTrigger()
-                .onTrue(new SequentialCommandGroup(endEffector.intakeCoralCommand())
-                        .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)));
+        operatorJoystickRight.redButton().onTrue(
+            collectAlgaeFromGround()
+            .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)).withTimeout(1.0)
+            .andThen(new InstantCommand(() -> ledStrip.setColor(Color.kGreen))));
 
-        operatorJoystickRight.indexButon().onTrue(endEffector.stopIntakeCommand());
+        endEffector.getCoralInnerDetectionTrigger().onTrue(
+            endEffector.intakeCoralCommand()
+            .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)).withTimeout(1.0)
+            .andThen(new InstantCommand(() -> ledStrip.setColor(Color.kGreen))));
+
+        operatorJoystickRight.indexButon().onTrue(
+            endEffector.stopIntakeCommand());
 
         // ==================== Pivot Bindings ====================
-        operatorJoystickRight.outerHatLeft().whileTrue(pivot.runPivotOutAtSpeed(.15));
-        operatorJoystickRight.outerHatRight().whileTrue(pivot.runPivotInAtSpeed(.15));
+        operatorJoystickRight.outerHatLeft().whileTrue( // TODO CHANGE TO JOG A FEW DEGREES
+            pivot.runPivotOutAtSpeed(.15));
+        operatorJoystickRight.outerHatRight().whileTrue(
+            pivot.runPivotInAtSpeed(.15));
 
-        operatorJoystickLeft.innerHatLeft().onTrue(pivot.setTargetPositionCommand(() -> Pivot.ALL_IN_POSITION));
-        operatorJoystickLeft.innerHatDown().onTrue(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_CORAL_POSITION_OFFSET));
-        operatorJoystickLeft.innerHatRight().onTrue(pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_ALGAE_POSITION_OFFSET));
-        operatorJoystickLeft.innerHatUp().onTrue(pivot.setTargetPositionOffsetCommand(Pivot.CARRY_ALGAE_POSITION_OFFSET));
+        
 
-        // LED Bindings
-        new Trigger(RobotState::isEnabled)
-                .onTrue(new BlinkLEDCommand(ledStrip, Color.kRed, 0.25));
+        // ==================== OPERATOR LEFT STICK DEBUG COMMANDS ====================
 
-        // TEST COMMANDS
+        /*
+         * ==================== CLIMBER ====================
+         * F2 - Rotate Climber back to starting position
+         * F1 - Unlock Ratchet
+         * F1 & Hold - Rotate Climber with Left Joystick
+         * F3 - Lock Ratchet
+         */
+        operatorJoystickLeft.f1Button().whileTrue(
+            climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));
+        operatorJoystickLeft.f2Button().onTrue(
+            climber.rotateClimberToStartingPositionCommand());
+        operatorJoystickLeft.f1Button().onTrue(
+            ratchet.unlockRatchetCommand());
+        operatorJoystickLeft.f3Button().onTrue(
+            ratchet.lockRatchetCommand());
 
-        // operatorJoystickLeft.lowerHatUp().onTrue(elevator.moveToPositionCommand(0).);
+        /*
+         * ==================== ELEVATOR ====================
+         * LOWER HAT UP - POSITION_CORAL_L4
+         * LOWER HAT LEFT - POSITION_CORAL_L2
+         * LOWER HAT RIGHT - POSITION_CORAL_L3
+         * LOWER HAT DOWN - POSITION_CORAL_L1
+         */
+        operatorJoystickLeft.lowerHatUp().onTrue(
+            elevator.moveToPositionCommand(Elevator.POSITION_CORAL_L4).withTimeout(3.0));
+        operatorJoystickLeft.lowerHatLeft().onTrue(
+            elevator.moveToPositionCommand(Elevator.POSITION_CORAL_L2).withTimeout(3.0));
+        operatorJoystickLeft.lowerHatRight().onTrue(
+            elevator.moveToPositionCommand(Elevator.POSITION_CORAL_L3).withTimeout(3.0));
+        operatorJoystickLeft.lowerHatDown().onTrue(
+            elevator.moveToPositionCommand(Elevator.POSITION_CORAL_L1).withTimeout(3.0));
 
-        operatorJoystickLeft.f1Button().whileTrue(climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));
-        operatorJoystickLeft.f2Button().onTrue(climber.rotateClimberToStartingPositionCommand());
+        /*
+         * Inner HAT UP - POSITION_ALGAE_BARGE
+         * Inner HAT LEFT - POSITION_ALGAE_LOW
+         * Inner HAT RIGHT - POSITION_ALGAE_HIGH
+         * Inner HAT DOWN - POSITION_ALGAE_GROUND
+         */
+        operatorJoystickLeft.innerHatUp().onTrue(
+            elevator.moveToPositionCommand(Elevator.POSITION_ALGAE_BARGE).withTimeout(3.0));
+        operatorJoystickLeft.innerHatLeft().onTrue(
+            elevator.moveToPositionCommand(Elevator.POSITION_ALGAE_LOW).withTimeout(3.0));
+        operatorJoystickLeft.innerHatRight().onTrue(
+            elevator.moveToPositionCommand(Elevator.POSITION_ALGAE_HIGH).withTimeout(3.0));
+        operatorJoystickLeft.innerHatDown().onTrue(
+            elevator.moveToPositionCommand(Elevator.POSITION_ALGAE_GROUND).withTimeout(3.0));
 
-        operatorJoystickLeft.f1Button().onTrue(ratchet.unlockRatchetCommand());
-        operatorJoystickLeft.f3Button().onTrue(ratchet.lockRatchetCommand());
+        operatorJoystickLeft.thumbButton().onTrue(
+            elevator.moveToPositionCommand(Elevator.BOTTOM_POSITION));
 
-        operatorJoystickLeft.lowerHatUp().onTrue(elevator.moveToPositionCommand(50));
-        operatorJoystickLeft.lowerHatDown().onTrue(elevator.moveToPositionCommand(30));
-        operatorJoystickLeft.thumbButton().onTrue(moveToCollectCoral());
 
-        // operatorJoystickLeft.triggerPrimary().whileTrue(elevator.testGravityCommand());
+        /*
+         * ==================== PIVOT ====================
+         * OUTER HAT UP - 
+         * OUTER HAT LEFT - 
+         * OUTER HAT RIGHT - 
+         * OUTER HAT DOWN - 
+         */
 
-        // Run SysId routines when holding back/start and X/Y.
-        // Note that each routine should be run exactly once in a single log.
-        // joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        // joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        // joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        // joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
-
-        // reset the field-centric heading on left bumper press
-        // joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
-
-        // Bind A button to run intake at full speed (1.0)
-        // joystick.b().whileTrue(endEffector.runIntakeContinuousCommand(.25));
-        // joystick.a().whileTrue(endEffector.runIntakeContinuousCommand(-.25));
-        // joystick.x().whileTrue(endEffector.holdGamePieceCommand());
+        operatorJoystickLeft.outerHatLeft().onTrue(
+            pivot.setTargetPositionCommand(() -> Pivot.ALL_IN_POSITION));
+        operatorJoystickLeft.outerHatDown().onTrue(
+            pivot.setTargetPositionOffsetCommand(0));
+        operatorJoystickLeft.outerHatRight().onTrue(
+            pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_ALGAE_POSITION_OFFSET));
+        operatorJoystickLeft.outerHatUp().onTrue(
+            pivot.setTargetPositionOffsetCommand(Pivot.CARRY_ALGAE_POSITION_OFFSET));        
 
         drivetrain.registerTelemetry(logger::telemeterize);
-        // SignalLogger.enableAutoLogging(false);
     }
 
     public Command getAutonomousCommand() {

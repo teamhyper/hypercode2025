@@ -176,7 +176,7 @@ public class EndEffector extends SubsystemBase {
      */
     public Command ejectCoralCommand() {
         return new RunCommand(() -> runIntake(CORAL_EJECTION_SPEED), this)
-                .until(() -> !isHoldingCoral()) // Stop when outer detection is true
+                .until(() -> !isHoldingCoral()).withTimeout(1.0) // Stop when outer detection is true
                 .finallyDo(interrupted -> runIntake(0));
     }
 
@@ -202,8 +202,7 @@ public class EndEffector extends SubsystemBase {
      */
     public Command ejectAlgaeCommand() {
         return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(-ALGAE_EJECTION_CURRENT), this)
-                .until(() -> !isHoldingAlgae())
-                // .andThen(new WaitCommand(1))
+                .until(() -> !isHoldingAlgae()).withTimeout(1.0)
                 .andThen(() -> runIntake(0), this);
     }
 
