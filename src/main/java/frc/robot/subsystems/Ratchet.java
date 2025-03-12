@@ -6,11 +6,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Ratchet extends SubsystemBase{
+public class Ratchet extends SubsystemBase {
 
     private static final int RATCHET_PWM_ID = 1;
-    private static final double RATCHET_LOCK_POSITION = 0.5; // TODO
-    private static final double RATCHET_UNLOCK_POSITION  = 0.1; // TODO
+    private static final double RATCHET_LOCK_POSITION = 0.5;
+    private static final double RATCHET_UNLOCK_POSITION  = 0.1;
 
     private final Servo s_ratchet;
 
@@ -40,6 +40,7 @@ public class Ratchet extends SubsystemBase{
     @Override
     public void periodic() {
       SmartDashboard.putBoolean("Ratchet Unlocked", getRatchetUnlocked());
+      SmartDashboard.putBoolean("Ratchet Locked", !getRatchetUnlocked());
     }
     
     /**

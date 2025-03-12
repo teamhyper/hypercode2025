@@ -3,18 +3,15 @@ package frc.robot.subsystems;
 import java.util.function.DoubleSupplier;
 
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -27,7 +24,7 @@ public class Climber extends SubsystemBase {
 
     private static final double CLIMBER_ENCODER_OFFSET = 163; // (Degrees)
     private static final double PREPARE_CURRENT = 30.0;
-    private static final double CLIMB_CURRENT = 80.0;
+    private static final double CLIMB_CURRENT = 180.0;
 
     private final TalonFX m_climber;
     private final CANcoder e_climber;
@@ -120,17 +117,24 @@ public class Climber extends SubsystemBase {
     }
 
     /**
+     * Command to move the climber to starting position.
+     */
+    public Command rotateClimberToStartingPositionCommand() {
+        return rotateClimberCommand(PREPARE_CURRENT).until(() -> getClimberAngle() <= 5).andThen(stopClimberCommand());
+    }
+
+    /**
      * Command to move the climber to climbing position.
      */
     public Command rotateClimberOutCommand() {
-        return rotateClimberCommand(-PREPARE_CURRENT).until(() -> getClimberAngle() >= 180).andThen(stopClimberCommand());
+        return rotateClimberCommand(-PREPARE_CURRENT).until(() -> getClimberAngle() >= 160).andThen(stopClimberCommand());
     }
 
     /**
      * Command to move the climber to lifting position.
      */
     public Command rotateClimberInCommand() {
-        return rotateClimberCommand(CLIMB_CURRENT).until(() -> getClimberAngle() <= 100).andThen(stopClimberCommand());
+        return rotateClimberCommand(CLIMB_CURRENT).until(() -> getClimberAngle() <= 90).andThen(stopClimberCommand());
     }
 
 }
