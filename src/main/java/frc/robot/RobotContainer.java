@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.RotateToFaceAprilTagCommand;
 import frc.robot.commands.ledCommands.BlinkLEDCommand;
 import frc.robot.commands.ledCommands.SetLEDPatternCommand;
 import frc.robot.generated.TunerConstants;
@@ -29,7 +30,7 @@ public class RobotContainer {
     public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
     public final EndEffector endEffector = new EndEffector();
     public final Climber climber = new Climber();
-    // public final VisionSubsystem vision = new VisionSubsystem(drivetrain);
+    public final VisionSubsystem vision = new VisionSubsystem(drivetrain);
     public final Elevator elevator = new Elevator();
     public final Pivot pivot = new Pivot();
     public final Ratchet ratchet = new Ratchet();
@@ -137,9 +138,10 @@ public class RobotContainer {
          * RIGHT JOYSTICK LEFT - 
          * RIGHT JOYSTICK RIGHT - RESET FIELD CENTRIC HEADING
          */
+        
 
         driverJoystickLeft.leftButton().onTrue(
-            new InstantCommand(() -> Drivetrain.isRobotCentric = false));
+            new InstantCommand(() -> new RotateToFaceAprilTagCommand(vision, drivetrain, 6)));
         driverJoystickLeft.rightButton().onTrue(
             new InstantCommand(() -> Drivetrain.isRobotCentric = true));
         driverJoystickRight.leftButton().onTrue(

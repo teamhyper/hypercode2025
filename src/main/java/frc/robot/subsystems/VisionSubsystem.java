@@ -74,7 +74,7 @@ public class VisionSubsystem extends SubsystemBase {
     }
 
     public Optional<EstimatedRobotPose> getPhotonPosition() {
-        if (latestCamera1Results.isEmpty()) {
+        if (latestCamera1Results == null || latestCamera1Results.isEmpty()) {
             return Optional.empty();
         }
         return poseEstimator.update(latestCamera1Results.get(latestCamera1Results.size() - 1));
