@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.photonvision.targeting.PhotonTrackedTarget;
+
 /*
  * A command that rotates the robot to face a specific AprilTag.
  */
@@ -37,8 +39,9 @@ public class RotateToFaceAprilTagCommand extends Command {
 
     @Override
     public void execute() {
-        if (visionSubsystem.getTagIfInView(targetTag).isPresent()) {
-            final var target = visionSubsystem.getTagIfInView(targetTag).get();
+        List<PhotonTrackedTarget> targetList = visionSubsystem.getForwardTags();
+        if (targetList.size() > 0) {
+            final PhotonTrackedTarget target = targetList.get(0);
             double relativeYaw = target.getYaw();
             double currentYaw = drivetrain.getPose().getRotation().getDegrees();
             double targetAbsYaw = currentYaw - relativeYaw - 25.0;
@@ -53,8 +56,9 @@ public class RotateToFaceAprilTagCommand extends Command {
 
     @Override
     public boolean isFinished() {
-        if (visionSubsystem.getTagIfInView(targetTag).isPresent()) {
-            final var target = visionSubsystem.getTagIfInView(targetTag).get();
+        List<PhotonTrackedTarget> targetList = visionSubsystem.getForwardTags();
+        if (targetList.size() > 0) {
+            final PhotonTrackedTarget target = targetList.get(0);
             double relativeYaw = target.getYaw();
             double currentYaw = drivetrain.getPose().getRotation().getDegrees();
             double targetAbsYaw = currentYaw - relativeYaw - 25.0;

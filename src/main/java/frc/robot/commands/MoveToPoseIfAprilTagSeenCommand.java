@@ -8,6 +8,8 @@ import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.VisionSubsystem;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -44,9 +46,9 @@ public class MoveToPoseIfAprilTagSeenCommand extends Command {
         SmartDashboard.putBoolean("MoveToPoseIfAprilTagSeenCommand Running", true);
         SmartDashboard.putString("Target Pose", targetPose.toString());
 
-        Optional<PhotonTrackedTarget> targetOpt = visionSubsystem.getTagIfInView(targetTag);
-        if (targetOpt.isPresent()) {
-            PhotonTrackedTarget target = targetOpt.get();
+        List<PhotonTrackedTarget> targetList = visionSubsystem.getForwardTags();
+        if (targetList.size() > 0) {
+            PhotonTrackedTarget target = targetList.get(0);
             double targetX = target.getBestCameraToTarget().getX();
             double targetY = target.getBestCameraToTarget().getY();
             double targetYaw = target.getYaw();
