@@ -86,6 +86,7 @@ public class Pivot extends SubsystemBase {
         pidController = motor.getClosedLoopController();
         encoder = motor.getAbsoluteEncoder();
 
+        // set our initial position to the current value of the absolute encoder
         setPosition(encoder::getPosition);
 
         // place the subsystem on SmartDashboard
@@ -232,7 +233,7 @@ public class Pivot extends SubsystemBase {
      * set the target on the SparkMax Closed Loop PID to the given offset from the ALL_IN_POSITION value
      *
      * @param offset position to move to
-     * @param hold should the command continue running when onTarget
+     * @param hold   should the command continue running when onTarget
      * @return command to set the PID setpoint to the given offset from ALL_IN_POSITION
      */
     public Command setTargetPositionOffsetCommand(double offset, boolean hold) {
@@ -260,4 +261,8 @@ public class Pivot extends SubsystemBase {
     public Command setTargetPositionOffsetCommand(DoubleSupplier offset, boolean hold) {
         return this.setTargetPositionOffsetCommand(offset.getAsDouble(), hold);
     }
+
+
+
+
 }
