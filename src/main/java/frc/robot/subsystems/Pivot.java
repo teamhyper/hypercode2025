@@ -24,7 +24,9 @@ public class Pivot extends SubsystemBase {
     // TODO: get positions
     // SCORE_CORAL_POSITION_OFFSET is a guesstimate of the midpoint (45deg) between the ALL_IN and ALL_OUT positions
     public static final double ALL_IN_POSITION = 211.5, ALL_OUT_POSITION = 297.0;
-    public static final double CLEAR_RAMP = 55.0, COLLECT_CORAL_POSITION_OFFSET = 40.0, COLLECT_ALGAE_POSITION_OFFSET = ALL_OUT_POSITION - ALL_IN_POSITION, SCORE_CORAL_L1_POSITION_OFFSET = 0.0, SCORE_CORAL_L2L3_POSITION_OFFSET = 30.0, SCORE_CORAL_L4_POSITION_OFFSET = 48.0, CARRY_ALGAE_POSITION_OFFSET = 60.0, SCORE_ALGAE_POSITION_OFFSET = 60.0;
+    public static final double ALL_IN_POSITION_OFFSET = 0, ALL_OUT_POSITION_OFFSET = ALL_OUT_POSITION - ALL_IN_POSITION, CLEAR_RAMP_OFFSET = 55.0;
+    public static final double COLLECT_CORAL_POSITION_OFFSET = 40.0, SCORE_CORAL_L1_POSITION_OFFSET = 0.0, SCORE_CORAL_L2L3_POSITION_OFFSET = 30.0, SCORE_CORAL_L4_POSITION_OFFSET = 48.0;
+    public static final double COLLECT_ALGAE_POSITION_OFFSET = ALL_OUT_POSITION_OFFSET, CARRY_ALGAE_POSITION_OFFSET = 60.0, SCORE_ALGAE_POSITION_OFFSET = 60.0;
 
     // PID coefficients
     // from REV example p = 0.1, i = 1e-4, d = 1
@@ -44,7 +46,6 @@ public class Pivot extends SubsystemBase {
     private final ClosedLoopSlot pidSlotExtended = ClosedLoopSlot.kSlot1;
     private double target;
     private boolean isUsingSlot1PID = false;
-
     public Pivot() {
         this(PIVOT_MOTOR_ID);
     }
@@ -135,12 +136,12 @@ public class Pivot extends SubsystemBase {
         double position = encoder.getPosition();
         boolean shouldUseSlot1PID = position >= ALL_OUT_POSITION + COLLECT_ALGAE_POSITION_OFFSET;
 
-        if( shouldUseSlot1PID && !isUsingSlot1PID ) {
-                isUsingSlot1PID = true;
-                pidController.setReference(this.target, SparkMax.ControlType.kPosition, pidSlotExtended);
+        if (shouldUseSlot1PID && !isUsingSlot1PID) {
+            isUsingSlot1PID = true;
+            pidController.setReference(this.target, SparkMax.ControlType.kPosition, pidSlotExtended);
         }
 
-        if(!shouldUseSlot1PID && isUsingSlot1PID) {
+        if (!shouldUseSlot1PID && isUsingSlot1PID) {
             isUsingSlot1PID = false;
             pidController.setReference(this.target, SparkMax.ControlType.kPosition, pidSlotMain, aFF);
         }
@@ -157,11 +158,11 @@ public class Pivot extends SubsystemBase {
     }
 
     /**
-     * @param position
-     * @return
+     * @param position the position to set the pivot to
+     * @return command that sets the PID setpoint to the given position and holds
      */
     public Command setPositionAndHoldCommand(DoubleSupplier position) {
-        return setTargetPositionCommand(position, true);
+        return setTargetPositionOffsetCommand(() -> position.getAsDouble() - ALL_IN_POSITION, true);
     }
 
     /**
@@ -228,44 +229,35 @@ public class Pivot extends SubsystemBase {
     }
 
     /**
-     * return a command that sets the position to the given offset from the ALL_WAY_IN value
+     * set the target on the SparkMax Closed Loop PID to the given offset from the ALL_IN_POSITION value
      *
-     * @param offset difference from the ALL_WAY_IN position to move
-     * @return command to set the PID setpoint to the given offset from the base position
+     * @param offset position to move to
+     * @param hold should the command continue running when onTarget
+     * @return command to set the PID setpoint to the given offset from ALL_IN_POSITION
      */
     public Command setTargetPositionOffsetCommand(double offset, boolean hold) {
-        return setTargetPositionCommand(() -> offset + ALL_IN_POSITION, hold);
+        DoubleSupplier offsetPosition = () -> offset + ALL_IN_POSITION;
+        return new FunctionalCommand(
+                () -> setPosition(offsetPosition),
+                this::pidSlotBasedOnPositionTarget,
+                (interrupted) -> stop(),
+                // assume if the PID output is below 1%, it's struggling to reach the setpoint but is close enough
+                () -> !hold && (onTarget(offsetPosition) || Math.abs(motor.getAppliedOutput()) < 0.01),
+                this
+        );
     }
 
+    /**
+     * set the target to the given offset and assume not holding
+     */
     public Command setTargetPositionOffsetCommand(double offset) {
         return setTargetPositionOffsetCommand(offset, false);
     }
 
     /**
-     * set the target on the SparkMax Closed Loop PID to the given position
-     *
-     * @param position position to move to
-     * @return command to set the PID setpoint to the given position
+     * set the target to the given offset and holding
      */
-    public Command setTargetPositionCommand(DoubleSupplier position, boolean hold) {
-        return new FunctionalCommand(
-                () -> setPosition(position),
-                this::pidSlotBasedOnPositionTarget,
-                (interrupted) -> stop(),
-                // assume if the PID output is below 1%, it's struggling to reach the setpoint but is close enough
-                () -> !hold && (onTarget(position) || Math.abs(motor.getAppliedOutput()) < 0.01),
-                this
-        );
-    }
-
-    public Command setTargetPositionCommand(DoubleSupplier position) {
-        return setTargetPositionCommand(position, false);
-    }
-
-    private void doNothing() {
-    }
-
-    private Command doNothingCmd() {
-        return new RunCommand(this::doNothing, this);
+    public Command setTargetPositionOffsetCommand(DoubleSupplier offset, boolean hold) {
+        return this.setTargetPositionOffsetCommand(offset.getAsDouble(), hold);
     }
 }
