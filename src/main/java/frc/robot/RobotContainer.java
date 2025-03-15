@@ -22,6 +22,11 @@ import frc.robot.hyperlib.DriverInput;
 import frc.robot.joysticks.ApemHF45Joystick;
 import frc.robot.joysticks.VKBGladiatorJoystick;
 import frc.robot.subsystems.*;
+import org.photonvision.targeting.PhotonTrackedTarget;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -141,13 +146,13 @@ public class RobotContainer {
         
 
         driverJoystickLeft.leftButton().onTrue(
-            new InstantCommand(() -> new RotateToFaceAprilTagCommand(vision, drivetrain, 6)));
+            faceTag(10));
         driverJoystickLeft.rightButton().onTrue(
             new InstantCommand(() -> Drivetrain.isRobotCentric = true));
-        driverJoystickRight.leftButton().onTrue(
-            new InstantCommand( () -> Drivetrain.isSlowMode = !Drivetrain.isSlowMode));
-        driverJoystickRight.rightButton().onTrue(
-            new InstantCommand(drivetrain::seedFieldCentric));
+        // driverJoystickRight.leftButton().onTrue(
+        //     new InstantCommand( () -> Drivetrain.isSlowMode = !Drivetrain.isSlowMode));
+        // driverJoystickRight.rightButton().onTrue(
+        //     new InstantCommand(drivetrain::seedFieldCentric));
 
         // ==================== Climber Bindings ====================
 
@@ -383,6 +388,10 @@ public class RobotContainer {
                         pivot.setPositionAndHoldCommand())
                 );
 
+    }
+
+    private Command faceTag(int tagNum) {
+        return new RotateToFaceAprilTagCommand(vision, drivetrain, tagNum);
     }
 
     /**

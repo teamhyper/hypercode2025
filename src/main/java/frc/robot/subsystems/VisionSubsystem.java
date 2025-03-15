@@ -6,6 +6,8 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,8 +25,8 @@ public class VisionSubsystem extends SubsystemBase {
     private final PhotonCamera camera_2;
     private final PhotonCamera camera_1;
     private final Drivetrain drivetrain;
-    private List<PhotonPipelineResult> latestCamera1Results;
-    private List<PhotonPipelineResult> latestCamera2Results;
+    private List<PhotonPipelineResult> latestCamera1Results = List.of();
+    private List<PhotonPipelineResult> latestCamera2Results = List.of();
     AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
     PhotonPoseEstimator poseEstimator = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, new Transform3d());
 
@@ -55,6 +57,12 @@ public class VisionSubsystem extends SubsystemBase {
             var visionMeasurement2d = visionMeasurement.estimatedPose.toPose2d();
 
             drivetrain.addVisionMeasurement(visionMeasurement2d, 0);
+        }
+
+        if (!getAllTagsInCamera1View().isEmpty()) {
+            for (PhotonTrackedTarget target : getAllTagsInCamera1View()) {
+                System.out.println(target.getFiducialId());
+            }
         }
 
         // Check if tag 16 is in view and put the result on the SmartDashboard
@@ -99,6 +107,16 @@ public class VisionSubsystem extends SubsystemBase {
      */
     public boolean tagInView(int fiducialId) {
         return getTagIfInView(fiducialId).isPresent();
+    }
+
+    public List<PhotonTrackedTarget> getAllTagsInCamera1View(){
+        if (!latestCamera1Results.isEmpty()) {
+            final var frame = latestCamera1Results.get(latestCamera1Results.size() - 1);
+            if (frame.hasTargets()) {
+                return frame.getTargets();
+            }
+        }
+        return Collections.emptyList();
     }
 
     public Optional<PhotonTrackedTarget> getTagIfInView(int fiducialId) {
