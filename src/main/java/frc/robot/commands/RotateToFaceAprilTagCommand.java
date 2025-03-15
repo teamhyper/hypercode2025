@@ -41,10 +41,10 @@ public class RotateToFaceAprilTagCommand extends Command {
     public void execute() {
         List<PhotonTrackedTarget> targetList = visionSubsystem.getForwardTags();
         if (targetList.size() > 0) {
-            final PhotonTrackedTarget target = targetList.get(0);
+            final PhotonTrackedTarget target = targetList.get(targetList.size() - 1);
             double relativeYaw = target.getYaw();
             double currentYaw = drivetrain.getPose().getRotation().getDegrees();
-            double targetAbsYaw = currentYaw - relativeYaw - 25.0;
+            double targetAbsYaw = currentYaw - relativeYaw;
             drivetrain.turnToAngle(Rotation2d.fromDegrees(targetAbsYaw));
         }
     }
@@ -54,28 +54,17 @@ public class RotateToFaceAprilTagCommand extends Command {
         // no-op
     }
 
-    @Override
-    public boolean isFinished() {
-        List<PhotonTrackedTarget> targetList = visionSubsystem.getForwardTags();
-        if (targetList.size() > 0) {
-            final PhotonTrackedTarget target = targetList.get(0);
-            double relativeYaw = target.getYaw();
-            double currentYaw = drivetrain.getPose().getRotation().getDegrees();
-            double targetAbsYaw = currentYaw - relativeYaw - 25.0;
+    // @Override
+    // public boolean isFinished() {
+    //     List<PhotonTrackedTarget> targetList = visionSubsystem.getForwardTags();
+    //     if (targetList.size() > 0) {
+    //         final PhotonTrackedTarget target = targetList.get(targetList.size() - 1);
+    //         double relativeYaw = target.getYaw();
+    //         double currentYaw = drivetrain.getPose().getRotation().getDegrees();
+    //         double targetAbsYaw = currentYaw - relativeYaw;
 
-            isAligned = Math.abs(targetAbsYaw - currentYaw) < angleTolerance;
-        }
-        return isAligned;
-    }
-
-    private static void rotateToFaceAllianceReef(DriverStation.Alliance alliance){
-        List<Integer> redAllianceTags = new ArrayList<>(Arrays.asList(6,7,8,9,10,11));
-        List<Integer> blueAllianceTags = new ArrayList<>(Arrays.asList(17,18,19,20,21,22));
-
-        if (alliance == DriverStation.Alliance.Red){
-
-        } else {
-
-        }
-    }
+    //         isAligned = Math.abs(targetAbsYaw - currentYaw) < angleTolerance;
+    //     }
+    //     return isAligned;
+    // }
 }

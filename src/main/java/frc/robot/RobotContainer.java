@@ -145,7 +145,7 @@ public class RobotContainer {
          */
         
 
-        driverJoystickLeft.leftButton().onTrue(
+        driverJoystickLeft.leftButton().whileTrue(
             faceTag(10));
         driverJoystickLeft.rightButton().onTrue(
             new InstantCommand(() -> Drivetrain.isRobotCentric = true));
