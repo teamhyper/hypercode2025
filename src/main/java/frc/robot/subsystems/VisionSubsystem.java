@@ -6,6 +6,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,8 +24,8 @@ public class VisionSubsystem extends SubsystemBase {
     private final PhotonCamera camera_2;
     private final PhotonCamera camera_1;
     private final Drivetrain drivetrain;
-    private List<PhotonPipelineResult> latestCamera1Results;
-    private List<PhotonPipelineResult> latestCamera2Results;
+    private List<PhotonPipelineResult> latestCamera1Results = Collections.emptyList();
+    private List<PhotonPipelineResult> latestCamera2Results = Collections.emptyList();
     AprilTagFieldLayout aprilTagFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
     PhotonPoseEstimator poseEstimator = new PhotonPoseEstimator(aprilTagFieldLayout, PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, new Transform3d());
 
