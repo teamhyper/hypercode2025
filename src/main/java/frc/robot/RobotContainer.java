@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.RotateToFaceAprilTagCommand;
 import frc.robot.commands.ledCommands.BlinkLEDCommand;
 import frc.robot.commands.ledCommands.SetLEDPatternCommand;
 import frc.robot.generated.TunerConstants;
@@ -21,6 +22,11 @@ import frc.robot.hyperlib.DriverInput;
 import frc.robot.joysticks.ApemHF45Joystick;
 import frc.robot.joysticks.VKBGladiatorJoystick;
 import frc.robot.subsystems.*;
+import org.photonvision.targeting.PhotonTrackedTarget;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -29,7 +35,7 @@ public class RobotContainer {
     public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
     public final EndEffector endEffector = new EndEffector();
     public final Climber climber = new Climber();
-    // public final VisionSubsystem vision = new VisionSubsystem(drivetrain);
+    public final VisionSubsystem vision = new VisionSubsystem(drivetrain);
     public final Elevator elevator = new Elevator();
     public final Pivot pivot = new Pivot();
     public final Ratchet ratchet = new Ratchet();
@@ -137,15 +143,16 @@ public class RobotContainer {
          * RIGHT JOYSTICK LEFT - 
          * RIGHT JOYSTICK RIGHT - RESET FIELD CENTRIC HEADING
          */
+        
 
         driverJoystickLeft.leftButton().onTrue(
-            new InstantCommand(() -> Drivetrain.isRobotCentric = false));
+            faceTag(10));
         driverJoystickLeft.rightButton().onTrue(
             new InstantCommand(() -> Drivetrain.isRobotCentric = true));
-        driverJoystickRight.leftButton().onTrue(
-            new InstantCommand( () -> Drivetrain.isSlowMode = !Drivetrain.isSlowMode));
-        driverJoystickRight.rightButton().onTrue(
-            new InstantCommand(drivetrain::seedFieldCentric));
+        // driverJoystickRight.leftButton().onTrue(
+        //     new InstantCommand( () -> Drivetrain.isSlowMode = !Drivetrain.isSlowMode));
+        // driverJoystickRight.rightButton().onTrue(
+        //     new InstantCommand(drivetrain::seedFieldCentric));
 
         // ==================== Climber Bindings ====================
 
@@ -381,6 +388,10 @@ public class RobotContainer {
                         pivot.setPositionAndHoldCommand())
                 );
 
+    }
+
+    private Command faceTag(int tagNum) {
+        return new RotateToFaceAprilTagCommand(vision, drivetrain, tagNum);
     }
 
     /**
