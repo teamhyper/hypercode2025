@@ -58,7 +58,7 @@ public class VisionSubsystem extends SubsystemBase {
      * @return An Optional containing the estimated robot pose, if available.
      */
     public Optional<EstimatedRobotPose> getPhotonPosition() {
-        List<PhotonPipelineResult> results = forwardCamera.getAllUnreadResults();
+        List<PhotonPipelineResult> results = getForwardCameraResults();
         if (results.isEmpty()) {
             return Optional.empty();
         }
@@ -80,7 +80,9 @@ public class VisionSubsystem extends SubsystemBase {
      * @return The latest forward camera results.
      */
     public List<PhotonPipelineResult> getForwardCameraResults() {
-        return forwardCamera.getAllUnreadResults();
+        List<PhotonPipelineResult>results = forwardCamera.getAllUnreadResults();
+        System.out.println(results.toString());
+        return results;
     }
 
     /**
@@ -89,7 +91,7 @@ public class VisionSubsystem extends SubsystemBase {
      * @return A list of PhotonTrackedTarget currently visible in the forward camera.
      */
     public List<PhotonTrackedTarget> getForwardTags() {
-        List<PhotonPipelineResult> results = forwardCamera.getAllUnreadResults();
+        List<PhotonPipelineResult> results = getForwardCameraResults();
         if (!results.isEmpty()) {
             PhotonPipelineResult latestFrame = results.get(results.size() - 1);
             if (latestFrame.hasTargets()) {
