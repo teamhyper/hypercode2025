@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.RotateToFaceAprilTagCommand;
+import frc.robot.commands.MoveToAprilTagCommand;
 import frc.robot.commands.ledCommands.BlinkLEDCommand;
 import frc.robot.commands.ledCommands.SetLEDPatternCommand;
 import frc.robot.generated.TunerConstants;
@@ -146,7 +147,8 @@ public class RobotContainer {
         
 
         driverJoystickLeft.leftButton().whileTrue(
-            faceTag(10));
+            moveToTag()
+        );
         driverJoystickLeft.rightButton().onTrue(
             new InstantCommand(() -> Drivetrain.isRobotCentric = true));
         // driverJoystickRight.leftButton().onTrue(
@@ -392,6 +394,10 @@ public class RobotContainer {
 
     private Command faceTag(int tagNum) {
         return new RotateToFaceAprilTagCommand(vision, drivetrain, tagNum);
+    }
+
+    private Command moveToTag() {
+        return new MoveToAprilTagCommand(drivetrain, vision, 1);
     }
 
     /**
