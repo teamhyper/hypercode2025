@@ -59,10 +59,12 @@ public class VisionSubsystem extends SubsystemBase {
         }
 
         // Check if tag 16 is in view and put the result on the SmartDashboard
-        SmartDashboard.putBoolean("Tag 16 Visible", tagInView(16));
+        SmartDashboard.putBoolean("Tag 6 Visible", tagInView(6));
         // Report the yaw of tag 16 to SmartDashboard
-        getTagIfInView(16).ifPresent(tag -> SmartDashboard.putNumber("Vision Tag 16 Yaw", tag.getYaw()));
-
+        getTagIfInView(6).ifPresent(tag -> SmartDashboard.putNumber("Vision Tag 6 Yaw", tag.getYaw()));
+        // if (!latestCamera1Results.isEmpty()) {
+        //     System.out.printf("Tag %d is best target", getAllTagsInCamera1View().get(0).getFiducialId());
+        // }
     }
 
     /**
@@ -131,6 +133,16 @@ public class VisionSubsystem extends SubsystemBase {
 
 
         return Optional.empty();
+    }
+
+    public List<PhotonTrackedTarget> getAllTagsInCamera1View(){
+        if (!latestCamera1Results.isEmpty()) {
+            final var frame = latestCamera1Results.get(latestCamera1Results.size() - 1);
+            if (frame.hasTargets()) {
+                return frame.getTargets();
+            }
+        }
+        return Collections.emptyList();
     }
 
     /**

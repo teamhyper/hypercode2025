@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.MoveToPoseIfAprilTagSeenCommand;
 import frc.robot.commands.MoveToPoseRelativeToAprilTagCommand;
 import frc.robot.commands.ledCommands.BlinkLEDCommand;
 import frc.robot.commands.ledCommands.SetLEDPatternCommand;
@@ -142,9 +143,9 @@ public class RobotContainer {
          */
 
         driverJoystickLeft.leftButton().whileTrue(
-            new MoveToPoseRelativeToAprilTagCommand(vision, drivetrain, 6, new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0.0))));
+            new MoveToPoseRelativeToAprilTagCommand(vision, drivetrain, 3, new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0.0))));
         // driverJoystickLeft.rightButton().onTrue(
-        //     new InstantCommand(() -> Drivetrain.isRobotCentric = true));
+        //     new InstantCommand(() -> Drivetrain.isRobotCentric = !Drivetrain.isRobotCentric));
         // driverJoystickRight.leftButton().onTrue(
         //     new InstantCommand( () -> Drivetrain.isSlowMode = !Drivetrain.isSlowMode));
         // driverJoystickRight.rightButton().onTrue(
