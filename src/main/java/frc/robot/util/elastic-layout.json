@@ -60,8 +60,8 @@
           },
           {
             "title": "Climber Angle",
-            "x": 1024.0,
-            "y": 256.0,
+            "x": 0.0,
+            "y": 768.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Text Display",
@@ -74,8 +74,8 @@
           },
           {
             "title": "Climber Current Output",
-            "x": 1024.0,
-            "y": 384.0,
+            "x": 256.0,
+            "y": 768.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Text Display",
@@ -88,8 +88,8 @@
           },
           {
             "title": "Ratchet Unlocked",
-            "x": 1024.0,
-            "y": 0.0,
+            "x": 0.0,
+            "y": 640.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Boolean Box",
@@ -105,8 +105,8 @@
           },
           {
             "title": "Ratchet Locked",
-            "x": 1024.0,
-            "y": 128.0,
+            "x": 256.0,
+            "y": 640.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Boolean Box",
@@ -230,8 +230,8 @@
           },
           {
             "title": "EncoderPosition (Offset)",
-            "x": 768.0,
-            "y": 128.0,
+            "x": 512.0,
+            "y": 512.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Text Display",
@@ -244,8 +244,8 @@
           },
           {
             "title": "Target",
-            "x": 768.0,
-            "y": 384.0,
+            "x": 0.0,
+            "y": 512.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Large Text Display",
@@ -257,8 +257,8 @@
           },
           {
             "title": "On Target",
-            "x": 768.0,
-            "y": 0.0,
+            "x": 256.0,
+            "y": 512.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Boolean Box",
@@ -274,8 +274,8 @@
           },
           {
             "title": "EncoderPosition (Actual)",
-            "x": 768.0,
-            "y": 256.0,
+            "x": 512.0,
+            "y": 640.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Text Display",
@@ -309,6 +309,63 @@
             "type": "Large Text Display",
             "properties": {
               "topic": "/SmartDashboard/Pose Z",
+              "period": 0.06,
+              "data_type": "double"
+            }
+          },
+          {
+            "title": "BatteryVoltage",
+            "x": 0.0,
+            "y": 896.0,
+            "width": 768.0,
+            "height": 128.0,
+            "type": "Voltage View",
+            "properties": {
+              "topic": "/RobotData/BatteryVoltage",
+              "period": 0.06,
+              "data_type": "double",
+              "min_value": 4.0,
+              "max_value": 13.0,
+              "divisions": 5,
+              "inverted": false,
+              "orientation": "horizontal"
+            }
+          },
+          {
+            "title": "pidOutput",
+            "x": 768.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/pidOutput",
+              "period": 0.06,
+              "data_type": "double"
+            }
+          },
+          {
+            "title": "relativeYaw",
+            "x": 768.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/relativeYaw",
+              "period": 0.06,
+              "data_type": "double"
+            }
+          },
+          {
+            "title": "currentYaw",
+            "x": 768.0,
+            "y": 512.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/currentYaw",
               "period": 0.06,
               "data_type": "double"
             }
