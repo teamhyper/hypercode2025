@@ -307,4 +307,9 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
         });
         m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
+
+    public Rotation2d getGyroRotation() {
+        double yawDegrees = pigeon.getYaw().getValueAsDouble(); // Assumes yaw is in degrees.
+        return Rotation2d.fromDegrees(yawDegrees);
+    }
 }
