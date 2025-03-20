@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 
 import java.util.function.DoubleSupplier;
 
-import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
@@ -15,7 +14,6 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.MAXMotionConfig.MAXMotionPositionMode;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
-import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -25,11 +23,15 @@ public class PivotNew extends SubsystemBase{
 
     private static final int PIVOT_MOTOR_ID = 20;
 
-    private static final double ABS_ENC_OFFSET = 8.085;
+    public static final double CORAL_ANGLE_L1_L2_L3 = 42.0;
+    public static final double CORAL_ANGLE_L4 = 60.0;
+    public static final double ALGAE_ANGLE = 85.0;
+    public static final double ALGAE_BARGE = 50.0;
 
     private final SparkMax motor;
     private final SparkAbsoluteEncoder encoder;
     private final SparkClosedLoopController pidController;
+    private final EndEffector endEffector;
 
     public PivotNew() {
         this(PIVOT_MOTOR_ID);
@@ -38,6 +40,9 @@ public class PivotNew extends SubsystemBase{
     public PivotNew(int motorId) {
         motor = new SparkMax(motorId, MotorType.kBrushless);
         encoder = motor.getAbsoluteEncoder();
+        pidController = motor.getClosedLoopController();
+        endEffector = EndEffector.getInstance(); // there's gotta be a better way
+
         SparkMaxConfig config = new SparkMaxConfig();
 
         config
@@ -58,18 +63,19 @@ public class PivotNew extends SubsystemBase{
 
         config.closedLoop
             .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
-            .pidf(0.1, 0, 0, 0, ClosedLoopSlot.kSlot0)
-            .pidf(0.1, 0, 0, 0, ClosedLoopSlot.kSlot1)
-            .pidf(0.1, 0, 0, 0, ClosedLoopSlot.kSlot2);
+            .pidf(0.1, 0, 0, 0, ClosedLoopSlot.kSlot0) // empty ee
+            .pidf(0.1, 0, 0, 0, ClosedLoopSlot.kSlot1) // holding coral
+            .pidf(0.1, 0, 0, 0, ClosedLoopSlot.kSlot2); // holding algae            
 
-        // config.closedLoop.maxMotion
-        //     .maxAcceleration(0)
-        //     .maxVelocity(motorId)
-        //     .positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal);
+        config.closedLoop.maxMotion
+            .maxAcceleration(1)
+            .maxVelocity(1)
+            .positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal)
+            .allowedClosedLoopError(1, ClosedLoopSlot.kSlot0)
+            .allowedClosedLoopError(1, ClosedLoopSlot.kSlot1)
+            .allowedClosedLoopError(1, ClosedLoopSlot.kSlot2);
 
-        
-        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        pidController = motor.getClosedLoopController();
+        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);        
     }
 
     /**
@@ -94,17 +100,30 @@ public class PivotNew extends SubsystemBase{
     }
 
     public void setPosition(double position) {
-        pidController.setReference(position, SparkMax.ControlType.kPosition, ClosedLoopSlot.kSlot0, 0);
+        pidController.setReference(position, SparkMax.ControlType.kPosition, getPIDSlot(), 0);
     }
 
-    public ClosedLoopSlot getSlot() {
-        // should return slot based on game piece being held
-        return ClosedLoopSlot.kSlot0;
+    public void holdPosition(double position) {
+        pidController.setReference(position, SparkMax.ControlType.kPosition, getPIDSlot(), 0);
+    }
+
+    public void holdPosition() {
+        holdPosition(getPosition());
+    }
+
+    public ClosedLoopSlot getPIDSlot() {
+        if (endEffector.isHoldingAlgae())
+            return ClosedLoopSlot.kSlot2;
+        else if (endEffector.isHoldingCoral())
+            return ClosedLoopSlot.kSlot1;
+        else
+            return ClosedLoopSlot.kSlot0;
     }
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("Pivot Angle", getPosition());
+        SmartDashboard.putNumber("Pivot: Angle", getPosition());
+        SmartDashboard.putNumber("Pivot: Current", getCurrent());
     }
 
     public Command runPivotCommand(double speed) {

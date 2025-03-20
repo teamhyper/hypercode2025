@@ -15,6 +15,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class EndEffector extends SubsystemBase {
+
+    private static EndEffector instance;
+
     private static final int MOTOR_ID = 16;
     private static final int TOF1_ID = 21;
     private static final int TOF2_ID = 22;
@@ -57,7 +60,14 @@ public class EndEffector extends SubsystemBase {
 
         configMotor();
         configSensors();
-    }    
+    }
+
+    public static EndEffector getInstance() {
+        if (instance == null) {
+            instance = new EndEffector();
+        }
+        return instance;
+    }
 
     /**
      * Configures the TalonFX settings.
@@ -96,14 +106,14 @@ public class EndEffector extends SubsystemBase {
     /**
      * Returns true if the intake is holding algae.
      */
-    private boolean isHoldingAlgae() {
+    public boolean isHoldingAlgae() {
         return debouncer.calculate(isDetectingRange(tof_algae, 60, 100));
     }
 
     /**
      * Returns true if the intake is holding algae.
      */
-    private boolean isHoldingCoral() {
+    public boolean isHoldingCoral() {
         return isDetecting(tof_coral_outer, CORAL_THRESHOLD);
     }
 
