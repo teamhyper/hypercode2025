@@ -27,7 +27,9 @@ public class Climber extends SubsystemBase {
     private static final double CLIMB_CURRENT = 180.0;
 
     private final TalonFX m_climber;
-    private final CANcoder e_climber;
+    private final CANcoder encoder;
+    private final TorqueCurrentFOC torqueCurrentFOC;
+    private final DutyCycleOut dutyCycleOut;
     
     public Climber() {
         this(CLIMBER_ID, CLIMBER_ABS_ENC_ID);
@@ -35,7 +37,9 @@ public class Climber extends SubsystemBase {
 
     public Climber(int climberID, int climberEncoderID) {
         m_climber = new TalonFX(climberID, "hyperbus");
-        e_climber = new CANcoder(climberEncoderID, "hyperbus");
+        encoder = new CANcoder(climberEncoderID, "hyperbus");
+        torqueCurrentFOC = new TorqueCurrentFOC(0);
+        dutyCycleOut = new DutyCycleOut(0);
 
         configMotors();
         configSensors();
@@ -59,15 +63,16 @@ public class Climber extends SubsystemBase {
         
         CANcoderConfiguration config = new CANcoderConfiguration();
         config.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
+        config.MagnetSensor.MagnetOffset = 0.456;
         
-        e_climber.getConfigurator().apply(config);
+        encoder.getConfigurator().apply(config);
     }
 
     /**
      * Returns the climber absolute position in degrees.
      */
-    private double getClimberAngle() {
-        return (e_climber.getAbsolutePosition().getValueAsDouble() * 360.0) + CLIMBER_ENCODER_OFFSET;
+    private double getAngle() {
+        return (encoder.getAbsolutePosition().getValueAsDouble() * 360.0);
     }    
 
     /**
@@ -75,7 +80,7 @@ public class Climber extends SubsystemBase {
      * @param current Current output in Amps
      */
     public void runClimber(double current) {
-        m_climber.setControl(new TorqueCurrentFOC(current));
+        m_climber.setControl(torqueCurrentFOC.withOutput(current));
     }
 
     /**
@@ -83,13 +88,13 @@ public class Climber extends SubsystemBase {
      * @param output Speed output in duty cycle
      */
     public void runClimberVariable(double output) {
-        m_climber.setControl(new DutyCycleOut(output));
+        m_climber.setControl(dutyCycleOut.withOutput(output));
     }
 
     @Override
     public void periodic() {
 
-      SmartDashboard.putNumber("Climber Angle", getClimberAngle());
+      SmartDashboard.putNumber("Climber Angle", getAngle());
       SmartDashboard.putNumber("Climber Current Output", m_climber.getTorqueCurrent().getValueAsDouble());
     }
 
@@ -120,21 +125,21 @@ public class Climber extends SubsystemBase {
      * Command to move the climber to starting position.
      */
     public Command rotateClimberToStartingPositionCommand() {
-        return rotateClimberCommand(PREPARE_CURRENT).until(() -> getClimberAngle() <= 5).andThen(stopClimberCommand());
+        return rotateClimberCommand(PREPARE_CURRENT).until(() -> getAngle() <= 5).andThen(stopClimberCommand());
     }
 
     /**
      * Command to move the climber to climbing position.
      */
-    public Command rotateClimberOutCommand() {
-        return rotateClimberCommand(-PREPARE_CURRENT).until(() -> getClimberAngle() >= 160).andThen(stopClimberCommand());
+    public Command rotateClimberToAttachingPositionCommand() {
+        return rotateClimberCommand(-PREPARE_CURRENT).until(() -> getAngle() >= 170).andThen(stopClimberCommand());
     }
 
     /**
      * Command to move the climber to lifting position.
      */
-    public Command rotateClimberInCommand() {
-        return rotateClimberCommand(CLIMB_CURRENT).until(() -> getClimberAngle() <= 90).andThen(stopClimberCommand());
+    public Command rotateClimberToClimbedPositionCommand() {
+        return rotateClimberCommand(CLIMB_CURRENT).until(() -> getAngle() <= 90).andThen(stopClimberCommand());
     }
 
 }

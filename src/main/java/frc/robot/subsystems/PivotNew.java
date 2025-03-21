@@ -11,11 +11,11 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.config.MAXMotionConfig.MAXMotionPositionMode;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -23,15 +23,20 @@ public class PivotNew extends SubsystemBase{
 
     private static final int PIVOT_MOTOR_ID = 20;
 
-    public static final double CORAL_ANGLE_L1_L2_L3 = 42.0;
-    public static final double CORAL_ANGLE_L4 = 60.0;
-    public static final double ALGAE_ANGLE = 85.0;
-    public static final double ALGAE_BARGE = 50.0;
+    public static final double ANGLE_HARDSTOP = 42.0;
+    public static final double ANGLE_SAFE_MOVE = 50.0;
+    public static final double ANGLE_CORAL_L4 = 60.0;
+    public static final double ANGLE_ALGAE_COLLECT = 80.0;
+    public static final double ANGLE_BARGE = 42.0;
+    public static final double TOLERENCE = 1.0;
 
     private final SparkMax motor;
     private final SparkAbsoluteEncoder encoder;
     private final SparkClosedLoopController pidController;
+
     private final EndEffector endEffector;
+
+    private double target = 0.0;
 
     public PivotNew() {
         this(PIVOT_MOTOR_ID);
@@ -41,7 +46,7 @@ public class PivotNew extends SubsystemBase{
         motor = new SparkMax(motorId, MotorType.kBrushless);
         encoder = motor.getAbsoluteEncoder();
         pidController = motor.getClosedLoopController();
-        endEffector = EndEffector.getInstance(); // there's gotta be a better way
+        endEffector = EndEffector.getInstance();
 
         SparkMaxConfig config = new SparkMaxConfig();
 
@@ -63,19 +68,16 @@ public class PivotNew extends SubsystemBase{
 
         config.closedLoop
             .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
-            .pidf(0.1, 0, 0, 0, ClosedLoopSlot.kSlot0) // empty ee
-            .pidf(0.1, 0, 0, 0, ClosedLoopSlot.kSlot1) // holding coral
-            .pidf(0.1, 0, 0, 0, ClosedLoopSlot.kSlot2); // holding algae            
+            .pidf(.00875, 0, .001, 0, ClosedLoopSlot.kSlot0) // EMPTY
+            .pidf(.00875, 0, 0, 0, ClosedLoopSlot.kSlot1) // HOLDING CORAL
+            .pidf(.00875, 0, 0, 0, ClosedLoopSlot.kSlot2) // HOLDING ALGAE
+            .pidf(.3, 0, 0, 0, ClosedLoopSlot.kSlot3) // START POS
+            .outputRange(-0.25, 0.25, ClosedLoopSlot.kSlot0)
+            .outputRange(-0.25, 0.25, ClosedLoopSlot.kSlot1)
+            .outputRange(-0.25, 0.25, ClosedLoopSlot.kSlot2)
+            .outputRange(-0.25, 0.5, ClosedLoopSlot.kSlot3);
 
-        config.closedLoop.maxMotion
-            .maxAcceleration(1)
-            .maxVelocity(1)
-            .positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal)
-            .allowedClosedLoopError(1, ClosedLoopSlot.kSlot0)
-            .allowedClosedLoopError(1, ClosedLoopSlot.kSlot1)
-            .allowedClosedLoopError(1, ClosedLoopSlot.kSlot2);
-
-        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);        
+        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);                   
     }
 
     /**
@@ -83,7 +85,7 @@ public class PivotNew extends SubsystemBase{
      *
      * @return - current position of the absolute encoder
      */
-    public double getPosition() {
+    public double getAngle() {
         return encoder.getPosition();
     }
 
@@ -99,20 +101,22 @@ public class PivotNew extends SubsystemBase{
         motor.stopMotor();
     }
 
-    public void setPosition(double position) {
+    public void setAngle(double position) {
         pidController.setReference(position, SparkMax.ControlType.kPosition, getPIDSlot(), 0);
     }
 
-    public void holdPosition(double position) {
+    public void holdAngle(double position) {
         pidController.setReference(position, SparkMax.ControlType.kPosition, getPIDSlot(), 0);
     }
 
-    public void holdPosition() {
-        holdPosition(getPosition());
+    public void holdAngle() {
+        holdAngle(getAngle());
     }
 
     public ClosedLoopSlot getPIDSlot() {
-        if (endEffector.isHoldingAlgae())
+        if (getAngle() < 30.0)
+            return ClosedLoopSlot.kSlot3;
+        else if (endEffector.isHoldingAlgae())
             return ClosedLoopSlot.kSlot2;
         else if (endEffector.isHoldingCoral())
             return ClosedLoopSlot.kSlot1;
@@ -122,7 +126,7 @@ public class PivotNew extends SubsystemBase{
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("Pivot: Angle", getPosition());
+        SmartDashboard.putNumber("Pivot: Angle", getAngle());
         SmartDashboard.putNumber("Pivot: Current", getCurrent());
     }
 
@@ -132,6 +136,50 @@ public class PivotNew extends SubsystemBase{
 
     public Command runPivotVariableCommand(DoubleSupplier speed) {
         return new RunCommand(() -> runMotor(speed.getAsDouble()), this).finallyDo(interrupted -> runMotor(0));            
+    }
+
+    public Command jogPivotOutCommand() {
+        return new FunctionalCommand(
+            () -> {target = getAngle() + 3.0;},
+            () -> setAngle(target),
+            (interrupted) -> stop(),
+            () -> (Math.abs(target - getAngle()) < TOLERENCE),
+            this
+        );
+    }
+
+    public Command jogPivotInCommand() {
+        return new FunctionalCommand(
+            () -> {target = getAngle() - 3.0;},
+            () -> setAngle(target),
+            (interrupted) -> stop(),
+            () -> (Math.abs(target - getAngle()) < TOLERENCE),
+            this
+        );
+    }
+
+    public Command setPivotAngleCommand(double angle) {
+        return new FunctionalCommand(
+            () -> {},
+            () -> setAngle(angle),
+            (interrupted) -> stop(),
+            () -> (Math.abs(angle - getAngle()) < TOLERENCE), // ENDS WHEN IN TOLERENCE
+            this
+        );
+    }
+
+    public Command holdPivotAngleCommand(double position) {
+        return new FunctionalCommand(
+            () -> {},
+            () -> setAngle(position),
+            (interrupted) -> stop(),
+            () -> false, // NEVER ENDS
+            this
+        );        
+    }
+
+    public Command holdPivotAngleCommand() {
+        return holdPivotAngleCommand(getAngle());
     }
 
 }

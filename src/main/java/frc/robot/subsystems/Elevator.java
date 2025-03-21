@@ -11,7 +11,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 
@@ -21,20 +20,24 @@ public class Elevator extends SubsystemBase {
 
     public static final double BOTTOM_POSITION = 0.0;
     public static final double TOP_POSITION = 88.0;
+
     public static final double POSITION_CORAL_L1 = 18.0;
     public static final double POSITION_CORAL_L2 = 35.5;
     public static final double POSITION_CORAL_L3 = 52.0;
     public static final double POSITION_CORAL_L4 = 83.5;
+
     public static final double POSITION_ALGAE_GROUND = 3.0;
-    public static final double POSITION_ALGAE_LOW = 27.5;
-    public static final double POSITION_ALGAE_HIGH = 42.0;
+    public static final double POSITION_ALGAE_LOW = 35.5;
+    public static final double POSITION_ALGAE_HIGH = 45.0;
     public static final double POSITION_ALGAE_BARGE = 86.0; // or 88 with carry algae position
-    private static final int MASTER_ID = 17;
-    private static final int FOLLOWER_ID = 18;
-    private static final int LIM_SWITCH_ID = 1;
+
     private static final double STAGE_1 = 24.93;
     private static final double STAGE_2 = 59.3;
     private static final double STAGE_3 = 88.0;
+
+    private static final int MASTER_ID = 17;
+    private static final int FOLLOWER_ID = 18;
+    private static final int LIM_SWITCH_ID = 1;    
 
     private final TalonFX masterMotor;
     private final TalonFX followerMotor;
@@ -42,6 +45,7 @@ public class Elevator extends SubsystemBase {
     private final DigitalInput bottomLimitSwitch;
 
     private final MotionMagicTorqueCurrentFOC motionMagicTorqueCurrentFOC;
+    private final DutyCycleOut dutyCycleOut;
 
     private final Debouncer limitSwitchDebouncer = new Debouncer(0.5, Debouncer.DebounceType.kRising); // 100ms debounce
 
@@ -61,10 +65,9 @@ public class Elevator extends SubsystemBase {
 
         bottomLimitSwitch = new DigitalInput(limSwitchID);
         motionMagicTorqueCurrentFOC = new MotionMagicTorqueCurrentFOC(0);
+        dutyCycleOut = new DutyCycleOut(0);
 
-        configMotors();
-
-        setDefaultCommand(holdElevatorPositionCommand());
+        configMotors();        
     }
 
     /**
@@ -80,18 +83,6 @@ public class Elevator extends SubsystemBase {
         config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-
-        // config.TorqueCurrent.TorqueNeutralDeadband = 0.01; // Prevents small unintended movements
-        // config.MotorOutput.DutyCycleNeutralDeadband = 0.01;
-        // config.OpenLoopRamps.DutyCycleOpenLoopRampPeriod = 0.5; // 0.5s to reach full speed in open-loop mode
-        // config.ClosedLoopRamps.DutyCycleClosedLoopRampPeriod = 0.3; // 0.3s in closed-loop mode
-
-        // config.CurrentLimits.SupplyCurrentLimit = 40;
-        // config.CurrentLimits.SupplyCurrentLowerLimit = 40;
-        // config.CurrentLimits.SupplyCurrentLowerTime = 1.0;
-        // config.CurrentLimits.SupplyCurrentLimitEnable = true;
-        // config.CurrentLimits.StatorCurrentLimit = 60; // Limit stator current to 60A
-        // config.CurrentLimits.StatorCurrentLimitEnable = true;
 
         // ✅ Set Motion Magic parameters
         config.MotionMagic.MotionMagicAcceleration = 80;  // Acceleration (ticks/sec²)
@@ -178,17 +169,17 @@ public class Elevator extends SubsystemBase {
      * @param output Speed output in duty cycle
      */
     public void runElevatorVariable(double output) {
-        masterMotor.setControl(new DutyCycleOut(output).withIgnoreHardwareLimits(true));
+        masterMotor.setControl(dutyCycleOut.withOutput(output));
     }
 
     /**
      * Holds the elevator at its current position.
      */
     public void holdPosition() {
-        // do nothing if elevator at bottom
+        // Do nothing if elevator at bottom
         if (masterMotor.getPosition().getValueAsDouble() <= 0.1) {
             masterMotor.setControl(new TorqueCurrentFOC(0));
-            // apply holding current otherwise
+            // Apply holding current otherwise
         } else {
             masterMotor.setControl(motionMagicTorqueCurrentFOC
                     .withSlot(getSlotFromPosition()).withPosition(masterMotor.getPosition().getValueAsDouble()));
@@ -205,24 +196,15 @@ public class Elevator extends SubsystemBase {
         target = Math.max(BOTTOM_POSITION, Math.min(TOP_POSITION, targetPosition));
 
         // Apply Motion Magic control with FOC
-        masterMotor.setControl(new MotionMagicTorqueCurrentFOC(target).withSlot(getSlotFromPosition()));
+        masterMotor.setControl(motionMagicTorqueCurrentFOC.withPosition(target).withSlot(getSlotFromPosition()));
     }
 
     @Override
     public void periodic() {
-
         zeroElevator();
         SmartDashboard.putBoolean("Elevator at Bottom", bottomLimitSwitch.get());
-
-        // target = masterMotor.getPosition().getValueAsDouble();
-        SmartDashboard.putNumber("Elevator Target", target);
-
-        SmartDashboard.putBoolean("Elevator On Target", this.isOnTarget());
-
         SmartDashboard.putNumber("Elevator Position Master", masterMotor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Elevator Position Follower", followerMotor.getPosition().getValueAsDouble());
         SmartDashboard.putNumber("Elevator Current Master", masterMotor.getTorqueCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("Elevator Current Follower", followerMotor.getTorqueCurrent().getValueAsDouble());
     }
 
     /**
@@ -230,7 +212,7 @@ public class Elevator extends SubsystemBase {
      *
      * @param rotation The current to run the elevator in Amps
      */
-    public Command moveUpCommand(double rotation) {
+    public Command jogElevatorUpCommand(double rotation) {
         return new FunctionalCommand(
                 () -> target = rotation + masterMotor.getPosition().getValueAsDouble(),
                 () -> setElevatorPosition(target),
@@ -244,7 +226,7 @@ public class Elevator extends SubsystemBase {
      *
      * @param rotation The current to run the elevator in Amps
      */
-    public Command moveDownCommand(double rotation) {
+    public Command jogElevatorDownCommand(double rotation) {
         return new FunctionalCommand(
                 () -> target = masterMotor.getPosition().getValueAsDouble() - rotation,
                 () -> setElevatorPosition(target),
@@ -265,8 +247,9 @@ public class Elevator extends SubsystemBase {
      *
      * @param output The current to run the elevator in Amps
      */
-    public Command moveVariableCommand(DoubleSupplier output) {
-        return new RunCommand(() -> runElevatorVariable(output.getAsDouble()), this).finallyDo(interrupted -> runElevator(0));
+    public Command moveElevatorVariableCommand(DoubleSupplier output) {
+        return new RunCommand(() -> runElevatorVariable(output.getAsDouble()), this)
+            .finallyDo(interrupted -> runElevator(0));
     }
 
     /**
@@ -274,7 +257,7 @@ public class Elevator extends SubsystemBase {
      *
      * @param position The position to move the elevator to in rotations
      */
-    public Command moveToPositionCommand(double position) {
+    public Command moveElevatorToPositionCommand(double position) {
         return new FunctionalCommand(
                 () -> {},
                 () -> setElevatorPosition(position),

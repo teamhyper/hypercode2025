@@ -14,8 +14,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.ledCommands.BlinkLEDCommand;
-import frc.robot.commands.ledCommands.SetLEDPatternCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hyperlib.DriverInput;
 import frc.robot.joysticks.ApemHF45Joystick;
@@ -29,12 +27,13 @@ public class RobotContainer {
     public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
     public final EndEffector endEffector = new EndEffector();
     public final Climber climber = new Climber();
-    // public final VisionSubsystem vision = new VisionSubsystem(drivetrain);
     public final Elevator elevator = new Elevator();
     public final PivotNew pivot = new PivotNew();
     public final Ratchet ratchet = new Ratchet();
     public final Ramp ramp = new Ramp();
     public final LEDStrip ledStrip = new LEDStrip();
+    // public final VisionSubsystem vision = new VisionSubsystem(drivetrain);
+
     // Slew Rate Limiter
     private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(Constants.xSpeedLimiter);
     private final SlewRateLimiter ySpeedLimiter = new SlewRateLimiter(Constants.ySpeedLimiter);
@@ -86,6 +85,10 @@ public class RobotContainer {
 
     private void configureBindings() {
 
+        elevator.setDefaultCommand(elevator.holdElevatorPositionCommand());
+        ledStrip.setDefaultCommand(new InstantCommand(() -> ledStrip.setColor(Color.kRed), ledStrip));
+        pivot.setDefaultCommand(pivot.holdPivotAngleCommand()); // TEST ME       
+
         // ==================== Drivetrain Bindings ====================
         drivetrain.setDefaultCommand(
                 drivetrain.applyRequest(() -> {
@@ -130,109 +133,103 @@ public class RobotContainer {
                 })
         );
 
-        /*
-         * ==================== DRIVER MODES ====================
-         * LEFT JOYSTICK LEFT - FIELD CENTRIC MODE
-         * LEFT JOYSTICK RIGHT - ROBOT CENTRIC + SLOW MODE
-         * RIGHT JOYSTICK LEFT - 
-         * RIGHT JOYSTICK RIGHT - RESET FIELD CENTRIC HEADING
-         */
+        // ==================== Drivetrain Bindings ====================
 
         driverJoystickLeft.leftButton().onTrue(
-            new InstantCommand(() -> Drivetrain.isRobotCentric = false));
+            new InstantCommand(() -> Drivetrain.isRobotCentric = !Drivetrain.isRobotCentric));
         driverJoystickLeft.rightButton().onTrue(
-            new InstantCommand(() -> Drivetrain.isRobotCentric = true));
-        driverJoystickRight.leftButton().onTrue(
             new InstantCommand( () -> Drivetrain.isSlowMode = !Drivetrain.isSlowMode));
         driverJoystickRight.rightButton().onTrue(
             new InstantCommand(drivetrain::seedFieldCentric));
 
-        // ==================== Climber Bindings ====================
+        // // ==================== Climber Bindings ====================
 
         /*
          * OP RIGHT F2 - Prepare Climber
          */
-        // operatorJoystickRight.f2Button().onTrue(
-        //         new ParallelDeadlineGroup(
-        //             new ParallelDeadlineGroup(
-        //                 ramp.detachRampCommand(), 
-        //                 ratchet.unlockRatchetCommand(), 
-        //                 pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_ALGAE_POSITION_OFFSET)) // TODO TEST
-        //             .andThen(climber.rotateClimberOutCommand()), new BlinkLEDCommand(ledStrip, Color.kYellow, 0.25))
-        //         .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)));
-
-                // TODO: use CommandScheduler.removeComposedCommand(Command) to remove pivot so it defaults to holding?
+        operatorJoystickRight.f2Button().onTrue(
+                    new ParallelDeadlineGroup(
+                        ramp.detachRampCommand(), 
+                        ratchet.unlockRatchetCommand(), 
+                        pivot.setPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT))
+                    .andThen(new ParallelDeadlineGroup(
+                        climber.rotateClimberToStartingPositionCommand(),
+                        pivot.holdPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT)
+                    )).andThen(new ParallelCommandGroup(
+                        pivot.holdPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT),
+                        new RunCommand(() -> ledStrip.setColor(Color.kGreen))
+                    )));
 
         /*
          * OP RIGHT F3 - Climb
          */
         operatorJoystickRight.f3Button().onTrue(
             ratchet.lockRatchetCommand()
-            .andThen(climber.rotateClimberInCommand()).withTimeout(3.0) // TODO TEST
-            .andThen(new SetLEDPatternCommand(ledStrip)));
+            .andThen(climber.rotateClimberToClimbedPositionCommand()).withTimeout(3.0));
 
         // ==================== Elevator Bindings ====================
 
         // Coral Positions
-        // operatorJoystickRight.lowerHatUp().onTrue(
-        //     moveToScoreCoral(Elevator.POSITION_CORAL_L4, Pivot.SCORE_CORAL_L4_POSITION_OFFSET));
-        // operatorJoystickRight.lowerHatLeft().onTrue(
-        //     moveToScoreCoral(Elevator.POSITION_CORAL_L2, Pivot.SCORE_CORAL_L2L3_POSITION_OFFSET));
-        // operatorJoystickRight.lowerHatRight().onTrue(
-        //     moveToScoreCoral(Elevator.POSITION_CORAL_L3, Pivot.SCORE_CORAL_L2L3_POSITION_OFFSET));
-        // operatorJoystickRight.lowerHatDown().onTrue(
-        //     moveToScoreCoral(Elevator.POSITION_CORAL_L1, Pivot.SCORE_CORAL_L1_POSITION_OFFSET));
+        operatorJoystickRight.lowerHatUp().onTrue(
+            setPivotAndMoveElevatorCommand(PivotNew.ANGLE_CORAL_L4, Elevator.POSITION_CORAL_L4));
+        operatorJoystickRight.lowerHatLeft().onTrue(
+            setPivotAndMoveElevatorCommand(PivotNew.ANGLE_HARDSTOP, Elevator.POSITION_CORAL_L2));
+        operatorJoystickRight.lowerHatRight().onTrue(
+            setPivotAndMoveElevatorCommand(PivotNew.ANGLE_HARDSTOP, Elevator.POSITION_CORAL_L3));
+        operatorJoystickRight.lowerHatDown().onTrue(
+            setPivotAndMoveElevatorCommand(PivotNew.ANGLE_HARDSTOP, Elevator.POSITION_CORAL_L1));
 
         // Algae Positions
-        // operatorJoystickRight.innerHatUp().onTrue(
-        //     moveToScoreAlgae());
-        // operatorJoystickRight.innerHatLeft().or(operatorJoystickRight.innerHatRight()).onTrue(
-        //     moveToCollectAlgaeFromReef(Elevator.POSITION_ALGAE_HIGH));
-        // operatorJoystickRight.innerHatDown().onTrue(
-        //     moveToCollectAlgaeFromReef(Elevator.POSITION_ALGAE_LOW));
+        operatorJoystickRight.innerHatUp().onTrue(
+            setPivotAndMoveElevatorCommand(PivotNew.ANGLE_BARGE, Elevator.POSITION_ALGAE_BARGE));
+        operatorJoystickRight.innerHatLeft().onTrue(
+            setPivotAndMoveElevatorCommand(PivotNew.ANGLE_ALGAE_COLLECT, Elevator.POSITION_ALGAE_LOW));
+        operatorJoystickRight.innerHatRight().onTrue(
+            setPivotAndMoveElevatorCommand(PivotNew.ANGLE_ALGAE_COLLECT, Elevator.POSITION_ALGAE_HIGH));
+        operatorJoystickRight.innerHatDown().onTrue(
+            setPivotAndMoveElevatorCommand(PivotNew.ANGLE_ALGAE_COLLECT, Elevator.POSITION_ALGAE_GROUND));
 
         // Floor Position
-        // operatorJoystickRight.thumbButton().onTrue(
-        //     moveToCollectCoral());
+        operatorJoystickRight.thumbButton().onTrue(
+            setPivotAndMoveElevatorCommand(PivotNew.ANGLE_HARDSTOP, Elevator.BOTTOM_POSITION));
 
         // Manual Elevator Jogging
-        operatorJoystickRight.outerHatUp().onTrue( // TODO TEST
-            elevator.moveUpCommand(2));
+        operatorJoystickRight.outerHatUp().onTrue(
+            elevator.jogElevatorUpCommand(2));
         operatorJoystickRight.outerHatDown().onTrue(
-            elevator.moveDownCommand(2));
-        // Pull BACK on the joystick to move the elevator up
+            elevator.jogElevatorDownCommand(2));
         operatorJoystickRight.pinkyButton().whileTrue(
-            elevator.moveVariableCommand(operatorJoystickRight::getY));
+            // Pull BACK on the joystick to move the elevator up
+            elevator.moveElevatorVariableCommand(operatorJoystickRight::getY));
 
         // ==================== EndEffector Bindings ====================
 
         operatorJoystickRight.triggerPrimary().onTrue(
-            endEffector.scoreGamePieceCommand()
-            .andThen(new BlinkLEDCommand(ledStrip, Color.kRed, 0.25)).withTimeout(1.0)
-            .andThen(new InstantCommand(() -> ledStrip.setColor(Color.kRed))));
+            endEffector.scoreGamePieceCommand());
 
-        // operatorJoystickRight.redButton().onTrue(
-        //     collectAlgaeFromGround()
-        //     .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)).withTimeout(1.0)
-        //     .andThen(new InstantCommand(() -> ledStrip.setColor(Color.kGreen))));
+        operatorJoystickRight.redButton().onTrue(
+            endEffector.intakeAlgaeCurrentLimitCommand()
+            .andThen(endEffector.holdAlgaeCommand()
+            ));
 
         endEffector.getCoralInnerDetectionTrigger().onTrue(
-            endEffector.intakeCoralCommand()
-            .andThen(new BlinkLEDCommand(ledStrip, Color.kGreen, 0.25)).withTimeout(1.0)
-            .andThen(new InstantCommand(() -> ledStrip.setColor(Color.kGreen))));
+            endEffector.intakeCoralCommand());
 
         operatorJoystickRight.indexButon().onTrue(
             endEffector.stopIntakeCommand());
 
         // ==================== Pivot Bindings ====================
-        operatorJoystickRight.outerHatLeft().whileTrue( // TODO CHANGE TO JOG A FEW DEGREES
-            pivot.runPivotCommand(-0.1));
-        operatorJoystickRight.outerHatRight().whileTrue(
-            pivot.runPivotCommand(.1));
+        operatorJoystickRight.outerHatLeft().onTrue( // TODO CHANGE TO JOG A FEW DEGREES
+            pivot.jogPivotInCommand());
+        operatorJoystickRight.outerHatRight().onTrue(
+            pivot.jogPivotOutCommand());
+
+        new Trigger(() -> endEffector.isHoldingAlgae() || endEffector.isHoldingCoral())
+                .whileTrue(new RunCommand(() -> ledStrip.setColor(Color.kGreen), ledStrip));
 
         
 
-        // ==================== OPERATOR LEFT STICK DEBUG COMMANDS ====================
+        // // ==================== OPERATOR LEFT STICK DEBUG COMMANDS ====================
 
         /*
          * ==================== CLIMBER ====================
@@ -249,71 +246,6 @@ public class RobotContainer {
             ratchet.unlockRatchetCommand());
         operatorJoystickLeft.f3Button().onTrue(
             ratchet.lockRatchetCommand());
-
-        /*
-         * ==================== ELEVATOR ====================
-         * LOWER HAT UP - POSITION_CORAL_L4
-         * LOWER HAT LEFT - POSITION_CORAL_L2
-         * LOWER HAT RIGHT - POSITION_CORAL_L3
-         * LOWER HAT DOWN - POSITION_CORAL_L1
-         */
-        operatorJoystickLeft.lowerHatUp().onTrue(
-            elevator.moveToPositionCommand(Elevator.POSITION_CORAL_L4).withTimeout(3.0));
-        operatorJoystickLeft.lowerHatLeft().onTrue(
-            elevator.moveToPositionCommand(Elevator.POSITION_CORAL_L2).withTimeout(3.0));
-        operatorJoystickLeft.lowerHatRight().onTrue(
-            elevator.moveToPositionCommand(Elevator.POSITION_CORAL_L3).withTimeout(3.0));
-        operatorJoystickLeft.lowerHatDown().onTrue(
-            elevator.moveToPositionCommand(Elevator.POSITION_CORAL_L1).withTimeout(3.0));
-
-        /*
-         * Inner HAT UP - POSITION_ALGAE_BARGE
-         * Inner HAT LEFT - POSITION_ALGAE_LOW
-         * Inner HAT RIGHT - POSITION_ALGAE_HIGH
-         * Inner HAT DOWN - POSITION_ALGAE_GROUND
-         */
-        operatorJoystickLeft.innerHatUp().onTrue(
-            elevator.moveToPositionCommand(Elevator.POSITION_ALGAE_BARGE).withTimeout(3.0));
-        operatorJoystickLeft.innerHatLeft().onTrue(
-            elevator.moveToPositionCommand(Elevator.POSITION_ALGAE_LOW).withTimeout(3.0));
-        operatorJoystickLeft.innerHatRight().onTrue(
-            elevator.moveToPositionCommand(Elevator.POSITION_ALGAE_HIGH).withTimeout(3.0));
-        operatorJoystickLeft.innerHatDown().onTrue(
-            elevator.moveToPositionCommand(Elevator.POSITION_ALGAE_GROUND).withTimeout(3.0));
-
-        operatorJoystickLeft.thumbButton().onTrue(
-            elevator.moveToPositionCommand(Elevator.BOTTOM_POSITION));
-
-        /*
-         * ==================== ENDEFFECTOR ====================
-         * Trigger - Intake Algae, Intake Coral, Score Coral
-         * Index - Score Algae, Reverse Coral
-         */
-
-         operatorJoystickLeft.triggerPrimary().whileTrue(
-            endEffector.runIntakeCommand(1.0));
-        operatorJoystickLeft.indexButon().whileTrue(
-            endEffector.runIntakeCommand(-1.0));
-
-
-        /*
-         * ==================== PIVOT ====================
-         * OUTER HAT UP - 
-         * OUTER HAT LEFT - 
-         * OUTER HAT RIGHT - 
-         * OUTER HAT DOWN - 
-         */
-
-        // operatorJoystickLeft.outerHatLeft().onTrue(
-        //     pivot.setTargetPositionCommand(() -> Pivot.ALL_IN_POSITION));
-        // operatorJoystickLeft.outerHatDown().onTrue(
-        //     pivot.setTargetPositionOffsetCommand(0));
-        // operatorJoystickLeft.outerHatRight().onTrue(
-        //     pivot.setTargetPositionOffsetCommand(Pivot.COLLECT_ALGAE_POSITION_OFFSET));
-        // operatorJoystickLeft.outerHatUp().onTrue(
-        //     pivot.setTargetPositionOffsetCommand(Pivot.CARRY_ALGAE_POSITION_OFFSET));        
-
-        operatorJoystickLeft.pinkyButton().whileTrue(pivot.runPivotVariableCommand(operatorJoystickLeft::getY));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
@@ -385,12 +317,13 @@ public class RobotContainer {
 
     // }
 
-    /**
-     * Squares the input value while preserving the sign.
-     * For example, 0.5 becomes 0.25, and -0.5 becomes -0.25.
-     */
-    private double squareInput(double value) {
-        return Math.copySign(value * value, value);
+    private Command setPivotAndMoveElevatorCommand(double pivotAngle, double elevatorPosition) {
+        return pivot.setPivotAngleCommand(PivotNew.ANGLE_SAFE_MOVE).withTimeout(1.0)
+                .andThen(new ParallelDeadlineGroup(
+                    elevator.moveElevatorToPositionCommand(elevatorPosition).withTimeout(3.0),
+                    pivot.holdPivotAngleCommand(PivotNew.ANGLE_SAFE_MOVE)
+                ))
+                .andThen(pivot.holdPivotAngleCommand(pivotAngle));
     }
 
 }

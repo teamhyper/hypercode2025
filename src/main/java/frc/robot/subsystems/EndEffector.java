@@ -33,10 +33,10 @@ public class EndEffector extends SubsystemBase {
     private static final double CORAL_INTAKE_SPEED = .25;
     private static final double CORAL_EJECTION_SPEED = .5;
     
-    private static final double ALGAE_INTAKE_CURRENT = 20.0;
+    private static final double ALGAE_INTAKE_CURRENT = 25.0;
     private static final double ALGAE_INTAKE_CURRENT_LIMIT = 30.0;
     private static final double ALGAE_EJECTION_CURRENT = 70.0;    
-    private static final double HOLD_CURRENT = 5.0;
+    private static final double HOLD_CURRENT = 10.0;
 
     private final TalonFX intakeMotor;
     private final TorqueCurrentFOC torqueCurrentFOC;
@@ -195,9 +195,8 @@ public class EndEffector extends SubsystemBase {
      */
     public Command intakeAlgaeCurrentLimitCommand() {
         return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(ALGAE_INTAKE_CURRENT), this)
-            .until(() -> intakeMotor.getTorqueCurrent().getValueAsDouble() >= ALGAE_INTAKE_CURRENT_LIMIT)
+            .until(() -> isHoldingAlgae())
                 .finallyDo(interrupted -> {
-                    System.out.println("intakeAlgaeCurrentLimitCommand: finallyDo()");
                     runIntakeWithTorqueCurrentFOC(0);
                 });
     }
@@ -208,7 +207,6 @@ public class EndEffector extends SubsystemBase {
     public Command holdAlgaeCommand() {
         return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(HOLD_CURRENT), this)
             .finallyDo(interrupted -> {
-                System.out.println("holdAlgaeCommand: finallyDo()");
                 runIntakeWithTorqueCurrentFOC(0);
             });
     }
