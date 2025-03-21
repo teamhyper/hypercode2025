@@ -32,8 +32,8 @@ public class VisionSubsystem extends SubsystemBase {
      * Constructs a new VisionSubsystem.
      */
     public VisionSubsystem(Drivetrain drivetrain) {
-        camera_2 = new PhotonCamera("hypercam-02");
         camera_1 = new PhotonCamera("hypercam-01");
+        camera_2 = new PhotonCamera("hypercam-02");        
         var visionMeasurement = getPhotonPosition().orElse(null);
         if (visionMeasurement != null) {
             drivetrain.resetPose(visionMeasurement.estimatedPose.toPose2d());

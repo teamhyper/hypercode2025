@@ -13,6 +13,7 @@ import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -33,6 +34,7 @@ public class PivotNew extends SubsystemBase{
     private final SparkMax motor;
     private final SparkAbsoluteEncoder encoder;
     private final SparkClosedLoopController pidController;
+    private final ArmFeedforward feedforward;
 
     private final EndEffector endEffector;
 
@@ -49,6 +51,7 @@ public class PivotNew extends SubsystemBase{
         endEffector = EndEffector.getInstance();
 
         SparkMaxConfig config = new SparkMaxConfig();
+        feedforward = new ArmFeedforward(0.0, 0.0, 0.0, 0.0);
 
         config
             .inverted(true)
