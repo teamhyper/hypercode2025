@@ -71,11 +71,11 @@ public class PivotNew extends SubsystemBase{
             .pidf(.00875, 0, .001, 0, ClosedLoopSlot.kSlot0) // EMPTY
             .pidf(.00875, 0, 0, 0, ClosedLoopSlot.kSlot1) // HOLDING CORAL
             .pidf(.00875, 0, 0, 0, ClosedLoopSlot.kSlot2) // HOLDING ALGAE
-            .pidf(.3, 0, 0, 0, ClosedLoopSlot.kSlot3) // START POS
+            .pidf(.3, 0, 0, 0, ClosedLoopSlot.kSlot3) // START POSITION PID
             .outputRange(-0.25, 0.25, ClosedLoopSlot.kSlot0)
             .outputRange(-0.25, 0.25, ClosedLoopSlot.kSlot1)
             .outputRange(-0.25, 0.25, ClosedLoopSlot.kSlot2)
-            .outputRange(-0.25, 0.5, ClosedLoopSlot.kSlot3);
+            .outputRange(-0.25, 0.25, ClosedLoopSlot.kSlot3);
 
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);                   
     }
@@ -105,14 +105,6 @@ public class PivotNew extends SubsystemBase{
         pidController.setReference(position, SparkMax.ControlType.kPosition, getPIDSlot(), 0);
     }
 
-    public void holdAngle(double position) {
-        pidController.setReference(position, SparkMax.ControlType.kPosition, getPIDSlot(), 0);
-    }
-
-    public void holdAngle() {
-        holdAngle(getAngle());
-    }
-
     public ClosedLoopSlot getPIDSlot() {
         if (getAngle() < 30.0)
             return ClosedLoopSlot.kSlot3;
@@ -140,7 +132,7 @@ public class PivotNew extends SubsystemBase{
 
     public Command jogPivotOutCommand() {
         return new FunctionalCommand(
-            () -> {target = getAngle() + 3.0;},
+            () -> target = getAngle() + 3.0,
             () -> setAngle(target),
             (interrupted) -> stop(),
             () -> (Math.abs(target - getAngle()) < TOLERENCE),
@@ -150,7 +142,7 @@ public class PivotNew extends SubsystemBase{
 
     public Command jogPivotInCommand() {
         return new FunctionalCommand(
-            () -> {target = getAngle() - 3.0;},
+            () -> target = getAngle() - 3.0,
             () -> setAngle(target),
             (interrupted) -> stop(),
             () -> (Math.abs(target - getAngle()) < TOLERENCE),
@@ -163,7 +155,7 @@ public class PivotNew extends SubsystemBase{
             () -> {},
             () -> setAngle(angle),
             (interrupted) -> stop(),
-            () -> (Math.abs(angle - getAngle()) < TOLERENCE), // ENDS WHEN IN TOLERENCE
+            () -> (Math.abs(angle - getAngle()) < TOLERENCE),
             this
         );
     }

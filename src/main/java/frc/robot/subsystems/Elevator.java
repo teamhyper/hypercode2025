@@ -29,15 +29,16 @@ public class Elevator extends SubsystemBase {
     public static final double POSITION_ALGAE_GROUND = 3.0;
     public static final double POSITION_ALGAE_LOW = 35.5;
     public static final double POSITION_ALGAE_HIGH = 45.0;
-    public static final double POSITION_ALGAE_BARGE = 86.0; // or 88 with carry algae position
+    public static final double POSITION_ALGAE_BARGE = 86.0;
 
-    private static final double STAGE_1 = 24.93;
-    private static final double STAGE_2 = 59.3;
-    private static final double STAGE_3 = 88.0;
+    public static final double STAGE_1 = 24.93;
+    public static final double STAGE_2 = 59.3;
 
     private static final int MASTER_ID = 17;
     private static final int FOLLOWER_ID = 18;
-    private static final int LIM_SWITCH_ID = 1;    
+    private static final int LIM_SWITCH_ID = 1;
+
+    private static final double TOLERENCE = 1.0;
 
     private final TalonFX masterMotor;
     private final TalonFX followerMotor;
@@ -45,6 +46,7 @@ public class Elevator extends SubsystemBase {
     private final DigitalInput bottomLimitSwitch;
 
     private final MotionMagicTorqueCurrentFOC motionMagicTorqueCurrentFOC;
+    private final TorqueCurrentFOC torqueCurrentFOC;
     private final DutyCycleOut dutyCycleOut;
 
     private final Debouncer limitSwitchDebouncer = new Debouncer(0.5, Debouncer.DebounceType.kRising); // 100ms debounce
@@ -52,8 +54,6 @@ public class Elevator extends SubsystemBase {
     private boolean hasResetZero = false;
 
     private double target = 0.0;
-
-    private final double tolerance = 1.0;
 
     public Elevator() {
         this(MASTER_ID, FOLLOWER_ID, LIM_SWITCH_ID);
@@ -65,6 +65,7 @@ public class Elevator extends SubsystemBase {
 
         bottomLimitSwitch = new DigitalInput(limSwitchID);
         motionMagicTorqueCurrentFOC = new MotionMagicTorqueCurrentFOC(0);
+        torqueCurrentFOC = new TorqueCurrentFOC(0);
         dutyCycleOut = new DutyCycleOut(0);
 
         configMotors();        
@@ -83,51 +84,40 @@ public class Elevator extends SubsystemBase {
         config.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
-
-        // ✅ Set Motion Magic parameters
+        
         config.MotionMagic.MotionMagicAcceleration = 80;  // Acceleration (ticks/sec²)
         config.MotionMagic.MotionMagicCruiseVelocity = 60; // Max velocity (ticks/sec)
-
-        // ✅ Tune PID values (adjust as needed)
+        
         config.Slot0.kP = 20.0;  // Proportional Gain (response to error)
         config.Slot0.kI = 0.0;  // Integral Gain (only if you need fine corrections)
         config.Slot0.kD = 0.0;  // Derivative Gain (smooths response)
-        // ✅ Set Feedforward Gains (for smooth motion)
         config.Slot0.kS = 0.0000;  // Static friction compensation (helps start moving)
         config.Slot0.kV = 0.0000;  // Velocity feedforward (scales output based on velocity)
         config.Slot0.kA = 0.0000;  // Acceleration feedforward (scales output based on acceleration)
         config.Slot0.kG = 4.0000;  // Gravity compensation (counteracts elevator weight)
-        // ✅ Set Gravity Type (for elevators)
         config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
-
-        // ✅ Tune PID values (adjust as needed)
+        
         config.Slot1.kP = 20.0;  // Proportional Gain (response to error)
         config.Slot1.kI = 0.0;  // Integral Gain (only if you need fine corrections)
         config.Slot1.kD = 0.0;  // Derivative Gain (smooths response)
-        // ✅ Set Feedforward Gains (for smooth motion)
         config.Slot1.kS = 0.0000;  // Static friction compensation (helps start moving)
         config.Slot1.kV = 0.0000;  // Velocity feedforward (scales output based on velocity)
         config.Slot1.kA = 0.0000;  // Acceleration feedforward (scales output based on acceleration)
         config.Slot1.kG = 7.0000;  // Gravity compensation (counteracts elevator weight)
-        // ✅ Set Gravity Type (for elevators)
         config.Slot1.GravityType = GravityTypeValue.Elevator_Static;
 
-        // ✅ Tune PID values (adjust as needed)
         config.Slot2.kP = 20.0;  // Proportional Gain (response to error)
         config.Slot2.kI = 0.0;  // Integral Gain (only if you need fine corrections)
-        config.Slot2.kD = 0.0;  // Derivative Gain (smooths response)
-        // ✅ Set Feedforward Gains (for smooth motion)
+        config.Slot2.kD = 0.0;  // Derivative Gain (smooths response)        
         config.Slot2.kS = 0.0000;  // Static friction compensation (helps start moving)
         config.Slot2.kV = 0.0000;  // Velocity feedforward (scales output based on velocity)
         config.Slot2.kA = 0.0000;  // Acceleration feedforward (scales output based on acceleration)
         config.Slot2.kG = 12.0000;  // Gravity compensation (counteracts elevator weight)
-        // ✅ Set Gravity Type (for elevators)
         config.Slot2.GravityType = GravityTypeValue.Elevator_Static;
 
         masterMotor.getConfigurator().apply(config);
         followerMotor.getConfigurator().apply(config);
 
-        // Ensure follower motor runs in the opposite direction of the master motor
         followerMotor.setControl(new Follower(masterMotor.getDeviceID(), true));
     }
 
@@ -137,7 +127,7 @@ public class Elevator extends SubsystemBase {
             return 0;
         } else if (currentPosition <= STAGE_2) {
             return 1;
-        } else {
+        } else { // STAGE_3
             return 2;
         }
     }
@@ -145,7 +135,6 @@ public class Elevator extends SubsystemBase {
     private void zeroElevator() {
         boolean debouncedLimitSwitch = limitSwitchDebouncer.calculate(bottomLimitSwitch.get());
         if (debouncedLimitSwitch && !hasResetZero) {
-            // Set the motor's position to zero
             masterMotor.setPosition(0);
             followerMotor.setPosition(0);
             hasResetZero = true;  // Prevent constant resetting
@@ -154,13 +143,21 @@ public class Elevator extends SubsystemBase {
         }
     }
 
+    public double getPosition() {
+        return masterMotor.getPosition().getValueAsDouble();
+    }
+
+    public double getCurrent() {
+        return masterMotor.getTorqueCurrent().getValueAsDouble();
+    }
+
     /**
      * Runs the elevator at a given current output.
      *
      * @param current Current output in Amps
      */
     public void runElevator(double current) {
-        masterMotor.setControl(new TorqueCurrentFOC(current));
+        masterMotor.setControl(torqueCurrentFOC.withOutput(current));
     }
 
     /**
@@ -178,11 +175,12 @@ public class Elevator extends SubsystemBase {
     public void holdPosition() {
         // Do nothing if elevator at bottom
         if (masterMotor.getPosition().getValueAsDouble() <= 0.1) {
-            masterMotor.setControl(new TorqueCurrentFOC(0));
+            masterMotor.setControl(torqueCurrentFOC.withOutput(0));
             // Apply holding current otherwise
         } else {
             masterMotor.setControl(motionMagicTorqueCurrentFOC
-                    .withSlot(getSlotFromPosition()).withPosition(masterMotor.getPosition().getValueAsDouble()));
+                    .withSlot(getSlotFromPosition())
+                    .withPosition(masterMotor.getPosition().getValueAsDouble()));
         }
     }
 
@@ -196,15 +194,17 @@ public class Elevator extends SubsystemBase {
         target = Math.max(BOTTOM_POSITION, Math.min(TOP_POSITION, targetPosition));
 
         // Apply Motion Magic control with FOC
-        masterMotor.setControl(motionMagicTorqueCurrentFOC.withPosition(target).withSlot(getSlotFromPosition()));
+        masterMotor.setControl(motionMagicTorqueCurrentFOC
+            .withPosition(target)
+            .withSlot(getSlotFromPosition()));
     }
 
     @Override
     public void periodic() {
         zeroElevator();
         SmartDashboard.putBoolean("Elevator at Bottom", bottomLimitSwitch.get());
-        SmartDashboard.putNumber("Elevator Position Master", masterMotor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("Elevator Current Master", masterMotor.getTorqueCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("Elevator: Position", getPosition());
+        SmartDashboard.putNumber("Elevator: Current", getCurrent());
     }
 
     /**
@@ -267,7 +267,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public boolean isOnTarget() {
-        return Math.abs(masterMotor.getPosition().getValueAsDouble() - target) < tolerance;
+        return Math.abs(masterMotor.getPosition().getValueAsDouble() - target) < TOLERENCE;
     }
 
     /**

@@ -22,11 +22,10 @@ public class Climber extends SubsystemBase {
     private static final int CLIMBER_ID = 19;
     private static final int CLIMBER_ABS_ENC_ID = 24;
 
-    private static final double CLIMBER_ENCODER_OFFSET = 163; // (Degrees)
     private static final double PREPARE_CURRENT = 30.0;
-    private static final double CLIMB_CURRENT = 180.0;
+    private static final double CLIMB_CURRENT = 120.0;
 
-    private final TalonFX m_climber;
+    private final TalonFX motor;
     private final CANcoder encoder;
     private final TorqueCurrentFOC torqueCurrentFOC;
     private final DutyCycleOut dutyCycleOut;
@@ -36,7 +35,7 @@ public class Climber extends SubsystemBase {
     }
 
     public Climber(int climberID, int climberEncoderID) {
-        m_climber = new TalonFX(climberID, "hyperbus");
+        motor = new TalonFX(climberID, "hyperbus");
         encoder = new CANcoder(climberEncoderID, "hyperbus");
         torqueCurrentFOC = new TorqueCurrentFOC(0);
         dutyCycleOut = new DutyCycleOut(0);
@@ -53,7 +52,7 @@ public class Climber extends SubsystemBase {
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        m_climber.getConfigurator().apply(config);
+        motor.getConfigurator().apply(config);
     }
 
     /**
@@ -80,7 +79,7 @@ public class Climber extends SubsystemBase {
      * @param current Current output in Amps
      */
     public void runClimber(double current) {
-        m_climber.setControl(torqueCurrentFOC.withOutput(current));
+        motor.setControl(torqueCurrentFOC.withOutput(current));
     }
 
     /**
@@ -88,14 +87,14 @@ public class Climber extends SubsystemBase {
      * @param output Speed output in duty cycle
      */
     public void runClimberVariable(double output) {
-        m_climber.setControl(dutyCycleOut.withOutput(output));
+        motor.setControl(dutyCycleOut.withOutput(output));
     }
 
     @Override
     public void periodic() {
 
-      SmartDashboard.putNumber("Climber Angle", getAngle());
-      SmartDashboard.putNumber("Climber Current Output", m_climber.getTorqueCurrent().getValueAsDouble());
+      SmartDashboard.putNumber("Climber: Angle", getAngle());
+      SmartDashboard.putNumber("Climber: Current", motor.getTorqueCurrent().getValueAsDouble());
     }
 
     /**

@@ -33,9 +33,8 @@ public class EndEffector extends SubsystemBase {
     private static final double CORAL_INTAKE_SPEED = .25;
     private static final double CORAL_EJECTION_SPEED = .5;
     
-    private static final double ALGAE_INTAKE_CURRENT = 25.0;
-    private static final double ALGAE_INTAKE_CURRENT_LIMIT = 30.0;
-    private static final double ALGAE_EJECTION_CURRENT = 70.0;    
+    private static final double ALGAE_INTAKE_CURRENT = 20.0;
+    private static final double ALGAE_EJECTION_CURRENT = 60.0;    
     private static final double HOLD_CURRENT = 10.0;
 
     private final TalonFX intakeMotor;
@@ -141,19 +140,18 @@ public class EndEffector extends SubsystemBase {
     public void periodic() {
 
         // Motor Metrics
-        SmartDashboard.putNumber("EndEffector Current", intakeMotor.getTorqueCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("EndEffector: Current", intakeMotor.getTorqueCurrent().getValueAsDouble());
 
         // Coral Detection Metrics
-        SmartDashboard.putNumber("Coral Inner Distance", tof_coral_inner.getRange());
-        SmartDashboard.putNumber("Coral Outer Distance", tof_coral_outer.getRange());
-        SmartDashboard.putBoolean("Coral Inner", isDetecting(tof_coral_inner, CORAL_THRESHOLD));
-        SmartDashboard.putBoolean("Coral Outer", isDetecting(tof_coral_outer, CORAL_THRESHOLD));
-        SmartDashboard.putBoolean("isHoldingCoral", isHoldingCoral());
+        SmartDashboard.putNumber("EndEffector: Coral Inner Distance", tof_coral_inner.getRange());
+        SmartDashboard.putNumber("EndEffector: Coral Outer Distance", tof_coral_outer.getRange());
+        SmartDashboard.putBoolean("EndEffector: Coral Inner", isDetecting(tof_coral_inner, CORAL_THRESHOLD));
+        SmartDashboard.putBoolean("EndEffector: Coral Outer", isDetecting(tof_coral_outer, CORAL_THRESHOLD));
+        SmartDashboard.putBoolean("EndEffector: isHoldingCoral", isHoldingCoral());
 
         // Coral & Algae Detection Metrics
-        SmartDashboard.putNumber("Algae Distance", tof_algae.getRange());
-        SmartDashboard.putBoolean("Algae Present Close", isDetecting(tof_algae, ALGAE_IN_THRESHOLD));
-        SmartDashboard.putBoolean("isHoldingAlgae", isHoldingAlgae());
+        SmartDashboard.putNumber("EndEffector: Algae Distance", tof_algae.getRange());
+        SmartDashboard.putBoolean("EndEffector: isHoldingAlgae", isHoldingAlgae());
     }
 
     // ========================= COMMANDS ======================================
@@ -193,7 +191,7 @@ public class EndEffector extends SubsystemBase {
     /**
      * Command to run the intake until current limit is hit then stops.
      */
-    public Command intakeAlgaeCurrentLimitCommand() {
+    public Command intakeAlgaeCommand() {
         return new RunCommand(() -> runIntakeWithTorqueCurrentFOC(ALGAE_INTAKE_CURRENT), this)
             .until(() -> isHoldingAlgae())
                 .finallyDo(interrupted -> {
