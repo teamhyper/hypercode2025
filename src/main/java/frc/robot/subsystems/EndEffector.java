@@ -22,6 +22,7 @@ public class EndEffector extends SubsystemBase {
     private static final int TOF1_ID = 21;
     private static final int TOF2_ID = 22;
     private static final int TOF3_ID = 23;
+    private static final int TOF4_ID = 25;
 
     private static final double PEAK_FWD_TORQUE_CURRENT = 80;
     private static final double PEAK_REV_TORQUE_CURRENT = 80;
@@ -43,6 +44,7 @@ public class EndEffector extends SubsystemBase {
     private final TimeOfFlight tof_coral_inner;
     private final TimeOfFlight tof_coral_outer;
     private final TimeOfFlight tof_algae;
+    private final TimeOfFlight tof_reef;
 
     private final Debouncer debouncer;
 
@@ -54,6 +56,7 @@ public class EndEffector extends SubsystemBase {
         tof_coral_inner = new TimeOfFlight(TOF1_ID);
         tof_coral_outer = new TimeOfFlight(TOF2_ID);
         tof_algae = new TimeOfFlight(TOF3_ID);
+        tof_reef = new TimeOfFlight(TOF4_ID);
 
         debouncer = new Debouncer(0.25, DebounceType.kBoth);
 
@@ -77,9 +80,9 @@ public class EndEffector extends SubsystemBase {
         config.TorqueCurrent.PeakForwardTorqueCurrent = PEAK_FWD_TORQUE_CURRENT;
         config.TorqueCurrent.PeakReverseTorqueCurrent = -PEAK_REV_TORQUE_CURRENT;
 
-        intakeMotor.optimizeBusUtilization();
-        intakeMotor.getPosition().setUpdateFrequency(50);
-        intakeMotor.getTorqueCurrent().setUpdateFrequency(50);
+        // intakeMotor.optimizeBusUtilization();
+        // intakeMotor.getPosition().setUpdateFrequency(50);
+        // intakeMotor.getTorqueCurrent().setUpdateFrequency(50);
         
         intakeMotor.getConfigurator().apply(config);
     }
@@ -91,6 +94,7 @@ public class EndEffector extends SubsystemBase {
         tof_coral_inner.setRangingMode(TimeOfFlight.RangingMode.Short, TOF_SAMPLE_TIME_MS);
         tof_coral_outer.setRangingMode(TimeOfFlight.RangingMode.Short, TOF_SAMPLE_TIME_MS);
         tof_algae.setRangingMode(TimeOfFlight.RangingMode.Short, TOF_SAMPLE_TIME_MS);
+        tof_reef.setRangingMode(TimeOfFlight.RangingMode.Short, TOF_SAMPLE_TIME_MS);
     }
 
     /**
@@ -118,6 +122,10 @@ public class EndEffector extends SubsystemBase {
      */
     public boolean isHoldingCoral() {
         return isDetecting(tof_coral_outer, CORAL_THRESHOLD);
+    }
+
+    public boolean isDetectingReef() {
+        return isDetectingRange(tof_reef, 105, 255);
     }
 
     /**
@@ -153,9 +161,13 @@ public class EndEffector extends SubsystemBase {
         SmartDashboard.putBoolean("EndEffector: Coral Outer", isDetecting(tof_coral_outer, CORAL_THRESHOLD));
         SmartDashboard.putBoolean("EndEffector: isHoldingCoral", isHoldingCoral());
 
-        // Coral & Algae Detection Metrics
+        // Algae Detection Metrics
         SmartDashboard.putNumber("EndEffector: Algae Distance", tof_algae.getRange());
         SmartDashboard.putBoolean("EndEffector: isHoldingAlgae", isHoldingAlgae());
+
+        // Reef Detection Metrics
+        SmartDashboard.putNumber("EndEffector: Reef Distance", tof_reef.getRange());
+        SmartDashboard.putBoolean("EndEffector: isDetectingReef", isDetectingReef());
     }
 
     // ========================= COMMANDS ======================================

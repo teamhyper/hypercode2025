@@ -92,7 +92,7 @@ public class RobotContainer {
 
         elevator.setDefaultCommand(elevator.holdElevatorPositionCommand());
         ledStrip.setDefaultCommand(new InstantCommand(() -> ledStrip.setColor(Color.kRed), ledStrip));
-        pivot.setDefaultCommand(pivot.holdPivotAngleCommand());
+        // pivot.setDefaultCommand(pivot.holdPivotAngleCommand());
 
         // ==================== Drivetrain Bindings ====================
         drivetrain.setDefaultCommand(
@@ -222,13 +222,19 @@ public class RobotContainer {
             endEffector.stopIntakeCommand());
 
         // ==================== Pivot Bindings ====================
-        operatorJoystickRight.outerHatLeft().onTrue( // TODO CHANGE TO JOG A FEW DEGREES
-            pivot.jogPivotInCommand());
-        operatorJoystickRight.outerHatRight().onTrue(
-            pivot.jogPivotOutCommand());
+        operatorJoystickRight.outerHatLeft().whileTrue( // TODO CHANGE TO JOG A FEW DEGREES
+            pivot.runPivotCommand(.25));
+        operatorJoystickRight.outerHatRight().whileTrue(
+            pivot.runPivotCommand(-.25));
 
         new Trigger(() -> endEffector.isHoldingAlgae() || endEffector.isHoldingCoral())
-                .whileTrue(new RunCommand(() -> ledStrip.setColor(Color.kGreen), ledStrip));
+        .whileTrue(new RunCommand(() -> {
+            if (endEffector.isDetectingReef() && endEffector.isHoldingCoral()) {
+                ledStrip.setColor(Color.kBlue);
+            } else {
+                ledStrip.setColor(Color.kGreen);
+            }
+        }, ledStrip));
 
         // ==================== OPERATOR LEFT STICK DEBUG COMMANDS ====================
 
@@ -236,16 +242,19 @@ public class RobotContainer {
         operatorJoystickLeft.indexButon().whileTrue(endEffector.runIntakeCommand(-1.0));
 
         // Climber
-        // operatorJoystickLeft.f2Button().onTrue(
-        //     climber.rotateClimberToStartingPositionCommand());
-        // operatorJoystickLeft.f1Button().whileTrue(
-        //     climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));        
+        operatorJoystickLeft.f2Button().onTrue(
+            climber.rotateClimberToStartingPositionCommand());
+        operatorJoystickLeft.f1Button().whileTrue(
+            climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));        
         operatorJoystickLeft.f1Button().onTrue(
             ratchet.unlockRatchetCommand());
         operatorJoystickLeft.f3Button().onTrue(
             ratchet.lockRatchetCommand());
         operatorJoystickLeft.sw1Up().or(operatorJoystickLeft.sw1Down()).onTrue(
             ramp.detachRampCommand());
+        // operatorJoystickLeft.f2Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_HARDSTOP));
+        // operatorJoystickLeft.f1Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_SAFE_MOVE));
+        // operatorJoystickLeft.f3Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_CORAL_L4));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
@@ -261,10 +270,9 @@ public class RobotContainer {
 
     private Command setPivotAndMoveElevatorCommand(double pivotAngle, double elevatorPosition) {
         return pivot.setPivotAngleCommand(PivotNew.ANGLE_SAFE_MOVE)
-                // .withTimeout(1.5)
                 .andThen(new ParallelDeadlineGroup(
                     elevator.moveElevatorToPositionCommand(elevatorPosition)
-                    .withTimeout(4.0),
+                    .withTimeout(3.0),
                     pivot.holdPivotAngleCommand(PivotNew.ANGLE_SAFE_MOVE)
                 ))
                 .andThen(pivot.holdPivotAngleCommand(pivotAngle));

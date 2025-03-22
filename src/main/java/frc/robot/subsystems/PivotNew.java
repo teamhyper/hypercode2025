@@ -25,11 +25,11 @@ public class PivotNew extends SubsystemBase{
     private static final int PIVOT_MOTOR_ID = 20;
 
     public static final double ANGLE_HARDSTOP = 41.0;
-    public static final double ANGLE_SAFE_MOVE = 55.0;
+    public static final double ANGLE_SAFE_MOVE = 50.0;
     public static final double ANGLE_CORAL_L4 = 60.0;
     public static final double ANGLE_ALGAE_COLLECT = 80.0;
-    public static final double ANGLE_BARGE = 42.0;
-    public static final double TOLERENCE = 1.5;
+    public static final double ANGLE_BARGE = 41.0;
+    public static final double TOLERENCE = 1.0;
 
     private final SparkMax motor;
     private final SparkAbsoluteEncoder encoder;
@@ -71,14 +71,14 @@ public class PivotNew extends SubsystemBase{
 
         config.closedLoop
             .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
-            .pidf(.00875, 0, .001, 0, ClosedLoopSlot.kSlot0) // EMPTY
-            .pidf(.00875, 0, 0, 0, ClosedLoopSlot.kSlot1) // HOLDING CORAL
-            .pidf(.00875, 0, 0, 0, ClosedLoopSlot.kSlot2) // HOLDING ALGAE
-            .pidf(.5, 0, 0, 0, ClosedLoopSlot.kSlot3) // START POSITION PID
-            .outputRange(-0.25, 0.25, ClosedLoopSlot.kSlot0)
-            .outputRange(-0.25, 0.25, ClosedLoopSlot.kSlot1)
-            .outputRange(-0.25, 0.25, ClosedLoopSlot.kSlot2)
-            .outputRange(-0.25, 0.25, ClosedLoopSlot.kSlot3);
+            .pidf(0.0375, 0, 0.025, 0, ClosedLoopSlot.kSlot0) // EMPTY
+            .pidf(0.0375, 0, 0.025, 0, ClosedLoopSlot.kSlot1) // HOLDING CORAL
+            .pidf(0.0375, 0, 0.025, 0, ClosedLoopSlot.kSlot2) // HOLDING ALGAE
+            .pidf(0.0375, 0, 0.025, 0, ClosedLoopSlot.kSlot3) // START POSITION PID
+            .outputRange(-0.2, 0.2, ClosedLoopSlot.kSlot0)
+            .outputRange(-0.2, 0.2, ClosedLoopSlot.kSlot1)
+            .outputRange(-0.2, 0.2, ClosedLoopSlot.kSlot2)
+            .outputRange(-0.2, 0.2, ClosedLoopSlot.kSlot3);
 
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);                   
     }
@@ -126,11 +126,13 @@ public class PivotNew extends SubsystemBase{
     }
 
     public Command runPivotCommand(double speed) {
-        return new RunCommand(() -> runMotor(speed), this).finallyDo(interrupted -> runMotor(0));
+        return new RunCommand(() -> runMotor(speed), this)
+        .finallyDo(interrupted -> holdPivotAngleCommand(getAngle())); // TEST
     }
 
     public Command runPivotVariableCommand(DoubleSupplier speed) {
-        return new RunCommand(() -> runMotor(speed.getAsDouble()), this).finallyDo(interrupted -> runMotor(0));            
+        return new RunCommand(() -> runMotor(speed.getAsDouble()), this)
+        .finallyDo(interrupted -> holdPivotAngleCommand(getAngle())); // TEST        
     }
 
     public Command jogPivotOutCommand() {

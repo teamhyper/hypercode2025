@@ -22,9 +22,9 @@ public class Elevator extends SubsystemBase {
     public static final double TOP_POSITION = 88.0;
 
     public static final double POSITION_CORAL_L1 = 18.0;
-    public static final double POSITION_CORAL_L2 = 35.5;
-    public static final double POSITION_CORAL_L3 = 52.0;
-    public static final double POSITION_CORAL_L4 = 84.5;
+    public static final double POSITION_CORAL_L2 = 34.12;
+    public static final double POSITION_CORAL_L3 = 54.50;
+    public static final double POSITION_CORAL_L4 = 82.27;
 
     public static final double POSITION_ALGAE_GROUND = 3.0;
     public static final double POSITION_ALGAE_LOW = 35.5;
@@ -103,7 +103,7 @@ public class Elevator extends SubsystemBase {
         config.Slot1.kS = 0.0000;  // Static friction compensation (helps start moving)
         config.Slot1.kV = 0.0000;  // Velocity feedforward (scales output based on velocity)
         config.Slot1.kA = 0.0000;  // Acceleration feedforward (scales output based on acceleration)
-        config.Slot1.kG = 7.0000;  // Gravity compensation (counteracts elevator weight)
+        config.Slot1.kG = 8.0000;  // Gravity compensation (counteracts elevator weight)
         config.Slot1.GravityType = GravityTypeValue.Elevator_Static;
 
         config.Slot2.kP = 20.0;  // Proportional Gain (response to error)
@@ -115,12 +115,12 @@ public class Elevator extends SubsystemBase {
         config.Slot2.kG = 12.0000;  // Gravity compensation (counteracts elevator weight)
         config.Slot2.GravityType = GravityTypeValue.Elevator_Static;
 
-        masterMotor.optimizeBusUtilization();
-        followerMotor.optimizeBusUtilization();
-        masterMotor.getPosition().setUpdateFrequency(50);
-        followerMotor.getPosition().setUpdateFrequency(50);
-        masterMotor.getTorqueCurrent().setUpdateFrequency(50);
-        followerMotor.getTorqueCurrent().setUpdateFrequency(50);
+        // masterMotor.optimizeBusUtilization();
+        // followerMotor.optimizeBusUtilization();
+        // masterMotor.getPosition().setUpdateFrequency(50);
+        // followerMotor.getPosition().setUpdateFrequency(50);
+        // masterMotor.getTorqueCurrent().setUpdateFrequency(50);
+        // followerMotor.getTorqueCurrent().setUpdateFrequency(50);
 
         masterMotor.getConfigurator().apply(config);
         followerMotor.getConfigurator().apply(config);
