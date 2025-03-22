@@ -31,7 +31,7 @@ public class RobotContainer {
     public final Ratchet ratchet = new Ratchet();
     public final Ramp ramp = new Ramp();
     public final LEDStrip ledStrip = new LEDStrip();
-    // public final VisionSubsystem vision = new VisionSubsystem(drivetrain);
+    // public final VisionSubsystem vision = new VisionSubsystem();
 
     // Slew Rate Limiter
     private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(Constants.xSpeedLimiter);
@@ -232,11 +232,14 @@ public class RobotContainer {
 
         // ==================== OPERATOR LEFT STICK DEBUG COMMANDS ====================
 
+        operatorJoystickLeft.triggerPrimary().whileTrue(endEffector.runIntakeCommand(1.0));
+        operatorJoystickLeft.indexButon().whileTrue(endEffector.runIntakeCommand(-1.0));
+
         // Climber
-        operatorJoystickLeft.f2Button().onTrue(
-            climber.rotateClimberToStartingPositionCommand());
-        operatorJoystickLeft.f1Button().whileTrue(
-            climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));        
+        // operatorJoystickLeft.f2Button().onTrue(
+        //     climber.rotateClimberToStartingPositionCommand());
+        // operatorJoystickLeft.f1Button().whileTrue(
+        //     climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));        
         operatorJoystickLeft.f1Button().onTrue(
             ratchet.unlockRatchetCommand());
         operatorJoystickLeft.f3Button().onTrue(
@@ -257,9 +260,11 @@ public class RobotContainer {
     // ==================== COMPOUND COMMANDS ====================
 
     private Command setPivotAndMoveElevatorCommand(double pivotAngle, double elevatorPosition) {
-        return pivot.setPivotAngleCommand(PivotNew.ANGLE_SAFE_MOVE).withTimeout(1.5)
+        return pivot.setPivotAngleCommand(PivotNew.ANGLE_SAFE_MOVE)
+                // .withTimeout(1.5)
                 .andThen(new ParallelDeadlineGroup(
-                    elevator.moveElevatorToPositionCommand(elevatorPosition).withTimeout(3.0),
+                    elevator.moveElevatorToPositionCommand(elevatorPosition)
+                    .withTimeout(4.0),
                     pivot.holdPivotAngleCommand(PivotNew.ANGLE_SAFE_MOVE)
                 ))
                 .andThen(pivot.holdPivotAngleCommand(pivotAngle));

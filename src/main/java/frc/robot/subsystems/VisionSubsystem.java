@@ -20,8 +20,8 @@ import org.photonvision.targeting.PhotonTrackedTarget;
  * A subsystem that handles vision processing.
  */
 public class VisionSubsystem extends SubsystemBase {
-    private final PhotonCamera camera_2;
     private final PhotonCamera camera_1;
+    private final PhotonCamera camera_2;    
     private final Drivetrain drivetrain;
     private List<PhotonPipelineResult> latestCamera1Results;
     private List<PhotonPipelineResult> latestCamera2Results;
@@ -31,16 +31,19 @@ public class VisionSubsystem extends SubsystemBase {
     /**
      * Constructs a new VisionSubsystem.
      */
-    public VisionSubsystem(Drivetrain drivetrain) {
+    public VisionSubsystem() {
         camera_1 = new PhotonCamera("hypercam-01");
-        camera_2 = new PhotonCamera("hypercam-02");        
-        var visionMeasurement = getPhotonPosition().orElse(null);
-        if (visionMeasurement != null) {
-            drivetrain.resetPose(visionMeasurement.estimatedPose.toPose2d());
-        } else {
-            drivetrain.resetPose(new edu.wpi.first.math.geometry.Pose2d());
-        }
-        this.drivetrain = drivetrain;
+        camera_2 = new PhotonCamera("hypercam-02");   
+        
+        this.drivetrain = Drivetrain.getInstance();
+        
+        // var visionMeasurement = getPhotonPosition().orElse(null);
+        // if (visionMeasurement != null) {
+        //     drivetrain.resetPose(visionMeasurement.estimatedPose.toPose2d());
+        // } else {
+        //     drivetrain.resetPose(new edu.wpi.first.math.geometry.Pose2d());
+        // }
+        
     }
 
     @Override
@@ -61,6 +64,8 @@ public class VisionSubsystem extends SubsystemBase {
         SmartDashboard.putBoolean("Tag 16 Visible", tagInView(16));
         // Report the yaw of tag 16 to SmartDashboard
         getTagIfInView(16).ifPresent(tag -> SmartDashboard.putNumber("Vision Tag 16 Yaw", tag.getYaw()));
+
+        // camera_1.
 
     }
 

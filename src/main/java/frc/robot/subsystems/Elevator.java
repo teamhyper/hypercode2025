@@ -24,7 +24,7 @@ public class Elevator extends SubsystemBase {
     public static final double POSITION_CORAL_L1 = 18.0;
     public static final double POSITION_CORAL_L2 = 35.5;
     public static final double POSITION_CORAL_L3 = 52.0;
-    public static final double POSITION_CORAL_L4 = 83.5;
+    public static final double POSITION_CORAL_L4 = 84.5;
 
     public static final double POSITION_ALGAE_GROUND = 3.0;
     public static final double POSITION_ALGAE_LOW = 35.5;
@@ -114,6 +114,13 @@ public class Elevator extends SubsystemBase {
         config.Slot2.kA = 0.0000;  // Acceleration feedforward (scales output based on acceleration)
         config.Slot2.kG = 12.0000;  // Gravity compensation (counteracts elevator weight)
         config.Slot2.GravityType = GravityTypeValue.Elevator_Static;
+
+        masterMotor.optimizeBusUtilization();
+        followerMotor.optimizeBusUtilization();
+        masterMotor.getPosition().setUpdateFrequency(50);
+        followerMotor.getPosition().setUpdateFrequency(50);
+        masterMotor.getTorqueCurrent().setUpdateFrequency(50);
+        followerMotor.getTorqueCurrent().setUpdateFrequency(50);
 
         masterMotor.getConfigurator().apply(config);
         followerMotor.getConfigurator().apply(config);

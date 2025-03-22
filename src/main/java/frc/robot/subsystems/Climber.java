@@ -52,6 +52,9 @@ public class Climber extends SubsystemBase {
         TalonFXConfiguration config = new TalonFXConfiguration();
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
+        motor.optimizeBusUtilization();
+        motor.getTorqueCurrent().setUpdateFrequency(50);
+
         motor.getConfigurator().apply(config);
     }
 

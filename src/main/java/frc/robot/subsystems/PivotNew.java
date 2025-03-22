@@ -24,12 +24,12 @@ public class PivotNew extends SubsystemBase{
 
     private static final int PIVOT_MOTOR_ID = 20;
 
-    public static final double ANGLE_HARDSTOP = 42.0;
-    public static final double ANGLE_SAFE_MOVE = 50.0;
+    public static final double ANGLE_HARDSTOP = 41.0;
+    public static final double ANGLE_SAFE_MOVE = 55.0;
     public static final double ANGLE_CORAL_L4 = 60.0;
     public static final double ANGLE_ALGAE_COLLECT = 80.0;
     public static final double ANGLE_BARGE = 42.0;
-    public static final double TOLERENCE = 1.0;
+    public static final double TOLERENCE = 1.5;
 
     private final SparkMax motor;
     private final SparkAbsoluteEncoder encoder;
@@ -64,7 +64,7 @@ public class PivotNew extends SubsystemBase{
             .inverted(false);
 
         config.softLimit
-            .reverseSoftLimit(42.0)
+            .reverseSoftLimit(41.0)
             .forwardSoftLimit(85.0)
             .reverseSoftLimitEnabled(true)
             .forwardSoftLimitEnabled(true);
@@ -74,7 +74,7 @@ public class PivotNew extends SubsystemBase{
             .pidf(.00875, 0, .001, 0, ClosedLoopSlot.kSlot0) // EMPTY
             .pidf(.00875, 0, 0, 0, ClosedLoopSlot.kSlot1) // HOLDING CORAL
             .pidf(.00875, 0, 0, 0, ClosedLoopSlot.kSlot2) // HOLDING ALGAE
-            .pidf(.3, 0, 0, 0, ClosedLoopSlot.kSlot3) // START POSITION PID
+            .pidf(.5, 0, 0, 0, ClosedLoopSlot.kSlot3) // START POSITION PID
             .outputRange(-0.25, 0.25, ClosedLoopSlot.kSlot0)
             .outputRange(-0.25, 0.25, ClosedLoopSlot.kSlot1)
             .outputRange(-0.25, 0.25, ClosedLoopSlot.kSlot2)

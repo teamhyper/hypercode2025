@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import org.json.simple.parser.ParseException;
 
@@ -36,6 +37,9 @@ import static edu.wpi.first.units.Units.Volts;
  * Subsystem so it can easily be used in command-based projects.
  */
 public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
+
+    private static Drivetrain instance;
+
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
@@ -124,6 +128,13 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
             },
             this // Reference to this subsystem to set requirements
         );
+    }
+
+    public static Drivetrain getInstance() {
+        if (instance == null) {
+            return instance = TunerConstants.createDrivetrain();
+        }
+        return instance;
     }
 
     /**

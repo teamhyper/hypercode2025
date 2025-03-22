@@ -76,6 +76,10 @@ public class EndEffector extends SubsystemBase {
 
         config.TorqueCurrent.PeakForwardTorqueCurrent = PEAK_FWD_TORQUE_CURRENT;
         config.TorqueCurrent.PeakReverseTorqueCurrent = -PEAK_REV_TORQUE_CURRENT;
+
+        intakeMotor.optimizeBusUtilization();
+        intakeMotor.getPosition().setUpdateFrequency(50);
+        intakeMotor.getTorqueCurrent().setUpdateFrequency(50);
         
         intakeMotor.getConfigurator().apply(config);
     }
