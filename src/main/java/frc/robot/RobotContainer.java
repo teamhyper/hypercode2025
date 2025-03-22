@@ -25,6 +25,9 @@ import frc.robot.hyperlib.DriverInput;
 import frc.robot.joysticks.ApemHF45Joystick;
 import frc.robot.joysticks.VKBGladiatorJoystick;
 import frc.robot.subsystems.*;
+import org.photonvision.targeting.PhotonTrackedTarget;
+
+import java.util.List;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -143,7 +146,7 @@ public class RobotContainer {
          */
 
         driverJoystickLeft.leftButton().whileTrue(
-            new MoveToPoseRelativeToAprilTagCommand(vision, drivetrain, 3, new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0.0))));
+            new MoveToPoseRelativeToAprilTagCommand(vision, drivetrain, 6, new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0.0))));
         // driverJoystickLeft.rightButton().onTrue(
         //     new InstantCommand(() -> Drivetrain.isRobotCentric = !Drivetrain.isRobotCentric));
         // driverJoystickRight.leftButton().onTrue(
@@ -385,6 +388,15 @@ public class RobotContainer {
                         pivot.setPositionAndHoldCommand())
                 );
 
+    }
+
+    private Command driveToBestTarget() {
+        List<PhotonTrackedTarget> targets = vision.getAllTagsInCamera1View();
+        if (!targets.isEmpty()){
+            PhotonTrackedTarget bestTarget =  vision.getAllTagsInCamera1View().get(0);
+            return new MoveToPoseRelativeToAprilTagCommand(vision, drivetrain, bestTarget.getFiducialId(), new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0.0)));
+        }
+        return new MoveToPoseRelativeToAprilTagCommand(vision, drivetrain, 0, new Pose2d(0.0, 0.0, Rotation2d.fromDegrees(0.0)));
     }
 
     /**
