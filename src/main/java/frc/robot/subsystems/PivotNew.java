@@ -108,7 +108,7 @@ public class PivotNew extends SubsystemBase{
                     double appliedVolts = motor.getAppliedOutput() * motor.getBusVoltage();
                     double angleRadians = Units.degreesToRadians(encoder.getPosition());      // arm angle (degrees)
                     double angularVelocity = Units.degreesToRadians(encoder.getVelocity() / 60.0);   // arm angular velocity (rad/s)
-                    log.motor("motor")                                // name the motor for logging
+                    log.motor("PivotArmMotor")                                // name the motor for logging
                        .voltage(Voltage.ofBaseUnits(appliedVolts, Volts))
                        .angularPosition(Radians.of(angleRadians))
                        .angularVelocity(RadiansPerSecond.of(angularVelocity));
