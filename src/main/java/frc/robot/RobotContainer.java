@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.*;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.generated.TunerConstants;
@@ -35,6 +34,7 @@ public class RobotContainer {
     public final Ramp ramp = new Ramp();
     public final LEDStrip ledStrip = new LEDStrip();
     // public final VisionSubsystem vision = new VisionSubsystem();
+    public final Vision vision = new Vision();
 
     // Slew Rate Limiter
     private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(Constants.xSpeedLimiter);
