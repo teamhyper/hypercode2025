@@ -1,11 +1,16 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Volts;
+
 import java.util.function.DoubleSupplier;
 
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -14,11 +19,14 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class PivotNew extends SubsystemBase{
 
@@ -35,6 +43,7 @@ public class PivotNew extends SubsystemBase{
     private final SparkAbsoluteEncoder encoder;
     private final SparkClosedLoopController pidController;
     private final ArmFeedforward feedforward;
+    private final SysIdRoutine sysIdRoutine;
 
     private final EndEffector endEffector;
 
@@ -51,7 +60,13 @@ public class PivotNew extends SubsystemBase{
         endEffector = EndEffector.getInstance();
 
         SparkMaxConfig config = new SparkMaxConfig();
-        feedforward = new ArmFeedforward(0.0, 0.0, 0.0, 0.0);
+
+        feedforward = new ArmFeedforward(
+            0.0, 
+            0.0, 
+            0.0, 
+            0.0
+            );
 
         config
             .inverted(true)
@@ -60,6 +75,7 @@ public class PivotNew extends SubsystemBase{
         config.absoluteEncoder
             .setSparkMaxDataPortConfig()
             .positionConversionFactor(360.0)
+            .velocityConversionFactor(360.0)
             .zeroOffset(0.885)
             .inverted(false);
 
@@ -80,14 +96,29 @@ public class PivotNew extends SubsystemBase{
             .outputRange(-0.2, 0.2, ClosedLoopSlot.kSlot2)
             .outputRange(-0.2, 0.2, ClosedLoopSlot.kSlot3);
 
-        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);                   
+        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        sysIdRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(), 
+            new SysIdRoutine.Mechanism(
+                // Drive callback: apply the commanded voltage to the arm motor
+                volts -> motor.setVoltage(volts),
+                // Log callback: record applied voltage, position, and velocity
+                log -> {
+                    double appliedVolts = motor.getAppliedOutput() * motor.getBusVoltage();
+                    double angleRadians = Units.degreesToRadians(encoder.getPosition());      // arm angle (degrees)
+                    double angularVelocity = Units.degreesToRadians(encoder.getVelocity() / 60.0);   // arm angular velocity (rad/s)
+                    log.motor("motor")                                // name the motor for logging
+                       .voltage(Voltage.ofBaseUnits(appliedVolts, Volts))
+                       .angularPosition(Radians.of(angleRadians))
+                       .angularVelocity(RadiansPerSecond.of(angularVelocity));
+                },
+                this,               // subsystem as requirement
+                "PivotArm"          // mechanism name in the log (optional)
+            )
+        );
     }
 
-    /**
-     * Method to get the current position
-     *
-     * @return - current position of the absolute encoder
-     */
     public double getAngle() {
         return encoder.getPosition();
     }
@@ -105,7 +136,12 @@ public class PivotNew extends SubsystemBase{
     }
 
     public void setAngle(double position) {
-        pidController.setReference(position, SparkMax.ControlType.kPosition, getPIDSlot(), 0);
+        pidController.setReference(
+            position, 
+            SparkMax.ControlType.kPosition, 
+            getPIDSlot(), 
+            feedforward.calculate(Units.degreesToRadians(position), Math.PI), 
+            ArbFFUnits.kVoltage);
     }
 
     public ClosedLoopSlot getPIDSlot() {
@@ -177,6 +213,13 @@ public class PivotNew extends SubsystemBase{
 
     public Command holdPivotAngleCommand() {
         return holdPivotAngleCommand(getAngle());
+    }
+
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return sysIdRoutine.quasistatic(direction); 
+    }
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return sysIdRoutine.dynamic(direction);
     }
 
 }

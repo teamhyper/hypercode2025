@@ -8,11 +8,14 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.*;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hyperlib.DriverInput;
 import frc.robot.joysticks.ApemHF45Joystick;
@@ -48,6 +51,7 @@ public class RobotContainer {
     ApemHF45Joystick driverJoystickRight = new ApemHF45Joystick(1);
     VKBGladiatorJoystick operatorJoystickLeft = new VKBGladiatorJoystick(2);
     VKBGladiatorJoystick operatorJoystickRight = new VKBGladiatorJoystick(3);
+    private final XboxController operatorController = new XboxController(4);
 
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
@@ -142,7 +146,6 @@ public class RobotContainer {
         );
 
         // ==================== Drivetrain Bindings ====================
-
         driverJoystickLeft.leftButton().onTrue(
             new InstantCommand(() -> Drivetrain.isRobotCentric = !Drivetrain.isRobotCentric));
         driverJoystickLeft.rightButton().onTrue(
@@ -240,6 +243,11 @@ public class RobotContainer {
 
         operatorJoystickLeft.triggerPrimary().whileTrue(endEffector.runIntakeCommand(1.0));
         operatorJoystickLeft.indexButon().whileTrue(endEffector.runIntakeCommand(-1.0));
+
+        operatorJoystickLeft.lowerHatDown().whileTrue(pivot.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        operatorJoystickLeft.lowerHatLeft().whileTrue(pivot.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        operatorJoystickLeft.lowerHatUp().whileTrue(pivot.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        operatorJoystickLeft.lowerHatRight().whileTrue(pivot.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
         // Climber
         operatorJoystickLeft.f2Button().onTrue(
