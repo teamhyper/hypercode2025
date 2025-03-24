@@ -223,10 +223,15 @@ public class RobotContainer {
 
         // ==================== Pivot Bindings ====================
         operatorJoystickRight.outerHatLeft().whileTrue( // TODO CHANGE TO JOG A FEW DEGREES
-            pivot.runPivotCommand(.25));
-        operatorJoystickRight.outerHatRight().whileTrue(
-            pivot.runPivotCommand(-.25));
+            pivot.runPivotCommand(-.1));
 
+        operatorJoystickRight.outerHatRight().whileTrue(
+            pivot.runPivotCommand(.1));
+
+        operatorJoystickRight.f1Button().whileTrue(pivot.runPivotVariableCommand(operatorJoystickRight::getY));
+
+        
+        // ==================== LED Triggers ====================
         new Trigger(() -> (endEffector.isHoldingAlgae() || endEffector.isHoldingCoral()) 
                             && !(Drivetrain.isRobotCentric || Drivetrain.isSlowMode))
             .whileTrue(new RunCommand(() -> {
@@ -269,19 +274,21 @@ public class RobotContainer {
         operatorJoystickLeft.lowerHatRight().whileTrue(pivot.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
         // Climber
-        operatorJoystickLeft.f2Button().onTrue(
-            climber.rotateClimberToStartingPositionCommand());
-        operatorJoystickLeft.f1Button().whileTrue(
-            climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));        
-        operatorJoystickLeft.f1Button().onTrue(
-            ratchet.unlockRatchetCommand());
-        operatorJoystickLeft.f3Button().onTrue(
-            ratchet.lockRatchetCommand());
-        operatorJoystickLeft.sw1Up().or(operatorJoystickLeft.sw1Down()).onTrue(
-            ramp.detachRampCommand());
-        // operatorJoystickLeft.f2Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_HARDSTOP));
-        // operatorJoystickLeft.f1Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_SAFE_MOVE));
-        // operatorJoystickLeft.f3Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_CORAL_L4));
+        // operatorJoystickLeft.f2Button().onTrue(
+        //     climber.rotateClimberToStartingPositionCommand());
+        // operatorJoystickLeft.f1Button().whileTrue(
+        //     climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));        
+        // operatorJoystickLeft.f1Button().onTrue(
+        //     ratchet.unlockRatchetCommand());
+        // operatorJoystickLeft.f3Button().onTrue(
+        //     ratchet.lockRatchetCommand());
+        // operatorJoystickLeft.sw1Up().or(operatorJoystickLeft.sw1Down()).onTrue(
+        //     ramp.detachRampCommand());
+            
+        operatorJoystickLeft.f2Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_HARDSTOP));
+        operatorJoystickLeft.f1Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_SAFE_MOVE));
+        operatorJoystickLeft.f3Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_CORAL_L4));
+        operatorJoystickLeft.sw1Up().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
