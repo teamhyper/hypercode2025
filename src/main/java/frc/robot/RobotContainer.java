@@ -8,7 +8,6 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
@@ -101,8 +100,7 @@ public class RobotContainer {
 
         elevator.setDefaultCommand(elevator.holdElevatorPositionCommand());
         ledStrip.setDefaultCommand(new InstantCommand(() -> ledStrip.setColor(Color.kRed), ledStrip));
-        // pivot.setDefaultCommand(pivot.holdPivotAngleCommand());
-
+        
         // ==================== Drivetrain Bindings ====================
         drivetrain.setDefaultCommand(
                 drivetrain.applyRequest(() -> {
@@ -235,14 +233,26 @@ public class RobotContainer {
         operatorJoystickRight.outerHatRight().whileTrue(
             pivot.runPivotCommand(-.25));
 
-        new Trigger(() -> endEffector.isHoldingAlgae() || endEffector.isHoldingCoral())
-        .whileTrue(new RunCommand(() -> {
-            if (endEffector.isDetectingReef() && endEffector.isHoldingCoral()) {
-                ledStrip.setColor(Color.kBlue);
-            } else {
-                ledStrip.setColor(Color.kGreen);
-            }
-        }, ledStrip));
+        new Trigger(() -> (endEffector.isHoldingAlgae() || endEffector.isHoldingCoral()) 
+                            && !(Drivetrain.isRobotCentric || Drivetrain.isSlowMode))
+            .whileTrue(new RunCommand(() -> {
+                if (endEffector.isDetectingReef() && endEffector.isHoldingCoral()) {
+                    ledStrip.setColor(Color.kBlue);
+                } else {
+                    ledStrip.setColor(Color.kGreen);
+                }
+            }, ledStrip));
+
+        new Trigger(() -> (endEffector.isHoldingAlgae() || endEffector.isHoldingCoral()) 
+                            && (Drivetrain.isRobotCentric || Drivetrain.isSlowMode))
+            .whileTrue(new ConditionalCommand(
+                ledStrip.setColorAndBlinkCommand(Color.kBlue), 
+                ledStrip.setColorAndBlinkCommand(Color.kGreen), 
+                () -> (endEffector.isDetectingReef() && endEffector.isHoldingCoral())));
+
+        new Trigger(() -> !(endEffector.isHoldingAlgae() || endEffector.isHoldingCoral()) 
+                            && (Drivetrain.isRobotCentric || Drivetrain.isSlowMode))
+            .whileTrue(ledStrip.setColorAndBlinkCommand(Color.kRed));
 
         // ==================== OPERATOR LEFT STICK DEBUG COMMANDS ====================
 
