@@ -82,13 +82,7 @@ public class RobotContainer {
                         .withVelocityX(0)
                         .withVelocityY(0)
                         .withRotationalRate(0))
-                ).withTimeout(1.0).andThen(new RunCommand(() -> {
-                    if (endEffector.isDetectingReef() && endEffector.isHoldingCoral()) {
-                        ledStrip.setColor(Color.kBlue);
-                    } else {
-                        ledStrip.setColor(Color.kGreen);
-                    }
-                }, ledStrip)));
+                ));
 
         // Another option that allows you to specify the default auto by its name
         // autoChooser = AutoBuilder.buildAutoChooser("My Default Auto");
@@ -249,6 +243,16 @@ public class RobotContainer {
                 ledStrip.setColorAndBlinkCommand(Color.kBlue), 
                 ledStrip.setColorAndBlinkCommand(Color.kGreen), 
                 () -> (endEffector.isDetectingReef() && endEffector.isHoldingCoral())));
+                
+        new Trigger(() -> (endEffector.isHoldingAlgae() || endEffector.isHoldingCoral()) 
+                            && (Drivetrain.isRobotCentric || Drivetrain.isSlowMode)
+                            && (endEffector.isDetectingReef() && endEffector.isHoldingCoral()))
+                .whileTrue(ledStrip.setColorAndBlinkCommand(Color.kBlue));
+
+        new Trigger(() -> (endEffector.isHoldingAlgae() || endEffector.isHoldingCoral()) 
+                            && (Drivetrain.isRobotCentric || Drivetrain.isSlowMode)
+                            && !(endEffector.isDetectingReef() && endEffector.isHoldingCoral()))
+                .whileTrue(ledStrip.setColorAndBlinkCommand(Color.kGreen));
 
         new Trigger(() -> !(endEffector.isHoldingAlgae() || endEffector.isHoldingCoral()) 
                             && (Drivetrain.isRobotCentric || Drivetrain.isSlowMode))
