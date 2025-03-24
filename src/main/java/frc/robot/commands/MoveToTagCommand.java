@@ -1,5 +1,15 @@
 package frc.robot.commands;
 
+import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
+
+import java.util.List;
+
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.Drivetrain;
@@ -11,6 +21,32 @@ public class MoveToTagCommand extends Command{
     private final Drivetrain drivetrain;
     private final Side side;
 
+    PhotonTrackedTarget target;
+    int targetID;
+    
+
+    double targetDistance = .2;
+    
+    Transform3d cameraToTargetTransform;
+    Transform3d robotToCameraTransform;
+    Transform3d cameraToRobotTransform;
+    Transform3d robotToTagTransform;
+
+    Translation3d translationError;
+    Rotation3d rotationError;
+
+    Pose3d targetPoseRelativeToTag;
+    Pose3d cameraToTagPose;
+    Pose3d robotToCameraPose;
+    Pose3d robotToTagPose;
+    Pose3d robotToDesiredPose;
+
+    double dx;
+    double dy;
+    double angleError;
+
+    private List<PhotonPipelineResult> results;
+
     public MoveToTagCommand(Vision vision, Drivetrain drivetrain, Side side) {
         this.drivetrain = drivetrain;
         this.vision = vision;
@@ -20,13 +56,39 @@ public class MoveToTagCommand extends Command{
 
     @Override
     public void initialize() {
-        super.initialize();
+        targetPoseRelativeToTag = new Pose3d(
+            new Translation3d(targetDistance ,0.0, 0.0),
+            new Rotation3d(0.0, 0.0, Math.PI)
+        );
+
+        robotToCameraTransform = new Transform3d(
+            new Translation3d(0.2, Units.inchesToMeters(11.0), 0.0),  // camera offset: +20cm forward, +50cm up
+            new Rotation3d(0.0, 0.0, 0.0)      // camera facing same direction as robot
+        );
+        
+        cameraToRobotTransform = robotToCameraTransform.inverse();
+        cameraToTagPose = new Pose3d(cameraToTargetTransform.getTranslation(), cameraToTargetTransform.getRotation());
+        robotToCameraPose = new Pose3d(robotToCameraTransform.getTranslation(), robotToCameraTransform.getRotation());
+        robotToTagPose = robotToCameraPose.transformBy(cameraToTargetTransform);
+        robotToDesiredPose = robotToTagPose.transformBy(new Transform3d(targetPoseRelativeToTag.getTranslation(), targetPoseRelativeToTag.getRotation()));
+
+        translationError = robotToDesiredPose.getTranslation();
+        rotationError = robotToDesiredPose.getRotation();
+
+        dx = translationError.getX();
+        dy = translationError.getY();
+
+        angleError = rotationError.getZ();
     }
 
     @Override
     public void execute() {
-        // TODO Auto-generated method stub
-        super.execute();
+        results = vision.getLatestCamera1Results();
+        if (results.get(results.size()-1).hasTargets()) {
+            target = results.get(0).getBestTarget();
+            targetID = target.getFiducialId();
+            // cameraToTarget = target.getBestCameraToTarget();
+        }
     }
 
     @Override

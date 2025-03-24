@@ -51,7 +51,6 @@ public class RobotContainer {
     ApemHF45Joystick driverJoystickRight = new ApemHF45Joystick(1);
     VKBGladiatorJoystick operatorJoystickLeft = new VKBGladiatorJoystick(2);
     VKBGladiatorJoystick operatorJoystickRight = new VKBGladiatorJoystick(3);
-    private final XboxController operatorController = new XboxController(4);
 
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
@@ -84,7 +83,13 @@ public class RobotContainer {
                         .withVelocityX(0)
                         .withVelocityY(0)
                         .withRotationalRate(0))
-                ));
+                ).withTimeout(1.0).andThen(new RunCommand(() -> {
+                    if (endEffector.isDetectingReef() && endEffector.isHoldingCoral()) {
+                        ledStrip.setColor(Color.kBlue);
+                    } else {
+                        ledStrip.setColor(Color.kGreen);
+                    }
+                }, ledStrip)));
 
         // Another option that allows you to specify the default auto by its name
         // autoChooser = AutoBuilder.buildAutoChooser("My Default Auto");
@@ -218,7 +223,7 @@ public class RobotContainer {
             .until(() -> !endEffector.isHoldingAlgae()
             )));
 
-        endEffector.getCoralInnerDetectionTrigger().onTrue(
+        endEffector.getCoralInnerDetectionTrigger().whileTrue(
             endEffector.intakeCoralCommand());
 
         operatorJoystickRight.indexButon().onTrue(

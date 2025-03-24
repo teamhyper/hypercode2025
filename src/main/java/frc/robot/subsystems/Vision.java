@@ -49,24 +49,6 @@ public class Vision extends SubsystemBase {
     @Override
     public void periodic() {
         updateLatestCameraResults();
-        var visionMeasurement = getPhotonPosition().orElse(null);
-        if (visionMeasurement != null) {
-            SmartDashboard.putNumber("Vision X", visionMeasurement.estimatedPose.getTranslation().getX());
-            SmartDashboard.putNumber("Vision Y", visionMeasurement.estimatedPose.getTranslation().getY());
-            SmartDashboard.putNumber("Vision Rotation", visionMeasurement.estimatedPose.getRotation().getAngle());
-
-            var visionMeasurement2d = visionMeasurement.estimatedPose.toPose2d();
-
-            drivetrain.addVisionMeasurement(visionMeasurement2d, 0);
-        }
-
-        // Check if tag 16 is in view and put the result on the SmartDashboard
-        SmartDashboard.putBoolean("Tag 16 Visible", tagInView(16));
-        // Report the yaw of tag 16 to SmartDashboard
-        getTagIfInView(16).ifPresent(tag -> SmartDashboard.putNumber("Vision Tag 16 Yaw", tag.getYaw()));
-
-        // camera_1.
-
     }
 
     /**
@@ -78,74 +60,30 @@ public class Vision extends SubsystemBase {
         // latestCamera2Results = camera_2.getAllUnreadResults();
     }
 
-    public Optional<EstimatedRobotPose> getPhotonPosition() {
-        if (latestCamera1Results.isEmpty()) {
-            return Optional.empty();
-        }
-        return poseEstimator.update(latestCamera1Results.get(latestCamera1Results.size() - 1));
-    }
-
     /**
      * Gets the latest results from the camera.
      * @return The latest results from the camera.
      */
-    public List<PhotonPipelineResult> getLatestCamera2Results() {
-        return latestCamera2Results;
-    }
-
     public List<PhotonPipelineResult> getLatestCamera1Results() {
         return latestCamera1Results;
     }
 
-    /**
-     * Checks if a specific tag is in the current view.
-     * @param fiducialId The ID of the tag to check for.
-     * @return Whether the tag is in the current view.
-     */
-    public boolean tagInView(int fiducialId) {
-        return getTagIfInView(fiducialId).isPresent();
-    }
-
-    public Optional<PhotonTrackedTarget> getTagIfInView(int fiducialId) {
-        if (latestCamera2Results.isEmpty() && latestCamera1Results.isEmpty()) {
-            return Optional.empty();
-        }
-
-        if (!latestCamera1Results.isEmpty()) {
-            final var frame1 = latestCamera1Results.get(latestCamera1Results.size() - 1);
-            if (frame1.hasTargets()) {
-                for (var target : frame1.targets) {
-                    if (target.getFiducialId() == fiducialId) {
-                        return Optional.of(target);
-                    }
-                }
-            }
-        }
-        
-        if (!latestCamera2Results.isEmpty()) {
-            final var frame2 = latestCamera2Results.get(latestCamera2Results.size() - 1);
-            if (frame2.hasTargets()) {
-                for (var target : frame2.targets) {
-                    if (target.getFiducialId() == fiducialId) {
-                        return Optional.of(target);
-                    }
-                }
-            }
-        }
-
-
-        return Optional.empty();
-    }
+    public List<PhotonPipelineResult> getLatestCamera2Results() {
+        return latestCamera2Results;
+    }    
 
     /**
      * Gets the camera used by the Vision.
      * @return The camera used by the Vision.
      */
+
+     public PhotonCamera getCamera_1() {
+        return camera_1;
+    }
+
     public PhotonCamera getCamera_2() {
         return camera_2;
     }
 
-    public PhotonCamera getCamera_1() {
-        return camera_1;
-    }
+    
 }
