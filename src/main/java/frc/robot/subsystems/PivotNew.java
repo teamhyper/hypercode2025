@@ -63,7 +63,7 @@ public class PivotNew extends SubsystemBase{
 
         feedforward = new ArmFeedforward(
             0.0, 
-            .75, 
+            .5, 
             0.0, 
             0.0
             );
@@ -87,9 +87,9 @@ public class PivotNew extends SubsystemBase{
 
         config.closedLoop
             .feedbackSensor(ClosedLoopConfig.FeedbackSensor.kAbsoluteEncoder)
-            .pidf(0.0175, 0, 0.05, 0, ClosedLoopSlot.kSlot0) // EMPTY
-            .pidf(0.0175, 0, 0.05, 0, ClosedLoopSlot.kSlot1) // HOLDING CORAL
-            .pidf(0.0175, 0, 0.05, 0, ClosedLoopSlot.kSlot2) // HOLDING ALGAE
+            .pidf(0.019, 0, 0.05, 0, ClosedLoopSlot.kSlot0) // EMPTY
+            .pidf(0.019, 0, 0.05, 0, ClosedLoopSlot.kSlot1) // HOLDING CORAL
+            .pidf(0.019, 0, 0.05, 0, ClosedLoopSlot.kSlot2) // HOLDING ALGAE
             .pidf(0.025, 0, 0.05, 0, ClosedLoopSlot.kSlot3) // START POSITION PID
             .outputRange(-0.2, 0.2, ClosedLoopSlot.kSlot0)
             .outputRange(-0.2, 0.2, ClosedLoopSlot.kSlot1)

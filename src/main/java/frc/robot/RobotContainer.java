@@ -145,8 +145,12 @@ public class RobotContainer {
         // ==================== Drivetrain Bindings ====================
         driverJoystickLeft.leftButton().onTrue(
             new InstantCommand(() -> Drivetrain.isRobotCentric = !Drivetrain.isRobotCentric));
+
         driverJoystickLeft.rightButton().onTrue(
             new InstantCommand( () -> Drivetrain.isSlowMode = !Drivetrain.isSlowMode));
+
+        // driverJoystickRight.leftButton().whileTrue(getAutonomousCommand());
+
         driverJoystickRight.rightButton().onTrue(
             new InstantCommand(drivetrain::seedFieldCentric));
 
@@ -223,10 +227,10 @@ public class RobotContainer {
 
         // ==================== Pivot Bindings ====================
         operatorJoystickRight.outerHatLeft().whileTrue( // TODO CHANGE TO JOG A FEW DEGREES
-            pivot.runPivotCommand(-.1));
+            pivot.runPivotCommand(-.15));
 
         operatorJoystickRight.outerHatRight().whileTrue(
-            pivot.runPivotCommand(.1));
+            pivot.runPivotCommand(.15));
 
         operatorJoystickRight.f1Button().whileTrue(pivot.runPivotVariableCommand(operatorJoystickRight::getY));
 
@@ -305,8 +309,8 @@ public class RobotContainer {
     private Command setPivotAndMoveElevatorCommand(double pivotAngle, double elevatorPosition) {
         return pivot.setPivotAngleCommand(PivotNew.ANGLE_SAFE_MOVE)
                 .andThen(new ParallelDeadlineGroup(
-                    elevator.moveElevatorToPositionCommand(elevatorPosition)
-                    .withTimeout(3.0),
+                    elevator.moveElevatorToPositionCommand(elevatorPosition),
+                    // .withTimeout(4.0),
                     pivot.holdPivotAngleCommand(PivotNew.ANGLE_SAFE_MOVE)
                 ))
                 .andThen(pivot.holdPivotAngleCommand(pivotAngle));

@@ -2,6 +2,9 @@ package frc.robot.commands;
 
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+
+import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import java.util.List;
 
@@ -45,12 +48,17 @@ public class MoveToTagCommand extends Command{
     double dy;
     double angleError;
 
+    SwerveRequest.RobotCentric robotCentricDrive;
+
     private List<PhotonPipelineResult> results;
+    private final SwerveRequest.RobotCentric driveRequest;
 
     public MoveToTagCommand(Vision vision, Drivetrain drivetrain, Side side) {
         this.drivetrain = drivetrain;
         this.vision = vision;
         this.side = side;
+        driveRequest = new SwerveRequest.RobotCentric()
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
         addRequirements(vision);
     }
 
@@ -89,6 +97,16 @@ public class MoveToTagCommand extends Command{
             targetID = target.getFiducialId();
             // cameraToTarget = target.getBestCameraToTarget();
         }
+
+        double kLinear = 0.5;
+    double kAngular = 2.0;
+    double vx = kLinear * dx;
+    double vy = kLinear * dy;
+    double omega = kAngular * angleError;
+
+        drivetrain.setControl(driveRequest
+            .withVelocityX(null)
+        );
     }
 
     @Override
