@@ -17,18 +17,20 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Vision;
 import frc.robot.subsystems.Drivetrain;
 
-enum Side {left, right};
+// enum Side {left, right};
 
 public class MoveToTagCommand extends Command{
     private final Vision vision;
     private final Drivetrain drivetrain;
-    private final Side side;
+    // private final Side side;
+
+    private static final double TOLERENCE = .1;
 
     PhotonTrackedTarget target;
     int targetID;
     
 
-    double targetDistance = .2;
+    double targetDistance = .1;
     
     Transform3d cameraToTargetTransform;
     Transform3d robotToCameraTransform;
@@ -48,15 +50,23 @@ public class MoveToTagCommand extends Command{
     double dy;
     double angleError;
 
+    double kLinear;
+    double kAngular;
+    double vx;
+    double vy;
+    double omega;
+    PhotonPipelineResult latestResult;
+
+
     SwerveRequest.RobotCentric robotCentricDrive;
 
     private List<PhotonPipelineResult> results;
     private final SwerveRequest.RobotCentric driveRequest;
 
-    public MoveToTagCommand(Vision vision, Drivetrain drivetrain, Side side) {
+    public MoveToTagCommand(Vision vision, Drivetrain drivetrain) {
         this.drivetrain = drivetrain;
         this.vision = vision;
-        this.side = side;
+        // this.side = side;
         driveRequest = new SwerveRequest.RobotCentric()
         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
         addRequirements(vision);
@@ -75,50 +85,61 @@ public class MoveToTagCommand extends Command{
         );
         
         cameraToRobotTransform = robotToCameraTransform.inverse();
-        cameraToTagPose = new Pose3d(cameraToTargetTransform.getTranslation(), cameraToTargetTransform.getRotation());
-        robotToCameraPose = new Pose3d(robotToCameraTransform.getTranslation(), robotToCameraTransform.getRotation());
-        robotToTagPose = robotToCameraPose.transformBy(cameraToTargetTransform);
-        robotToDesiredPose = robotToTagPose.transformBy(new Transform3d(targetPoseRelativeToTag.getTranslation(), targetPoseRelativeToTag.getRotation()));
-
-        translationError = robotToDesiredPose.getTranslation();
-        rotationError = robotToDesiredPose.getRotation();
-
-        dx = translationError.getX();
-        dy = translationError.getY();
-
-        angleError = rotationError.getZ();
+        
     }
 
     @Override
     public void execute() {
-        results = vision.getLatestCamera1Results();
-        if (results.get(results.size()-1).hasTargets()) {
-            target = results.get(0).getBestTarget();
+        results = vision.getLatestCamera1Results();        
+        if (!results.isEmpty()) {
+            latestResult = results.get(results.size() - 1);
+            if (latestResult.hasTargets())
+            target = latestResult.getBestTarget();
             targetID = target.getFiducialId();
-            // cameraToTarget = target.getBestCameraToTarget();
-        }
+            cameraToTargetTransform = target.getBestCameraToTarget();
+            cameraToTagPose = new Pose3d(
+                robotToCameraTransform.getTranslation(),
+                robotToCameraTransform.getRotation()
+            );
+            robotToCameraPose = new Pose3d(robotToCameraTransform.getTranslation(), robotToCameraTransform.getRotation());
+            robotToTagPose = robotToCameraPose.transformBy(new Transform3d(cameraToTagPose.getTranslation(), cameraToTagPose.getRotation()));
+            robotToDesiredPose = robotToTagPose.transformBy(new Transform3d(targetPoseRelativeToTag.getTranslation(), targetPoseRelativeToTag.getRotation()));
 
-        double kLinear = 0.5;
-    double kAngular = 2.0;
-    double vx = kLinear * dx;
-    double vy = kLinear * dy;
-    double omega = kAngular * angleError;
+            translationError = robotToDesiredPose.getTranslation();
+            rotationError = robotToDesiredPose.getRotation();
 
-        drivetrain.setControl(driveRequest
-            .withVelocityX(null)
-        );
+            dx = translationError.getX();
+            dy = translationError.getY();
+            angleError = rotationError.getZ();
+            kLinear = 5.0;
+            kAngular = 0.1;
+            vx = kLinear * dx;
+            vy = kLinear * dy;
+            omega = kAngular * angleError;
+
+            drivetrain.setControl(driveRequest
+                .withVelocityX(vx)
+                .withVelocityY(vy)
+                .withRotationalRate(omega)
+            );
+        }        
     }
 
     @Override
     public void end(boolean interrupted) {
-        // TODO Auto-generated method stub
-        super.end(interrupted);
+        drivetrain.setControl(driveRequest
+            .withVelocityX(0)
+            .withVelocityY(0)
+            .withRotationalRate(0)
+        );
     }
 
     @Override
     public boolean isFinished() {
         // TODO Auto-generated method stub
-        return super.isFinished();
+        return (Math.abs(vy - TOLERENCE) < .1) && 
+            (Math.abs(vx - TOLERENCE) < .1) && 
+            (Math.abs(omega - TOLERENCE) < .1);
     }
 
     

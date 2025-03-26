@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.commands.MoveToTagCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hyperlib.DriverInput;
 import frc.robot.joysticks.ApemHF45Joystick;
@@ -33,7 +34,7 @@ public class RobotContainer {
     public final Ramp ramp = new Ramp();
     public final LEDStrip ledStrip = new LEDStrip();
     // public final VisionSubsystem vision = new VisionSubsystem();
-    public final Vision vision = new Vision();
+    // public final Vision vision = new Vision();
 
     // Slew Rate Limiter
     private final SlewRateLimiter xSpeedLimiter = new SlewRateLimiter(Constants.xSpeedLimiter);
@@ -106,13 +107,13 @@ public class RobotContainer {
                     // If slow mode is on, reduce them
                     if (Drivetrain.isRobotCentric) {
                         speed *= 0.1;
-                        angular *= 0.25; 
+                        angular *= 0.5; 
                     } else if (Drivetrain.isSlowMode) {
-                        speed *= 0.20;
-                        angular *= 0.20;
+                        speed *= 0.25;
+                        angular *= 0.5;
                     } else if (elevator.getPosition() > Elevator.STAGE_1) {
-                        speed *= 0.20;
-                        angular *= 0.20;
+                        speed *= 0.25;
+                        angular *= 0.5;
                     }
 
                     // Read the raw joystick
@@ -129,7 +130,8 @@ public class RobotContainer {
                     if (Drivetrain.isRobotCentric) {
                         // Robot-centric mode
                         return robotCentricDrive
-                                .withVelocityX(-vx)
+                                // .withVelocityX(-vx)
+                                .withVelocityX(0)
                                 .withVelocityY(-vy)
                                 .withRotationalRate(omega);
                     } else {
@@ -149,7 +151,7 @@ public class RobotContainer {
         driverJoystickLeft.rightButton().onTrue(
             new InstantCommand( () -> Drivetrain.isSlowMode = !Drivetrain.isSlowMode));
 
-        // driverJoystickRight.leftButton().whileTrue(getAutonomousCommand());
+        // driverJoystickRight.leftButton().whileTrue(new MoveToTagCommand(vision, drivetrain));
 
         driverJoystickRight.rightButton().onTrue(
             new InstantCommand(drivetrain::seedFieldCentric));
@@ -226,7 +228,7 @@ public class RobotContainer {
             endEffector.stopIntakeCommand());
 
         // ==================== Pivot Bindings ====================
-        operatorJoystickRight.outerHatLeft().whileTrue( // TODO CHANGE TO JOG A FEW DEGREES
+        operatorJoystickRight.outerHatLeft().whileTrue(
             pivot.runPivotCommand(-.15));
 
         operatorJoystickRight.outerHatRight().whileTrue(
@@ -272,27 +274,27 @@ public class RobotContainer {
         operatorJoystickLeft.triggerPrimary().whileTrue(endEffector.runIntakeCommand(1.0));
         operatorJoystickLeft.indexButon().whileTrue(endEffector.runIntakeCommand(-1.0));
 
-        operatorJoystickLeft.lowerHatDown().whileTrue(pivot.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        operatorJoystickLeft.lowerHatLeft().whileTrue(pivot.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        operatorJoystickLeft.lowerHatUp().whileTrue(pivot.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        operatorJoystickLeft.lowerHatRight().whileTrue(pivot.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        // operatorJoystickLeft.lowerHatDown().whileTrue(pivot.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        // operatorJoystickLeft.lowerHatLeft().whileTrue(pivot.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        // operatorJoystickLeft.lowerHatUp().whileTrue(pivot.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        // operatorJoystickLeft.lowerHatRight().whileTrue(pivot.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
         // Climber
-        // operatorJoystickLeft.f2Button().onTrue(
-        //     climber.rotateClimberToStartingPositionCommand());
-        // operatorJoystickLeft.f1Button().whileTrue(
-        //     climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));        
-        // operatorJoystickLeft.f1Button().onTrue(
-        //     ratchet.unlockRatchetCommand());
-        // operatorJoystickLeft.f3Button().onTrue(
-        //     ratchet.lockRatchetCommand());
-        // operatorJoystickLeft.sw1Up().or(operatorJoystickLeft.sw1Down()).onTrue(
-        //     ramp.detachRampCommand());
+        operatorJoystickLeft.f2Button().onTrue(
+            climber.rotateClimberToStartingPositionCommand());
+        operatorJoystickLeft.f1Button().whileTrue(
+            climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));        
+        operatorJoystickLeft.f1Button().onTrue(
+            ratchet.unlockRatchetCommand());
+        operatorJoystickLeft.f3Button().onTrue(
+            ratchet.lockRatchetCommand());
+        operatorJoystickLeft.sw1Up().or(operatorJoystickLeft.sw1Down()).onTrue(
+            ramp.detachRampCommand());
             
-        operatorJoystickLeft.f2Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_HARDSTOP));
-        operatorJoystickLeft.f1Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_SAFE_MOVE));
-        operatorJoystickLeft.f3Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_CORAL_L4));
-        operatorJoystickLeft.sw1Up().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT));
+        // operatorJoystickLeft.f2Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_HARDSTOP));
+        // operatorJoystickLeft.f1Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_SAFE_MOVE));
+        // operatorJoystickLeft.f3Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_CORAL_L4));
+        // operatorJoystickLeft.sw1Up().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT));
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
