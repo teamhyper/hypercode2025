@@ -75,7 +75,7 @@ public class MoveToTagCommand extends Command{
     @Override
     public void initialize() {
         targetPoseRelativeToTag = new Pose3d(
-            new Translation3d(targetDistance ,0.0, 0.0),
+            new Translation3d(targetDistance, 0.0, 0.0),
             new Rotation3d(0.0, 0.0, Math.PI)
         );
 

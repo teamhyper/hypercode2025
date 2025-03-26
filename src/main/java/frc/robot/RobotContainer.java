@@ -8,12 +8,15 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.commands.MoveToPoseRelativeToAprilTagCommand;
 import frc.robot.commands.MoveToTagCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hyperlib.DriverInput;
@@ -33,7 +36,7 @@ public class RobotContainer {
     public final Ratchet ratchet = new Ratchet();
     public final Ramp ramp = new Ramp();
     public final LEDStrip ledStrip = new LEDStrip();
-    // public final VisionSubsystem vision = new VisionSubsystem();
+    public final VisionSubsystem vision = new VisionSubsystem();
     // public final Vision vision = new Vision();
 
     // Slew Rate Limiter
@@ -152,6 +155,7 @@ public class RobotContainer {
             new InstantCommand( () -> Drivetrain.isSlowMode = !Drivetrain.isSlowMode));
 
         // driverJoystickRight.leftButton().whileTrue(new MoveToTagCommand(vision, drivetrain));
+        driverJoystickRight.leftButton().whileTrue(new MoveToPoseRelativeToAprilTagCommand(vision, drivetrain, 6, new Pose2d(.5, .5, new Rotation2d())));
 
         driverJoystickRight.rightButton().onTrue(
             new InstantCommand(drivetrain::seedFieldCentric));
