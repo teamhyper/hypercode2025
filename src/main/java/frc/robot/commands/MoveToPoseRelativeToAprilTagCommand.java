@@ -44,8 +44,7 @@ public class MoveToPoseRelativeToAprilTagCommand extends Command {
     @Override
     public void initialize() {
         SmartDashboard.putBoolean("MoveToPoseRelativeToAprilTagCommand Running", true);
-        SmartDashboard.putString("Relative Pose", relativePose.toString());
-
+        SmartDashboard.putString("Relative Pose To Tag " + targetTag, relativePose.toString());
         Optional<PhotonTrackedTarget> targetOpt = visionSubsystem.getTagIfInView(targetTag);
         if (targetOpt.isPresent()) {
             PhotonTrackedTarget target = targetOpt.get();
