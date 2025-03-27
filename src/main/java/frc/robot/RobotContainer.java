@@ -13,8 +13,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.MoveToTagCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.hyperlib.DriverInput;
 import frc.robot.joysticks.ApemHF45Joystick;
@@ -107,13 +105,13 @@ public class RobotContainer {
                     // If slow mode is on, reduce them
                     if (Drivetrain.isRobotCentric) {
                         speed *= 0.1;
-                        angular *= 0.5; 
+                        angular *= 1.0; 
                     } else if (Drivetrain.isSlowMode) {
-                        speed *= 0.25;
-                        angular *= 0.5;
+                        speed *= 0.30;
+                        angular *= 1.0;
                     } else if (elevator.getPosition() > Elevator.STAGE_1) {
-                        speed *= 0.25;
-                        angular *= 0.5;
+                        speed *= 0.30;
+                        angular *= 1.0;
                     }
 
                     // Read the raw joystick
@@ -164,7 +162,7 @@ public class RobotContainer {
                         ratchet.unlockRatchetCommand(), 
                         pivot.setPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT))
                     .andThen(new ParallelDeadlineGroup(
-                        climber.rotateClimberToStartingPositionCommand(),
+                        climber.rotateClimberToAttachingPositionCommand(),
                         pivot.holdPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT)
                     )).andThen(new ParallelCommandGroup(
                         pivot.holdPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT),

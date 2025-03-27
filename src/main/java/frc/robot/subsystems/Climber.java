@@ -66,6 +66,7 @@ public class Climber extends SubsystemBase {
         CANcoderConfiguration config = new CANcoderConfiguration();
         config.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
         config.MagnetSensor.MagnetOffset = 0.456;
+        config.MagnetSensor.AbsoluteSensorDiscontinuityPoint = 1;
         
         encoder.getConfigurator().apply(config);
     }
@@ -127,7 +128,7 @@ public class Climber extends SubsystemBase {
      * Command to move the climber to starting position.
      */
     public Command rotateClimberToStartingPositionCommand() {
-        return rotateClimberCommand(PREPARE_CURRENT).until(() -> getAngle() <= 5).andThen(stopClimberCommand());
+        return rotateClimberCommand(PREPARE_CURRENT).until(() -> getAngle() <= 7).andThen(stopClimberCommand());
     }
 
     /**
