@@ -155,7 +155,7 @@ public class RobotContainer {
             new InstantCommand( () -> Drivetrain.isSlowMode = !Drivetrain.isSlowMode));
 
         // driverJoystickRight.leftButton().whileTrue(new MoveToTagCommand(vision, drivetrain));
-        driverJoystickRight.leftButton().whileTrue(new MoveToPoseRelativeToAprilTagCommand(vision, drivetrain, 6, new Pose2d(.5, .5, new Rotation2d())));
+        driverJoystickRight.leftButton().whileTrue(new MoveToPoseRelativeToAprilTagCommand(vision, drivetrain, 6, new Pose2d(.2, .2, new Rotation2d())));
 
         driverJoystickRight.rightButton().onTrue(
             new InstantCommand(drivetrain::seedFieldCentric));

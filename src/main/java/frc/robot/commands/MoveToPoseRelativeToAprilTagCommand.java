@@ -3,6 +3,7 @@ package frc.robot.commands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Drivetrain;
@@ -54,8 +55,17 @@ public class MoveToPoseRelativeToAprilTagCommand extends Command {
 
             // Convert target data to a Pose2d in the robot's coordinate frame
             Pose2d cameraToTarget = new Pose2d(targetX, targetY, Rotation2d.fromDegrees(targetYaw));
+            
+            Transform2d cameraOffset = new Transform2d(
+                new Translation2d(0, 0), // Replace with actual offsets
+                Rotation2d.fromDegrees(0)          // Replace with actual yaw offset
+            );
+            
+            Pose2d robotToTarget = cameraToTarget.transformBy(cameraOffset);
+
             Pose2d robotPose = drivetrain.getPose();
-            Pose2d fieldToTarget = robotPose.transformBy(new Transform2d(cameraToTarget.getTranslation(), cameraToTarget.getRotation()));
+            // Pose2d fieldToTarget = robotPose.transformBy(new Transform2d(cameraToTarget.getTranslation(), cameraToTarget.getRotation()));
+            Pose2d fieldToTarget = robotPose.transformBy(new Transform2d(robotToTarget.getTranslation(), robotToTarget.getRotation()));
 
             // Calculate the desired pose relative to the AprilTag
             initialPose = fieldToTarget.transformBy(new Transform2d(relativePose.getTranslation(), relativePose.getRotation()));
@@ -63,7 +73,7 @@ public class MoveToPoseRelativeToAprilTagCommand extends Command {
             // If the target is not seen, cancel the command
             cancel();
         }
-    }
+    } 
 
     @Override
     public void execute() {
