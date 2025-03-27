@@ -36,7 +36,7 @@ public class RobotContainer {
     public final Ratchet ratchet = new Ratchet();
     public final Ramp ramp = new Ramp();
     public final LEDStrip ledStrip = new LEDStrip();
-    public final VisionSubsystem vision = new VisionSubsystem();
+    // public final VisionSubsystem vision = new VisionSubsystem();
     // public final Vision vision = new Vision();
 
     // Slew Rate Limiter
@@ -155,7 +155,7 @@ public class RobotContainer {
             new InstantCommand( () -> Drivetrain.isSlowMode = !Drivetrain.isSlowMode));
 
         // driverJoystickRight.leftButton().whileTrue(new MoveToTagCommand(vision, drivetrain));
-        driverJoystickRight.leftButton().whileTrue(new MoveToPoseRelativeToAprilTagCommand(vision, drivetrain, 6, new Pose2d(.2, .2, new Rotation2d())));
+        // driverJoystickRight.leftButton().whileTrue(new MoveToPoseRelativeToAprilTagCommand(vision, drivetrain, 6, new Pose2d(0, 0, new Rotation2d())));
 
         driverJoystickRight.rightButton().onTrue(
             new InstantCommand(drivetrain::seedFieldCentric));

@@ -236,8 +236,45 @@ public class Drivetrain extends TunerSwerveDrivetrain implements Subsystem {
             targetPose.getTranslation().getY() - currentPose.getTranslation().getY(),
             0
         );
+
         this.setControl(new SwerveRequest.ApplyRobotSpeeds().withSpeeds(chassisSpeeds));
     }
+
+    /**
+ * Moves the robot to the specified pose (position and angle).
+ * @param targetPose The target pose to move to.
+ */
+public void moveToPose(Pose2d targetPose) {
+    final var currentPose = getPose();
+
+    // Calculate translational error
+    final var translationError = targetPose.getTranslation().minus(currentPose.getTranslation());
+    final double distanceError = translationError.getNorm();
+
+    // Calculate rotational error
+    final var yawError = targetPose.getRotation().getDegrees() - currentPose.getRotation().getDegrees();
+
+    // Proportional control gains (adjust as needed)
+    final double kPTranslation = 0.5; // Proportional gain for translation
+    final double kPRotation = 0.1;    // Proportional gain for rotation
+
+    // Calculate speeds
+    final var xSpeed = kPTranslation * translationError.getX();
+    final var ySpeed = kPTranslation * translationError.getY();
+    final var yawSpeed = kPRotation * yawError;
+
+    // Create chassis speeds
+    final var chassisSpeeds = new ChassisSpeeds(xSpeed, ySpeed, yawSpeed);
+    
+
+    // Report speeds to SmartDashboard
+    SmartDashboard.putNumber("X Speed", xSpeed);
+    SmartDashboard.putNumber("Y Speed", ySpeed);
+    SmartDashboard.putNumber("Yaw Speed", yawSpeed);
+
+    // Apply the calculated speeds
+    this.setControl(new SwerveRequest.ApplyRobotSpeeds().withSpeeds(chassisSpeeds));
+}
 
     /**
      * Returns a command that applies the specified control request to this swerve drivetrain.

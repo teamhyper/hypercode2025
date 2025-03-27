@@ -20,10 +20,11 @@ public class MoveToPoseRelativeToAprilTagCommand extends Command {
     private final Drivetrain drivetrain;
     private final int targetTag;
     private final Pose2d relativePose;
-    private final double positionTolerance = 0.1; // Adjust as needed
+    private final double positionTolerance = 0.2; // Adjust as needed
     private final double angleTolerance = 5.0; // Adjust as needed
     private boolean isAligned;
     private Pose2d initialPose;
+    private Pose2d finalPose;
 
     /**
      * Constructor for the MoveToPoseRelativeToAprilTagCommand.
@@ -45,30 +46,27 @@ public class MoveToPoseRelativeToAprilTagCommand extends Command {
     @Override
     public void initialize() {
         SmartDashboard.putBoolean("MoveToPoseRelativeToAprilTagCommand Running", true);
-        SmartDashboard.putString("Relative Pose To Tag " + targetTag, relativePose.toString());
+        this.initialPose = drivetrain.getPose();
+        SmartDashboard.putNumber("Initial X", initialPose.getX());
+        SmartDashboard.putNumber("Initial Y", initialPose.getY());
         Optional<PhotonTrackedTarget> targetOpt = visionSubsystem.getTagIfInView(targetTag);
         if (targetOpt.isPresent()) {
             PhotonTrackedTarget target = targetOpt.get();
             double targetX = target.getBestCameraToTarget().getX();
             double targetY = target.getBestCameraToTarget().getY();
             double targetYaw = target.getYaw();
-
+    
             // Convert target data to a Pose2d in the robot's coordinate frame
             Pose2d cameraToTarget = new Pose2d(targetX, targetY, Rotation2d.fromDegrees(targetYaw));
-            
-            Transform2d cameraOffset = new Transform2d(
-                new Translation2d(0, 0), // Replace with actual offsets
-                Rotation2d.fromDegrees(0)          // Replace with actual yaw offset
-            );
-            
-            Pose2d robotToTarget = cameraToTarget.transformBy(cameraOffset);
 
-            Pose2d robotPose = drivetrain.getPose();
-            // Pose2d fieldToTarget = robotPose.transformBy(new Transform2d(cameraToTarget.getTranslation(), cameraToTarget.getRotation()));
-            Pose2d fieldToTarget = robotPose.transformBy(new Transform2d(robotToTarget.getTranslation(), robotToTarget.getRotation()));
+            // Apply the desired relative pose
+            finalPose = cameraToTarget.transformBy(new Transform2d(
+                relativePose.getTranslation(),
+                relativePose.getRotation()
+            ));
+            SmartDashboard.putNumber("Final X", finalPose.getX());
+            SmartDashboard.putNumber("Final Y", finalPose.getY());
 
-            // Calculate the desired pose relative to the AprilTag
-            initialPose = fieldToTarget.transformBy(new Transform2d(relativePose.getTranslation(), relativePose.getRotation()));
         } else {
             // If the target is not seen, cancel the command
             cancel();
@@ -77,28 +75,22 @@ public class MoveToPoseRelativeToAprilTagCommand extends Command {
 
     @Override
     public void execute() {
-        if (initialPose != null) {
+        if (finalPose != null) {
             // Use the initial pose to drive the robot to the specified pose
-            drivetrain.driveToPose(initialPose);
+            drivetrain.moveToPose(finalPose);
         }
     }
 
     @Override
     public void end(boolean interrupted) {
-        SmartDashboard.putBoolean("MoveToPoseRelativeToAprilTagCommand Running", false);
-        if (!interrupted && initialPose != null) {
-            // Align the robot to face the AprilTag
-            double targetYaw = initialPose.getRotation().getDegrees();
-            drivetrain.turnToAngle(Rotation2d.fromDegrees(targetYaw));
-        }
     }
 
     @Override
     public boolean isFinished() {
         Pose2d currentPose = drivetrain.getPose();
-        boolean positionReached = Math.abs(currentPose.getX() - initialPose.getX()) < positionTolerance &&
-                                  Math.abs(currentPose.getY() - initialPose.getY()) < positionTolerance;
-        boolean angleAligned = Math.abs(currentPose.getRotation().getDegrees() - initialPose.getRotation().getDegrees()) < angleTolerance;
+        boolean positionReached = Math.abs(currentPose.getX() - finalPose.getX()) < positionTolerance &&
+                                  Math.abs(currentPose.getY() - finalPose.getY()) < positionTolerance;
+        boolean angleAligned = Math.abs(currentPose.getRotation().getDegrees() - finalPose.getRotation().getDegrees()) < angleTolerance;
 
         isAligned = positionReached && angleAligned;
         return isAligned;
