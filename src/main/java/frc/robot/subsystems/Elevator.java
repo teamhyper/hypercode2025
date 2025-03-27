@@ -19,17 +19,17 @@ import java.util.function.DoubleSupplier;
 public class Elevator extends SubsystemBase {
 
     public static final double BOTTOM_POSITION = 0.0;
-    public static final double TOP_POSITION = 88.0;
+    public static final double TOP_POSITION = 91.5;
 
     public static final double POSITION_CORAL_L1 = 18.0;
-    public static final double POSITION_CORAL_L2 = 34.12;
+    public static final double POSITION_CORAL_L2 = 34.00;
     public static final double POSITION_CORAL_L3 = 54.50;
-    public static final double POSITION_CORAL_L4 = 82.27;
+    public static final double POSITION_CORAL_L4 = 84.00;
 
     public static final double POSITION_ALGAE_GROUND = 3.0;
     public static final double POSITION_ALGAE_LOW = 35.5;
     public static final double POSITION_ALGAE_HIGH = 45.0;
-    public static final double POSITION_ALGAE_BARGE = 86.0;
+    public static final double POSITION_ALGAE_BARGE = 91.5;
 
     public static final double STAGE_1 = 27.0;
     public static final double STAGE_2 = 59.0;

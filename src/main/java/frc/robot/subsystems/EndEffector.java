@@ -125,7 +125,7 @@ public class EndEffector extends SubsystemBase {
     }
 
     public boolean isDetectingReef() {
-        return isDetectingRange(tof_reef, 105, 255);
+        return isDetectingRange(tof_reef, 105, 300);
     }
 
     /**
@@ -155,14 +155,14 @@ public class EndEffector extends SubsystemBase {
         SmartDashboard.putNumber("EndEffector: Current", intakeMotor.getTorqueCurrent().getValueAsDouble());
 
         // Coral Detection Metrics
-        SmartDashboard.putNumber("EndEffector: Coral Inner Distance", tof_coral_inner.getRange());
-        SmartDashboard.putNumber("EndEffector: Coral Outer Distance", tof_coral_outer.getRange());
-        SmartDashboard.putBoolean("EndEffector: Coral Inner", isDetecting(tof_coral_inner, CORAL_THRESHOLD));
-        SmartDashboard.putBoolean("EndEffector: Coral Outer", isDetecting(tof_coral_outer, CORAL_THRESHOLD));
+        // SmartDashboard.putNumber("EndEffector: Coral Inner Distance", tof_coral_inner.getRange());
+        // SmartDashboard.putNumber("EndEffector: Coral Outer Distance", tof_coral_outer.getRange());
+        // SmartDashboard.putBoolean("EndEffector: Coral Inner", isDetecting(tof_coral_inner, CORAL_THRESHOLD));
+        // SmartDashboard.putBoolean("EndEffector: Coral Outer", isDetecting(tof_coral_outer, CORAL_THRESHOLD));
         SmartDashboard.putBoolean("EndEffector: isHoldingCoral", isHoldingCoral());
 
         // Algae Detection Metrics
-        SmartDashboard.putNumber("EndEffector: Algae Distance", tof_algae.getRange());
+        // SmartDashboard.putNumber("EndEffector: Algae Distance", tof_algae.getRange());
         SmartDashboard.putBoolean("EndEffector: isHoldingAlgae", isHoldingAlgae());
 
         // Reef Detection Metrics
