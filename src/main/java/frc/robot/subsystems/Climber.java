@@ -135,14 +135,14 @@ public class Climber extends SubsystemBase {
      * Command to move the climber to climbing position.
      */
     public Command rotateClimberToAttachingPositionCommand() {
-        return rotateClimberCommand(-PREPARE_CURRENT).until(() -> getAngle() >= 170).andThen(stopClimberCommand());
+        return rotateClimberCommand(-PREPARE_CURRENT).until(() -> (getAngle() >= 170 && getAngle() <= 190)).andThen(stopClimberCommand());
     }
 
     /**
      * Command to move the climber to lifting position.
      */
     public Command rotateClimberToClimbedPositionCommand() {
-        return rotateClimberCommand(CLIMB_CURRENT).until(() -> getAngle() <= 90).andThen(stopClimberCommand());
+        return rotateClimberCommand(CLIMB_CURRENT).until(() -> getAngle() <= 85).andThen(stopClimberCommand());
     }
 
 }
