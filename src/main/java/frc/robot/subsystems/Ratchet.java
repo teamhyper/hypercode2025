@@ -9,8 +9,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Ratchet extends SubsystemBase {
 
     private static final int RATCHET_PWM_ID = 1;
-    private static final double RATCHET_LOCK_POSITION = 0.850; // AWAY FROM RATCHET LEVER
-    private static final double RATCHET_UNLOCK_POSITION  = 0.465; // INTO RATCHET LEVER
+    private static final double RATCHET_LOCK_POSITION = 0.5; // AWAY FROM RATCHET LEVER
+    private static final double RATCHET_UNLOCK_POSITION  = 0.675; // INTO RATCHET LEVER
 
     private final Servo s_ratchet;
 
