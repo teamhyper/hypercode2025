@@ -62,7 +62,7 @@ public class PivotNew extends SubsystemBase{
         SparkMaxConfig config = new SparkMaxConfig();
 
         feedforward = new ArmFeedforward(
-            0.0, 
+            0.005, 
             .5, 
             0.0, 
             0.0

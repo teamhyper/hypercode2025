@@ -125,7 +125,7 @@ public class EndEffector extends SubsystemBase {
     }
 
     public boolean isDetectingReef() {
-        return isDetectingRange(tof_reef, 105, 350);
+        return isDetectingRange(tof_reef, 105, 375);
     }
 
     /**

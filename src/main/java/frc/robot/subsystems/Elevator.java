@@ -88,8 +88,8 @@ public class Elevator extends SubsystemBase {
         // config.MotionMagic.MotionMagicAcceleration = 80;  // Acceleration (ticks/sec²)
         // config.MotionMagic.MotionMagicCruiseVelocity = 60; // Max velocity (ticks/sec)
 
-        config.MotionMagic.MotionMagicAcceleration = 60;  // Acceleration (ticks/sec²)
-        config.MotionMagic.MotionMagicCruiseVelocity = 100; // Max velocity (ticks/sec)
+        config.MotionMagic.MotionMagicAcceleration = 80;  // Acceleration (ticks/sec²)
+        config.MotionMagic.MotionMagicCruiseVelocity = 120; // Max velocity (ticks/sec)
         
         config.Slot0.kP = 20.0;  // Proportional Gain (response to error)
         config.Slot0.kI = 0.0;  // Integral Gain (only if you need fine corrections)
