@@ -163,16 +163,15 @@ public class RobotContainer {
         // ==================== Climber Bindings ====================
 
         operatorJoystickRight.f2Button().onTrue(
+                ratchet.unlockRatchetCommand().andThen(
                     new ParallelDeadlineGroup(
-                        ramp.detachRampCommand(), 
-                        ratchet.unlockRatchetCommand(), 
+                        ramp.detachRampCommand(),                         
                         pivot.setPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT))
                     .andThen(new ParallelDeadlineGroup(
                         climber.rotateClimberToAttachingPositionCommand(),
                         pivot.holdPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT)
-                    )).andThen(new ParallelCommandGroup(
-                        pivot.holdPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT),
-                        new RunCommand(() -> ledStrip.setColor(Color.kGreen))
+                    )).andThen(
+                        pivot.holdPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT)
                     )));
 
         operatorJoystickRight.f3Button().onTrue(

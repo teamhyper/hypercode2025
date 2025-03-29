@@ -8,46 +8,116 @@
         "layouts": [],
         "containers": [
           {
-            "title": "Pose",
-            "x": 1664.0,
+            "title": "EndEffector: isHoldingCoral",
+            "x": 0.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/EndEffector: isHoldingCoral",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "EndEffector: isHoldingAlgae",
+            "x": 0.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/EndEffector: isHoldingAlgae",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Slow Mode",
+            "x": 0.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Slow Mode",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Field Centric",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Field Centric",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Robot Centric",
+            "x": 128.0,
+            "y": 0.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Robot Centric",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Elevator at Bottom",
+            "x": 768.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Elevator at Bottom",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Elevator: Current",
+            "x": 768.0,
             "y": 0.0,
             "width": 256.0,
             "height": 256.0,
-            "type": "Text Display",
-            "properties": {
-              "topic": "/SmartDashboard/Pose",
-              "period": 0.06,
-              "data_type": "string",
-              "show_submit_button": false
-            }
-          },
-          {
-            "title": "BatteryVoltage",
-            "x": 1536.0,
-            "y": 640.0,
-            "width": 384.0,
-            "height": 256.0,
-            "type": "Voltage View",
-            "properties": {
-              "topic": "/RobotData/BatteryVoltage",
-              "period": 0.033,
-              "data_type": "double",
-              "min_value": 4.0,
-              "max_value": 13.0,
-              "divisions": 5,
-              "inverted": false,
-              "orientation": "horizontal"
-            }
-          },
-          {
-            "title": "Algae Distance",
-            "x": 512.0,
-            "y": 640.0,
-            "width": 256.0,
-            "height": 256.0,
             "type": "Graph",
             "properties": {
-              "topic": "/SmartDashboard/Algae Distance",
+              "topic": "/SmartDashboard/Elevator: Current",
               "period": 0.033,
               "data_type": "double",
               "time_displayed": 5.0,
@@ -56,97 +126,40 @@
             }
           },
           {
-            "title": "Coral Inner Distance",
-            "x": 0.0,
-            "y": 640.0,
-            "width": 256.0,
-            "height": 256.0,
-            "type": "Graph",
-            "properties": {
-              "topic": "/SmartDashboard/Coral Inner Distance",
-              "period": 0.033,
-              "data_type": "double",
-              "time_displayed": 5.0,
-              "color": 4278238420,
-              "line_width": 2.0
-            }
-          },
-          {
-            "title": "Coral Outer Distance",
-            "x": 256.0,
-            "y": 640.0,
-            "width": 256.0,
-            "height": 256.0,
-            "type": "Graph",
-            "properties": {
-              "topic": "/SmartDashboard/Coral Outer Distance",
-              "period": 0.033,
-              "data_type": "double",
-              "time_displayed": 5.0,
-              "color": 4278238420,
-              "line_width": 2.0
-            }
-          },
-          {
-            "title": "Coral Inner",
-            "x": 0.0,
-            "y": 512.0,
-            "width": 256.0,
-            "height": 128.0,
-            "type": "Boolean Box",
-            "properties": {
-              "topic": "/SmartDashboard/Coral Inner",
-              "period": 0.06,
-              "data_type": "boolean",
-              "true_color": 4283215696,
-              "false_color": 4294198070,
-              "true_icon": "None",
-              "false_icon": "None"
-            }
-          },
-          {
-            "title": "Coral Outer",
-            "x": 256.0,
-            "y": 512.0,
-            "width": 256.0,
-            "height": 128.0,
-            "type": "Boolean Box",
-            "properties": {
-              "topic": "/SmartDashboard/Coral Outer",
-              "period": 0.06,
-              "data_type": "boolean",
-              "true_color": 4283215696,
-              "false_color": 4294198070,
-              "true_icon": "None",
-              "false_icon": "None"
-            }
-          },
-          {
-            "title": "Algae Present",
-            "x": 512.0,
-            "y": 512.0,
-            "width": 256.0,
-            "height": 128.0,
-            "type": "Boolean Box",
-            "properties": {
-              "topic": "/SmartDashboard/Algae Present",
-              "period": 0.06,
-              "data_type": "boolean",
-              "true_color": 4283215696,
-              "false_color": 4294198070,
-              "true_icon": "None",
-              "false_icon": "None"
-            }
-          },
-          {
-            "title": "EndEffector Current",
+            "title": "Elevator: Position",
             "x": 768.0,
-            "y": 512.0,
-            "width": 768.0,
-            "height": 384.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Elevator: Position",
+              "period": 0.06,
+              "data_type": "double"
+            }
+          },
+          {
+            "title": "Pivot: Angle",
+            "x": 512.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/Pivot: Angle",
+              "period": 0.06,
+              "data_type": "double"
+            }
+          },
+          {
+            "title": "Pivot: Current",
+            "x": 512.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 256.0,
             "type": "Graph",
             "properties": {
-              "topic": "/SmartDashboard/EndEffector Current",
+              "topic": "/SmartDashboard/Pivot: Current",
               "period": 0.033,
               "data_type": "double",
               "time_displayed": 5.0,
@@ -155,90 +168,116 @@
             }
           },
           {
-            "title": "isCurrentThresholdReached",
+            "title": "EndEffector: Current",
+            "x": 256.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "Graph",
+            "properties": {
+              "topic": "/SmartDashboard/EndEffector: Current",
+              "period": 0.033,
+              "data_type": "double",
+              "time_displayed": 5.0,
+              "color": 4278238420,
+              "line_width": 2.0
+            }
+          },
+          {
+            "title": "EndEffector: Reef Distance",
+            "x": 256.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/SmartDashboard/EndEffector: Reef Distance",
+              "period": 0.06,
+              "data_type": "double"
+            }
+          },
+          {
+            "title": "EndEffector: isDetectingReef",
+            "x": 256.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/EndEffector: isDetectingReef",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Climber: Current",
+            "x": 1024.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "Graph",
+            "properties": {
+              "topic": "/SmartDashboard/Climber: Current",
+              "period": 0.033,
+              "data_type": "double",
+              "time_displayed": 5.0,
+              "color": 4278238420,
+              "line_width": 2.0
+            }
+          },
+          {
+            "title": "Climber: Angle",
             "x": 1024.0,
             "y": 256.0,
             "width": 256.0,
-            "height": 256.0,
-            "type": "Boolean Box",
+            "height": 128.0,
+            "type": "Large Text Display",
             "properties": {
-              "topic": "/SmartDashboard/isCurrentThresholdReached",
+              "topic": "/SmartDashboard/Climber: Angle",
               "period": 0.06,
-              "data_type": "boolean",
-              "true_color": 4283215696,
-              "false_color": 4294198070,
-              "true_icon": "None",
-              "false_icon": "None"
+              "data_type": "double"
             }
           },
           {
-            "title": "isHolding",
-            "x": 768.0,
-            "y": 256.0,
+            "title": "Auto Chooser",
+            "x": 1280.0,
+            "y": 0.0,
             "width": 256.0,
             "height": 256.0,
-            "type": "Boolean Box",
+            "type": "ComboBox Chooser",
             "properties": {
-              "topic": "/SmartDashboard/isHolding",
+              "topic": "/SmartDashboard/Auto Chooser",
               "period": 0.06,
-              "data_type": "boolean",
-              "true_color": 4283215696,
-              "false_color": 4294198070,
-              "true_icon": "None",
-              "false_icon": "None"
+              "sort_options": false
             }
           },
           {
-            "title": "Coral Inner",
-            "x": 128.0,
+            "title": "Ratchet Locked",
+            "x": 1280.0,
             "y": 256.0,
-            "width": 128.0,
+            "width": 256.0,
             "height": 128.0,
             "type": "Boolean Box",
             "properties": {
-              "topic": "/SmartDashboard/Coral Inner",
+              "topic": "/SmartDashboard/Ratchet Locked",
               "period": 0.06,
               "data_type": "boolean",
               "true_color": 4283215696,
               "false_color": 4294198070,
               "true_icon": "None",
               "false_icon": "None"
-            }
-          },
-          {
-            "title": "Climber Angle",
-            "x": 768.0,
-            "y": 0.0,
-            "width": 512.0,
-            "height": 256.0,
-            "type": "Text Display",
-            "properties": {
-              "topic": "/SmartDashboard/Climber Angle",
-              "period": 0.033,
-              "data_type": "double",
-              "show_submit_button": false
-            }
-          },
-          {
-            "title": "Climber Current Output",
-            "x": 1408.0,
-            "y": 0.0,
-            "width": 128.0,
-            "height": 128.0,
-            "type": "Text Display",
-            "properties": {
-              "topic": "/SmartDashboard/Climber Current Output",
-              "period": 0.06,
-              "data_type": "double",
-              "show_submit_button": false
             }
           },
           {
             "title": "Ratchet Unlocked",
-            "x": 512.0,
-            "y": 0.0,
+            "x": 1280.0,
+            "y": 384.0,
             "width": 256.0,
-            "height": 256.0,
+            "height": 128.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/Ratchet Unlocked",

@@ -22,13 +22,13 @@ public class Elevator extends SubsystemBase {
     public static final double TOP_POSITION = 91.5;
 
     public static final double POSITION_CORAL_L1 = 18.0;
-    public static final double POSITION_CORAL_L2 = 34.00;
+    public static final double POSITION_CORAL_L2 = 35.00;
     public static final double POSITION_CORAL_L3 = 54.50;
-    public static final double POSITION_CORAL_L4 = 84.00;
+    public static final double POSITION_CORAL_L4 = 85.00;
 
     public static final double POSITION_ALGAE_GROUND = 3.0;
     public static final double POSITION_ALGAE_LOW = 35.5;
-    public static final double POSITION_ALGAE_HIGH = 45.0;
+    public static final double POSITION_ALGAE_HIGH = 56.37;
     public static final double POSITION_ALGAE_BARGE = 91.5;
 
     public static final double STAGE_1 = 27.0;
