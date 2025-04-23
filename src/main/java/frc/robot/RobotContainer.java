@@ -55,7 +55,7 @@ public class RobotContainer {
     VKBGladiatorJoystick operatorJoystickLeft = new VKBGladiatorJoystick(2);
     VKBGladiatorJoystick operatorJoystickRight = new VKBGladiatorJoystick(3);
 
-    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
+    private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond) * 0.1; // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
@@ -162,21 +162,21 @@ public class RobotContainer {
 
         // ==================== Climber Bindings ====================
 
-        operatorJoystickRight.f2Button().onTrue(
-                ratchet.unlockRatchetCommand().andThen(
-                    new ParallelDeadlineGroup(
-                        ramp.detachRampCommand(),                         
-                        pivot.setPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT))
-                    .andThen(new ParallelDeadlineGroup(
-                        climber.rotateClimberToAttachingPositionCommand(),
-                        pivot.holdPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT)
-                    )).andThen(
-                        pivot.holdPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT)
-                    )));
+        // operatorJoystickRight.f2Button().onTrue(
+        //         ratchet.unlockRatchetCommand().andThen(
+        //             new ParallelDeadlineGroup(
+        //                 ramp.detachRampCommand(),                         
+        //                 pivot.setPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT))
+        //             .andThen(new ParallelDeadlineGroup(
+        //                 climber.rotateClimberToAttachingPositionCommand(),
+        //                 pivot.holdPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT)
+        //             )).andThen(
+        //                 pivot.holdPivotAngleCommand(PivotNew.ANGLE_ALGAE_COLLECT)
+        //             )));
 
-        operatorJoystickRight.f3Button().onTrue(
-            ratchet.lockRatchetCommand()
-            .andThen(climber.rotateClimberToClimbedPositionCommand()).withTimeout(3.0));
+        // operatorJoystickRight.f3Button().onTrue(
+        //     ratchet.lockRatchetCommand()
+        //     .andThen(climber.rotateClimberToClimbedPositionCommand()).withTimeout(3.0));
 
         // ==================== Elevator Bindings ====================
 
@@ -237,7 +237,7 @@ public class RobotContainer {
         operatorJoystickRight.outerHatRight().whileTrue(
             pivot.runPivotCommand(.15));
 
-        operatorJoystickRight.f1Button().whileTrue(pivot.runPivotVariableCommand(operatorJoystickRight::getY));
+        // operatorJoystickRight.f1Button().whileTrue(pivot.runPivotVariableCommand(operatorJoystickRight::getY));
 
         
         // ==================== LED Triggers ====================
@@ -283,16 +283,16 @@ public class RobotContainer {
         // operatorJoystickLeft.lowerHatRight().whileTrue(pivot.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
         // Climber
-        operatorJoystickLeft.f2Button().onTrue(
-            climber.rotateClimberToStartingPositionCommand());
-        operatorJoystickLeft.f1Button().whileTrue(
-            climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));        
-        operatorJoystickLeft.f1Button().onTrue(
-            ratchet.unlockRatchetCommand());
-        operatorJoystickLeft.f3Button().onTrue(
-            ratchet.lockRatchetCommand());
-        operatorJoystickLeft.sw1Up().or(operatorJoystickLeft.sw1Down()).onTrue(
-            ramp.detachRampCommand());
+        // operatorJoystickLeft.f2Button().onTrue(
+        //     climber.rotateClimberToStartingPositionCommand());
+        // operatorJoystickLeft.f1Button().whileTrue(
+        //     climber.rotateClimberVariableCommad(operatorJoystickLeft::getYAxis));        
+        // operatorJoystickLeft.f1Button().onTrue(
+        //     ratchet.unlockRatchetCommand());
+        // operatorJoystickLeft.f3Button().onTrue(
+        //     ratchet.lockRatchetCommand());
+        // operatorJoystickLeft.sw1Up().or(operatorJoystickLeft.sw1Down()).onTrue(
+        //     ramp.detachRampCommand());
             
         // operatorJoystickLeft.f2Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_HARDSTOP));
         // operatorJoystickLeft.f1Button().whileTrue(pivot.holdPivotAngleCommand(PivotNew.ANGLE_SAFE_MOVE));
